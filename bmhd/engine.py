@@ -174,36 +174,37 @@ def _exact_sphere_norm_ulp_polish(v_retracted: torch.Tensor, target_norm_sq: tor
                 sub_v = torch.where(imp, cand, sub_v)
                 sub_err = torch.minimum(sub_err, cand_err)
 
-        # Pass 2: Masked scale-residue + coordinate polish on any remaining 1-ULP cells
+        # Pass 2: Masked coordinate-ULP + scale search on any remaining 1-ULP cells
         rem_mask = sub_err.squeeze(-1) != 0.0
         if bool(rem_mask.any().item()):
             rem_v = sub_v[rem_mask]
             rem_t = sub_t[rem_mask]
             rem_err = sub_err[rem_mask]
             rem_inf = torch.full_like(rem_t, float("inf"))
-            for s_mul in (1, -1, 2, -2, 3, -3, 4, -4, 5, -5, 6, -6, 8, -8, 12, -12, 16, -16):
+            rem_order = rem_v.abs().argsort(dim=-1, descending=True)
+            idx0 = rem_order[:, 0:1]
+            idx1 = rem_order[:, min(1, M - 1) : min(1, M - 1) + 1]
+            v1_orig = torch.gather(rem_v, -1, idx1)
+            ulp_v1 = (torch.nextafter(v1_orig, rem_inf) - v1_orig).abs()
+
+            for s_mul in range(1, 256):
                 if not bool((rem_err != 0.0).any().item()):
                     break
-                w = rem_v * (1.0 + float(s_mul) * 1e-5)
-                ew = ((w * w).sum(dim=-1, keepdim=True) - rem_t).abs()
-                for j in range(M):
-                    res = rem_t - (w * w).sum(dim=-1, keepdim=True)
-                    vm = w[:, j : j + 1]
-                    best_wj = vm.clone()
-                    sgn = torch.where(vm >= 0.0, torch.ones_like(vm), -torch.ones_like(vm))
-                    vb = sgn * torch.sqrt((vm * vm + res).clamp(min=0.0))
-                    uv = (torch.nextafter(vb, rem_inf) - vb).abs()
-                    for k in (0, 1, -1, 2, -2):
-                        vc = vb if k == 0 else (vb + float(k) * uv)
-                        w[:, j : j + 1] = vc
-                        ce = ((w * w).sum(dim=-1, keepdim=True) - rem_t).abs()
-                        imp_w = ce < ew
-                        best_wj = torch.where(imp_w, vc, best_wj)
-                        ew = torch.minimum(ew, ce)
-                    w[:, j : j + 1] = best_wj
-                imp = ew < rem_err
-                rem_v = torch.where(imp, w, rem_v)
-                rem_err = torch.minimum(rem_err, ew)
+                step_m = float(s_mul // 2 if s_mul % 2 == 0 else -(s_mul // 2 + 1))
+                w = rem_v.scatter(-1, idx1, v1_orig + step_m * ulp_v1)
+                res0 = rem_t.double() - (w.double() * w.double()).sum(dim=-1, keepdim=True)
+                vm0 = torch.gather(w, -1, idx0)
+                sgn0 = torch.where(vm0 >= 0.0, torch.ones_like(vm0), -torch.ones_like(vm0))
+                vb0 = sgn0 * torch.sqrt((vm0.double() * vm0.double() + res0).clamp(min=0.0)).float()
+                uv0 = (torch.nextafter(vb0, rem_inf) - vb0).abs()
+                for k in (0, 1, -1, 2, -2):
+                    vc0 = vb0 if k == 0 else (vb0 + float(k) * uv0)
+                    cand_w = w.scatter(-1, idx0, vc0)
+                    ce = ((cand_w * cand_w).sum(dim=-1, keepdim=True) - rem_t).abs()
+                    imp = ce < rem_err
+                    if bool(imp.any().item()):
+                        rem_v = torch.where(imp, cand_w, rem_v)
+                        rem_err = torch.minimum(rem_err, ce)
             sub_v[rem_mask] = rem_v
 
         vp[mask0] = sub_v

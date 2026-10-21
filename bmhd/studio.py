@@ -841,7 +841,6 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       color: var(--text-muted);
       cursor: pointer;
       white-space: nowrap;
-      transition: all 0.12s ease;
       width: auto;
     }
     .preset-btn:hover, .mode-pill:hover {
@@ -931,8 +930,8 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       background: var(--bg-input);
       border: 1px solid var(--border-hi);
       color: var(--text-main);
-      padding: 4px 7px;
-      font-size: 11px;
+      padding: 3.5px 5px;
+      font-size: 10px;
       border-radius: 3px;
       font-family: var(--font-mono);
     }
@@ -1248,7 +1247,7 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
   <div class="preset-bar">
     <div class="preset-group">
       <span class="preset-tag">Scenario Deck</span>
-      <button class="preset-btn active" data-scen="01_issan_nonsym_solovev_tau0">01 Solov'ev (tau0=0.38)</button>
+      <button class="preset-btn" data-scen="01_issan_nonsym_solovev_tau0">01 Solov'ev (tau0=0.38)</button>
       <button class="preset-btn" data-scen="02_issan_sheared_elliptic_tau1">02 Sheared-iota (tau1=0.42)</button>
       <button class="preset-btn" data-scen="03_spec_magnetic_island_chain">03 SPEC Islands (m/n=2/1)</button>
       <button class="preset-btn" data-scen="04_tokamak_elm_pellet_4d">04 Tokamak H-Mode (4D)</button>
@@ -1277,13 +1276,13 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
             <span class="ctrl-val" id="lblFieldUnit">dim</span>
           </div>
           <select id="selectField">
-            <option value="bmhd_psi">Magnetic Flux psi [dim, 0-1]</option>
-            <option value="bmhd_b_mod">Field Strength |B| [Tesla, 0.8-5.2T]</option>
-            <option value="bmhd_p_kpa">Stepped Pressure p [kPa, 0-220kPa]</option>
-            <option value="bmhd_j_curl">Beltrami Current |J| [MA/m^2]</option>
-            <option value="bmhd_iota">Rotational Transform iota [dim]</option>
+            <option value="bmhd_psi">Magnetic Flux &psi; [0.0&ndash;1.0 dim]</option>
+            <option value="bmhd_b_mod">Field Strength |B| [0.8&ndash;5.2 T]</option>
+            <option value="bmhd_p_kpa">Stepped Pressure p [0&ndash;220 kPa]</option>
+            <option value="bmhd_j_curl">Beltrami Current |J| [MA/m&sup2;]</option>
+            <option value="bmhd_iota">Rotational Transform &iota; [1/q]</option>
           </select>
-          <div style="display:grid;grid-template-columns:1.1fr 0.9fr;gap:5px;margin-top:2px;">
+          <div style="display:grid;grid-template-columns:1.28fr 0.72fr;gap:5px;margin-top:2px;">
             <div>
               <div class="ctrl-label"><span>Colormap</span></div>
               <select id="selectColormap">
@@ -1291,7 +1290,7 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
                 <option value="turbo">Turbo (Rainbow)</option>
                 <option value="plasma">Plasma (Violet-Gold)</option>
                 <option value="inferno">Inferno (Fire)</option>
-                <option value="viridis">Viridis (Teal-Yellow)</option>
+                <option value="viridis">Viridis (Teal-Gold)</option>
                 <option value="cyan_gold">Beltrami Cyan-Gold</option>
                 <option value="coolwarm">Coolwarm Diverging</option>
               </select>
@@ -1555,6 +1554,14 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       { id: "bmhd_iota", name: "Rotational Transform iota", unit: "dim", min: 0.3, max: 2.2, cmap: "coolwarm" },
     ];
 
+    const CANONICAL_TAU_BY_SCENARIO = {
+      "01_issan_nonsym_solovev_tau0": [0.38, 0.00],
+      "02_issan_sheared_elliptic_tau1": [0.00, 0.42],
+      "03_spec_magnetic_island_chain": [0.18, 0.24],
+      "04_tokamak_elm_pellet_4d": [0.32, 0.12],
+      "05_beltrami_plasma_spallation_torch": [0.15, 0.35],
+    };
+
     const STATE = {
       scenarioId: "01_issan_nonsym_solovev_tau0",
       fieldId: "bmhd_psi",
@@ -1563,7 +1570,7 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       cutAngleDeg: 255,
       opacity: 0.88,
       tau0: 0.38,
-      tau1: 0.42,
+      tau1: 0.00,
       sliceZ: 16,
       sliceY: 12,
       sliceX: 12,
@@ -1612,6 +1619,9 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
           const matchedKey = aliasMap[q] || keys.find((k) => k.toLowerCase().includes(q));
           if (matchedKey) STATE.scenarioId = matchedKey;
         }
+        const cTau = CANONICAL_TAU_BY_SCENARIO[STATE.scenarioId] || [0.38, 0.00];
+        STATE.tau0 = cTau[0];
+        STATE.tau1 = cTau[1];
       }
       if (p.has("field")) {
         STATE.fieldId = p.get("field");
@@ -1707,7 +1717,7 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
           document.querySelectorAll(".preset-btn").forEach((b) => b.classList.remove("active"));
           btn.classList.add("active");
           STATE.scenarioId = btn.getAttribute("data-scen");
-          onScenarioChange();
+          onScenarioChange(true);
         });
         btn.classList.toggle("active", btn.getAttribute("data-scen") === STATE.scenarioId);
       });
@@ -1764,6 +1774,7 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
         document.getElementById("valTau0").textContent = v.toFixed(2);
         checkDetent();
         updateLiveInvariants();
+        updateProbeFromVoxel(STATE.sliceZ, STATE.sliceY, STATE.sliceX);
         renderAll();
         updateUrl();
       });
@@ -1776,6 +1787,7 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
         document.getElementById("valTau1").textContent = v.toFixed(2);
         checkDetent();
         updateLiveInvariants();
+        updateProbeFromVoxel(STATE.sliceZ, STATE.sliceY, STATE.sliceX);
         renderAll();
         updateUrl();
       });
@@ -1785,6 +1797,7 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
           STATE[id] = parseInt(e.target.value, 10);
           document.getElementById("valSlices").textContent =
             `Z:${STATE.sliceZ} Y:${STATE.sliceY} X:${STATE.sliceX}`;
+          updateProbeFromVoxel(STATE.sliceZ, STATE.sliceY, STATE.sliceX);
           render3DViewport();
         });
       });
@@ -2119,9 +2132,31 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       document.getElementById("invHamada").innerHTML = `${hamMod.toFixed(4)} T&sup1;m`;
     }
 
-    function onScenarioChange() {
+    function onScenarioChange(fromClick = false) {
       const scen = window.BMHD_OFFLINE_SCENARIOS[STATE.scenarioId];
       if (!scen) return;
+
+      document.querySelectorAll(".preset-btn").forEach((b) => {
+        b.classList.toggle("active", b.getAttribute("data-scen") === STATE.scenarioId);
+      });
+
+      if (fromClick) {
+        const canonicalTau = {
+          "01_issan_nonsym_solovev_tau0": [0.38, 0.00],
+          "02_issan_sheared_elliptic_tau1": [0.00, 0.42],
+          "03_spec_magnetic_island_chain": [0.18, 0.24],
+          "04_tokamak_elm_pellet_4d": [0.32, 0.12],
+          "05_beltrami_plasma_spallation_torch": [0.15, 0.35],
+        }[STATE.scenarioId] || [0.38, 0.42];
+        STATE.tau0 = canonicalTau[0];
+        STATE.tau1 = canonicalTau[1];
+        const s0 = document.getElementById("sliderTau0");
+        const s1 = document.getElementById("sliderTau1");
+        if (s0) s0.value = STATE.tau0;
+        if (s1) s1.value = STATE.tau1;
+        document.getElementById("valTau0").textContent = STATE.tau0.toFixed(2);
+        document.getElementById("valTau1").textContent = STATE.tau1.toFixed(2);
+      }
 
       const shortTitle = scen.scenario_name.split(",")[0] + (scen.scenario_name.includes("(") && !scen.scenario_name.split(",")[0].endsWith(")") ? ")" : "");
       document.getElementById("hudScenarioTitle").textContent = shortTitle;
@@ -2208,7 +2243,10 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
 
       updateFieldUnit();
       checkDetent();
+      updateCameraHud();
       updateLiveInvariants();
+      const probeX = Math.min(nx - 2, Math.round(nx * 0.5 + 1.02 * (nx / 2.85)));
+      updateProbeFromVoxel(STATE.sliceZ, STATE.sliceY, probeX);
       renderAll();
       updateUrl();
     }
@@ -2802,6 +2840,34 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       ctx.restore();
     }
 
+    function updateProbeFromVoxel(iz, iy, ix) {
+      const scen = window.BMHD_OFFLINE_SCENARIOS[STATE.scenarioId];
+      if (!scen) return;
+      const [nz, ny, nx] = scen.grid_shape;
+      const cz = Math.max(0, Math.min(nz - 1, Math.round(iz)));
+      const cy = Math.max(0, Math.min(ny - 1, Math.round(iy)));
+      const cx = Math.max(0, Math.min(nx - 1, Math.round(ix)));
+
+      const zNorm = (cz - nz * 0.5) / Math.max(1, nz * 0.5);
+      const tauShift = STATE.tau0 * 0.04 * zNorm + STATE.tau1 * 0.03;
+      const psi = Math.max(0.0, Math.min(1.0, (scen.fields.bmhd_psi?.[cz]?.[cy]?.[cx] ?? 0.0) + tauShift));
+      const bmod = Math.max(0.5, (scen.fields.bmhd_b_mod?.[cz]?.[cy]?.[cx] ?? 0.0) * (1.0 + 0.05 * STATE.tau0));
+      const pkpa = Math.max(0.0, (scen.fields.bmhd_p_kpa?.[cz]?.[cy]?.[cx] ?? 0.0) * (1.0 - 0.04 * Math.abs(STATE.tau0)));
+      const jcurl = Math.max(0.0, (scen.fields.bmhd_j_curl?.[cz]?.[cy]?.[cx] ?? 0.0) * (1.0 + 0.06 * Math.abs(STATE.tau1)));
+      const iota = (scen.fields.bmhd_iota?.[cz]?.[cy]?.[cx] ?? 0.0) + 0.05 * STATE.tau1;
+
+      const xPhys = (cx / Math.max(1, nx - 1) - 0.5) * 2.85;
+      const yPhys = (cy / Math.max(1, ny - 1) - 0.5) * 2.85;
+      const zPhys = (cz / Math.max(1, nz - 1) - 0.5) * 1.00;
+      const R = Math.sqrt(xPhys * xPhys + yPhys * yPhys);
+      const phiDeg = Math.round((Math.atan2(yPhys, xPhys) * 180) / Math.PI);
+
+      document.getElementById("probeCoords").innerHTML =
+        `Probe: Voxel [${cz},${cy},${cx}] &bull; R=${R.toFixed(2)}m &phi;=${phiDeg}&deg; Z=${zPhys.toFixed(2)}m`;
+      document.getElementById("probeValues").innerHTML =
+        `&psi;: ${psi.toFixed(3)} | |B|: ${bmod.toFixed(2)}T | p: ${pkpa.toFixed(1)}kPa | |J|: ${jcurl.toFixed(2)} | &iota;: ${iota.toFixed(2)}`;
+    }
+
     function updateHoverProbe(mx, my, w, h) {
       const scen = window.BMHD_OFFLINE_SCENARIOS[STATE.scenarioId];
       if (!scen) return;
@@ -2811,23 +2877,7 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       const ix = Math.min(nx - 1, Math.floor(nxNorm * nx));
       const iy = Math.min(ny - 1, Math.floor(((nxNorm + nyNorm) * 0.5) * ny));
       const iz = Math.min(nz - 1, Math.floor((1.0 - nyNorm) * nz));
-
-      const psi = scen.fields.bmhd_psi?.[iz]?.[iy]?.[ix] ?? 0.0;
-      const bmod = scen.fields.bmhd_b_mod?.[iz]?.[iy]?.[ix] ?? 0.0;
-      const pkpa = scen.fields.bmhd_p_kpa?.[iz]?.[iy]?.[ix] ?? 0.0;
-      const jcurl = scen.fields.bmhd_j_curl?.[iz]?.[iy]?.[ix] ?? 0.0;
-      const iota = scen.fields.bmhd_iota?.[iz]?.[iy]?.[ix] ?? 0.0;
-
-      const xPhys = (ix / (nx - 1) - 0.5) * 2.8;
-      const yPhys = (iy / (ny - 1) - 0.5) * 2.8;
-      const zPhys = (iz / (nz - 1) - 0.5) * 0.9;
-      const R = Math.sqrt(xPhys * xPhys + yPhys * yPhys);
-      const phiDeg = Math.round((Math.atan2(yPhys, xPhys) * 180) / Math.PI);
-
-      document.getElementById("probeCoords").innerHTML =
-        `Probe: Voxel [${iz},${iy},${ix}] &bull; R=${R.toFixed(2)}m &phi;=${phiDeg}&deg; Z=${zPhys.toFixed(2)}m`;
-      document.getElementById("probeValues").innerHTML =
-        `&psi;: ${psi.toFixed(3)} | |B|: ${bmod.toFixed(2)}T | p: ${pkpa.toFixed(1)}kPa | |J|: ${jcurl.toFixed(2)} | &iota;: ${iota.toFixed(2)}`;
+      updateProbeFromVoxel(iz, iy, ix);
     }
 
     // =========================================================================
@@ -3420,69 +3470,263 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       }
     }
 
+    function injectUserChord(scen, newChord) {
+      scen.chords.push(newChord);
+      const selChord = document.getElementById("selectChord");
+      const opt = document.createElement("option");
+      opt.value = scen.chords.length - 1;
+      opt.textContent = newChord.short_label;
+      selChord.appendChild(opt);
+      selChord.value = opt.value;
+      STATE.selectedChordIdx = scen.chords.length - 1;
+      renderAll();
+    }
+
     function parseClientFile(name, ext, text) {
       const scen = window.BMHD_OFFLINE_SCENARIOS[STATE.scenarioId];
       if (!scen) return;
-
+      const [nz, ny, nx] = scen.grid_shape;
       const lines = text.split(/\\r?\\n/);
-      const vals = [];
-      let inData = false;
 
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (trimmed.startsWith("~A") || trimmed.startsWith("# DATA")) {
-          inData = true;
-          continue;
-        }
-        if (inData && trimmed && !trimmed.startsWith("#")) {
-          const parts = trimmed.split(/\\s+/);
-          const v = parseFloat(parts[parts.length - 1]);
-          if (!isNaN(v)) vals.push(v);
-        }
-      }
+      if (ext === "las") {
+        let section = "";
+        let nullVal = -999.25;
+        const curveNames = [];
+        const rows = [];
 
-      if (vals.length > 0) {
-        const nPts = vals.length;
+        for (const rawLine of lines) {
+          const trimmed = rawLine.trim();
+          if (!trimmed || trimmed.startsWith("#")) continue;
+          if (trimmed.startsWith("~")) {
+            section = trimmed.slice(0, 2).toUpperCase();
+            continue;
+          }
+          if (section === "~W") {
+            const m = trimmed.match(/^NULL\\s*\\.[^\\s]*\\s+([-+0-9.eE]+)/i);
+            if (m) nullVal = parseFloat(m[1]);
+          } else if (section === "~C") {
+            const m = trimmed.match(/^([A-Za-z0-9_]+)\\s*\\./);
+            if (m) curveNames.push(m[1].toUpperCase());
+          } else if (section === "~A") {
+            const parts = trimmed.split(/\\s+/).map((v) => parseFloat(v)).filter((v) => !isNaN(v));
+            if (parts.length > 0) rows.push(parts);
+          }
+        }
+
+        if (rows.length === 0) return;
+        const nPts = rows.length;
+        const colIdx = (key, fallbackIdx) => {
+          const idx = curveNames.indexOf(key);
+          return idx >= 0 ? idx : fallbackIdx;
+        };
+        const cleanVal = (v, defVal) => (v === undefined || isNaN(v) || Math.abs(v - nullVal) < 1e-3 ? defVal : v);
+
+        const idxZv = colIdx("Z_VOX", -1);
+        const idxYv = colIdx("Y_VOX", -1);
+        const idxXv = colIdx("X_VOX", -1);
+        const idxPsi = colIdx("PSI", rows[0].length > 7 ? 7 : rows[0].length - 1);
+        const idxBmod = colIdx("B_MOD", -1);
+        const idxPkpa = colIdx("P_KPA", -1);
+        const idxJcurl = colIdx("J_CURL", -1);
+        const idxIota = colIdx("IOTA", -1);
+        const idxSpike = colIdx("SPIKE_FLAG", -1);
+        const idxGlare = colIdx("GLARE_MASK", -1);
+
+        const traj_z = rows.map((r, i) =>
+          idxZv >= 0 && idxZv < r.length
+            ? Math.max(0, Math.min(nz - 1, cleanVal(r[idxZv], (i / Math.max(1, nPts - 1)) * (nz - 1))))
+            : (i / Math.max(1, nPts - 1)) * (nz - 1)
+        );
+        const traj_y = rows.map((r) =>
+          idxYv >= 0 && idxYv < r.length ? Math.max(0, Math.min(ny - 1, cleanVal(r[idxYv], ny * 0.5))) : ny * 0.5
+        );
+        const traj_x = rows.map((r) =>
+          idxXv >= 0 && idxXv < r.length ? Math.max(0, Math.min(nx - 1, cleanVal(r[idxXv], nx * 0.5))) : nx * 0.5
+        );
+        const psi = rows.map((r, i) => {
+          const cz = Math.round(traj_z[i]);
+          const cy = Math.round(traj_y[i]);
+          const cx = Math.round(traj_x[i]);
+          const fallbackPsi = scen.fields.bmhd_psi?.[cz]?.[cy]?.[cx] ?? 0.5;
+          return Math.max(0, Math.min(1, cleanVal(r[idxPsi], fallbackPsi)));
+        });
+        const b_mod = rows.map((r, i) =>
+          idxBmod >= 0 && idxBmod < r.length ? cleanVal(r[idxBmod], 1.2 + psi[i] * 2.5) : 1.2 + psi[i] * 2.5
+        );
+        const p_kpa = rows.map((r, i) =>
+          idxPkpa >= 0 && idxPkpa < r.length ? cleanVal(r[idxPkpa], (1.0 - psi[i]) * 180.0) : (1.0 - psi[i]) * 180.0
+        );
+        const j_curl = rows.map((r, i) =>
+          idxJcurl >= 0 && idxJcurl < r.length ? cleanVal(r[idxJcurl], 2.0 + psi[i] * 3.5) : 2.0 + psi[i] * 3.5
+        );
+        const iota = rows.map((r, i) =>
+          idxIota >= 0 && idxIota < r.length ? cleanVal(r[idxIota], 1.2 + 0.4 * psi[i]) : 1.2 + 0.4 * psi[i]
+        );
+
+        const spike_depths = [];
+        const glare_depths = [];
+        rows.forEach((r, i) => {
+          if (idxSpike >= 0 && r[idxSpike] > 0.5) spike_depths.push(i);
+          if (idxGlare >= 0 && r[idxGlare] > 0.5) glare_depths.push(i);
+        });
+        if (spike_depths.length === 0 && nPts >= 4) {
+          spike_depths.push(Math.floor(nPts * 0.3), Math.floor(nPts * 0.7));
+        }
+
         const newIdx = scen.chords.length;
-        const newChord = {
+        injectUserChord(scen, {
           chord_id: newIdx,
           name: `USER_${name}`,
-          short_label: `#${newIdx} USER ${name.slice(0, 12)}`,
-          type: ext === "las" ? "user_las_chord" : "user_dev_sightline",
+          short_label: `#${newIdx} LAS ${name.slice(0, 12)}`,
+          type: "user_las_chord",
+          is_loco: false,
+          glare_fraction: glare_depths.length / Math.max(1, nPts),
+          traj_z,
+          traj_y,
+          traj_x,
+          psi,
+          b_mod,
+          p_kpa,
+          j_curl,
+          iota,
+          spike_depths,
+          glare_depths,
+        });
+      } else {
+        // Parse .dev directional survey (10-column station table or 3-column MD/INC/AZI)
+        const dataRows = [];
+        for (const rawLine of lines) {
+          const trimmed = rawLine.trim();
+          if (!trimmed || trimmed.startsWith("#") || trimmed.startsWith("~")) continue;
+          const parts = trimmed.split(/\\s+/).map((v) => parseFloat(v));
+          if (parts.length >= 3 && parts.every((v) => !isNaN(v))) {
+            dataRows.push(parts);
+          }
+        }
+        if (dataRows.length === 0) return;
+
+        const nPts = dataRows.length;
+        let traj_z = [];
+        let traj_y = [];
+        let traj_x = [];
+
+        if (dataRows[0].length >= 9) {
+          // 10-column BMHD .dev table: MD, INC, AZI, TVD, Y, X, Z_VOX, Y_VOX, X_VOX, DLS
+          traj_z = dataRows.map((r) => Math.max(0, Math.min(nz - 1, r[6])));
+          traj_y = dataRows.map((r) => Math.max(0, Math.min(ny - 1, r[7])));
+          traj_x = dataRows.map((r) => Math.max(0, Math.min(nx - 1, r[8])));
+        } else {
+          // 3-column MD, INC(deg), AZI(deg): integrate via minimum curvature
+          let tvd = 0.0, north = 0.0, east = 0.0;
+          const tvds = [0.0], norths = [0.0], easts = [0.0];
+          for (let i = 1; i < nPts; i++) {
+            const dMd = Math.max(1e-6, dataRows[i][0] - dataRows[i - 1][0]);
+            const inc1 = (dataRows[i - 1][1] * Math.PI) / 180.0;
+            const azi1 = (dataRows[i - 1][2] * Math.PI) / 180.0;
+            const inc2 = (dataRows[i][1] * Math.PI) / 180.0;
+            const azi2 = (dataRows[i][2] * Math.PI) / 180.0;
+            const cosDog = Math.max(-1.0, Math.min(1.0,
+              Math.cos(inc2 - inc1) - Math.sin(inc1) * Math.sin(inc2) * (1.0 - Math.cos(azi2 - azi1))
+            ));
+            const dog = Math.acos(cosDog);
+            const rf = dog > 1e-5 ? (2.0 / dog) * Math.tan(0.5 * dog) : 1.0;
+            tvd += 0.5 * dMd * (Math.cos(inc1) + Math.cos(inc2)) * rf;
+            north += 0.5 * dMd * (Math.sin(inc1) * Math.cos(azi1) + Math.sin(inc2) * Math.cos(azi2)) * rf;
+            east += 0.5 * dMd * (Math.sin(inc1) * Math.sin(azi1) + Math.sin(inc2) * Math.sin(azi2)) * rf;
+            tvds.push(tvd);
+            norths.push(north);
+            easts.push(east);
+          }
+          const maxTvd = Math.max(1e-6, Math.max(...tvds) - Math.min(...tvds));
+          traj_z = tvds.map((v) => Math.max(0, Math.min(nz - 1, ((v - Math.min(...tvds)) / maxTvd) * (nz - 1))));
+          traj_y = norths.map((v) => Math.max(0, Math.min(ny - 1, ny * 0.5 + (v / maxTvd) * (ny * 0.35))));
+          traj_x = easts.map((v) => Math.max(0, Math.min(nx - 1, nx * 0.65 + (v / maxTvd) * (nx * 0.25))));
+        }
+
+        const psi = [];
+        const b_mod = [];
+        const p_kpa = [];
+        const j_curl = [];
+        const iota = [];
+        for (let i = 0; i < nPts; i++) {
+          const cz = Math.max(0, Math.min(nz - 1, Math.round(traj_z[i])));
+          const cy = Math.max(0, Math.min(ny - 1, Math.round(traj_y[i])));
+          const cx = Math.max(0, Math.min(nx - 1, Math.round(traj_x[i])));
+          psi.push(scen.fields.bmhd_psi?.[cz]?.[cy]?.[cx] ?? 0.5);
+          b_mod.push(scen.fields.bmhd_b_mod?.[cz]?.[cy]?.[cx] ?? 2.5);
+          p_kpa.push(scen.fields.bmhd_p_kpa?.[cz]?.[cy]?.[cx] ?? 120.0);
+          j_curl.push(scen.fields.bmhd_j_curl?.[cz]?.[cy]?.[cx] ?? 3.0);
+          iota.push(scen.fields.bmhd_iota?.[cz]?.[cy]?.[cx] ?? 1.2);
+        }
+
+        const newIdx = scen.chords.length;
+        injectUserChord(scen, {
+          chord_id: newIdx,
+          name: `USER_${name}`,
+          short_label: `#${newIdx} DEV ${name.slice(0, 12)}`,
+          type: "user_dev_sightline",
           is_loco: false,
           glare_fraction: 0.0,
-          traj_z: Array.from({ length: nPts }, (_, i) => (i / Math.max(1, nPts - 1)) * 23.0),
-          traj_y: Array.from({ length: nPts }, () => 10.0),
-          traj_x: Array.from({ length: nPts }, () => 10.0),
-          psi: vals,
-          b_mod: vals.map((v) => v * 3.0),
-          p_kpa: vals.map((v) => v * 150.0),
-          j_curl: vals.map((v) => v * 4.0),
-          iota: vals.map(() => 1.5),
-          spike_depths: [Math.floor(nPts * 0.3), Math.floor(nPts * 0.7)],
+          traj_z,
+          traj_y,
+          traj_x,
+          psi,
+          b_mod,
+          p_kpa,
+          j_curl,
+          iota,
+          spike_depths: [Math.floor(nPts * 0.28), Math.floor(nPts * 0.72)],
           glare_depths: [],
-        };
-        scen.chords.push(newChord);
-
-        const selChord = document.getElementById("selectChord");
-        const opt = document.createElement("option");
-        opt.value = scen.chords.length - 1;
-        opt.textContent = newChord.short_label;
-        selChord.appendChild(opt);
-        selChord.value = opt.value;
-        STATE.selectedChordIdx = scen.chords.length - 1;
-
-        renderAll();
+        });
       }
     }
 
     function parseClientSegy(name, buffer) {
-      if (buffer.byteLength >= 3222) {
-        const dv = new DataView(buffer);
-        const ns = dv.getInt16(3220, false);
-        console.log(`Parsed SEG-Y ${name}: ns=${ns}`);
+      const scen = window.BMHD_OFFLINE_SCENARIOS[STATE.scenarioId];
+      if (!scen || !buffer || buffer.byteLength < 3600) {
+        renderAll();
+        return;
       }
-      renderAll();
+      const [nz, ny, nx] = scen.grid_shape;
+      const dv = new DataView(buffer);
+      const nsRaw = dv.getInt16(3220, false);
+      const ns = Math.max(4, Math.min(512, nsRaw > 0 ? nsRaw : nz));
+      const traceDataOffset = 3600 + 240;
+      const vals = [];
+      for (let i = 0; i < ns; i++) {
+        const bytePos = traceDataOffset + i * 4;
+        if (bytePos + 4 <= buffer.byteLength) {
+          const v = dv.getFloat32(bytePos, false);
+          vals.push(isFinite(v) ? v : 0.5);
+        }
+      }
+      if (vals.length >= 4) {
+        const minV = Math.min(...vals);
+        const maxV = Math.max(...vals, minV + 1e-6);
+        const psi = vals.map((v) => Math.max(0, Math.min(1, (v - minV) / (maxV - minV))));
+        const nPts = psi.length;
+        const newIdx = scen.chords.length;
+        injectUserChord(scen, {
+          chord_id: newIdx,
+          name: `SEGY_${name}`,
+          short_label: `#${newIdx} SEGY ${name.slice(0, 11)}`,
+          type: "user_segy_trace",
+          is_loco: false,
+          glare_fraction: 0.0,
+          traj_z: Array.from({ length: nPts }, (_, i) => (i / Math.max(1, nPts - 1)) * (nz - 1)),
+          traj_y: Array.from({ length: nPts }, () => ny * 0.5),
+          traj_x: Array.from({ length: nPts }, () => Math.min(nx - 2, Math.round(nx * 0.68))),
+          psi,
+          b_mod: psi.map((v) => 1.2 + v * 2.8),
+          p_kpa: psi.map((v) => (1.0 - v) * 185.0),
+          j_curl: psi.map((v) => 1.8 + v * 4.2),
+          iota: psi.map((v) => 1.1 + 0.5 * v),
+          spike_depths: [Math.floor(nPts * 0.3), Math.floor(nPts * 0.7)],
+          glare_depths: [],
+        });
+      } else {
+        renderAll();
+      }
     }
 
     window.addEventListener("resize", renderAll);

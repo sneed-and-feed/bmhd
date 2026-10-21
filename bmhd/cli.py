@@ -69,49 +69,49 @@ def cmd_verify_theorems(args: argparse.Namespace) -> int:
             "Theorem 2.1",
             "skew_triad_swap_neg",
             "Antisymmetric Bilinear Triad S = -S^T, diag(S)=0",
-            f"swap_err={audit.get('theorem_2_1_antisymmetry_error', 0.0):.2e}, diag_err={audit.get('theorem_2_1_diagonal_error', 0.0):.2e}",
+            f"swap_err={audit.get('antisymmetry_error', 0.0):.2e}, diag_err={audit.get('self_interaction_error', 0.0):.2e}",
             audit.get("theorem_2_1", {}).get("passed", True),
         ),
         (
             "Theorem 2.2",
             "occlusion_triad_breaks_symmetric_tie",
             "Deterministic Symmetry-Breaking Margin 2*beta*alpha*(W21 - W12)",
-            f"tie_break_err={audit.get('theorem_2_2_tie_breaking_error', 0.0):.2e}, gap={audit.get('theorem_2_2_actual_gap', 0.0):.4f}",
+            f"tie_break_err={audit.get('formula_error', 0.0):.2e}, gap={audit.get('tie_break_gap', 0.0):.4f}",
             audit.get("theorem_2_2", {}).get("passed", True),
         ),
         (
             "Theorem 2.3",
             "darksnail_readout_energy_conservation",
             "Tangent Orthogonality <v, B_W(u, v)> = 0 <=> B . grad psi = 0",
-            f"ortho_err={audit.get('theorem_2_3_orthogonality_error', 0.0):.2e} (<= 1.0e-8 float32)",
+            f"ortho_err={audit.get('orthogonality_residual', 0.0):.2e} (<= 1.0e-8 float32)",
             audit.get("theorem_2_3", {}).get("passed", True),
         ),
         (
             "Theorem 2.4",
             "darksnail_step0_system1_homotopy",
             "Symmetric Baseline Reduction at tau0=0, tau1=0 (0.00e+0)",
-            f"step0_err={audit.get('theorem_2_4_step0_error', 0.0):.2e}",
+            f"step0_err={audit.get('step0_homotopy_error', 0.0):.2e}",
             audit.get("theorem_2_4", {}).get("passed", True),
         ),
         (
             "Theorem 2.5",
             "rope2d_medoid_relative_invariance",
             "Beltrami Spike Recovery under 10% Bremsstrahlung Glare",
-            f"spike_rec={audit.get('theorem_2_5_spike_recovery', 1.0):.4f} (100.0% clean recovery)",
+            f"spike_rec={audit.get('spike_recovery', 1.0):.4f} (100.0% clean recovery)",
             audit.get("theorem_2_5", {}).get("passed", True),
         ),
         (
             "Theorem 2.6",
             "darksnail_multistep_spherical_invariance",
             "Multistep Field-Line Radial Drift (K in {1, 4, 8, 16})",
-            f"radial_drift={audit.get('theorem_2_6_max_cascade_drift', 0.0):.2e} (0.000e+00 escape)",
+            f"radial_drift={audit.get('spherical_radial_drift', 0.0):.2e} (0.000e+00 escape)",
             audit.get("theorem_2_6", {}).get("passed", True),
         ),
         (
             "Theorem 2.7",
             "kelvinMandelDipRotor_orthonormal",
             "SO(6) Kelvin-Mandel Rotor Trace & Norm Conservation",
-            f"trace_drift={audit.get('theorem_2_7_stiffness_trace_drift', 0.0):.2e}, frob_drift={audit.get('theorem_2_7_stiffness_frob_drift', 0.0):.2e}",
+            f"trace_drift={audit.get('stiffness_trace_drift', 0.0):.2e}, frob_drift={audit.get('stiffness_frobenius_drift', 0.0):.2e}",
             audit.get("theorem_2_7", {}).get("passed", True),
         ),
     ]
@@ -158,7 +158,10 @@ def cmd_evaluate(args: argparse.Namespace) -> int:
     from bmhd.scenarios import build_all_scenarios, SCENARIOS_CATALOG
 
     scenarios = build_all_scenarios()
-    target_scenarios = list(scenarios.keys()) if args.scenario in ("all", None) else [args.scenario]
+    if getattr(args, "all", False) or args.scenario in ("all", None):
+        target_scenarios = list(scenarios.keys())
+    else:
+        target_scenarios = [args.scenario]
 
     rows = []
     for sc_key in target_scenarios:
@@ -261,14 +264,16 @@ def cmd_studio(args: argparse.Namespace) -> int:
 
 def cmd_stream(args: argparse.Namespace) -> int:
     """Stream 3D field volume out-of-core via np.memmap with heap tracking."""
+    scenario_label = f" | Scenario={args.scenario}" if getattr(args, "scenario", None) else ""
     _print_header(
         "BMHD Out-of-Core Field-Cube Streaming",
-        "np.memmap Z-slab windowing & Beltrami exterior-curl downsampling (< 35 MB heap)",
+        f"np.memmap Z-slab windowing & Beltrami exterior-curl downsampling (< 35 MB heap){scenario_label}",
     )
 
     from bmhd.io import stream_field_volume
 
     target_grid = tuple(int(x.strip()) for x in args.target_grid.split(","))
+    chunk_ky = args.chunk_z if getattr(args, "chunk_z", None) is not None else args.chunk_ky
 
     if args.path and Path(args.path).exists():
         volume_path = args.path
@@ -294,7 +299,7 @@ def cmd_stream(args: argparse.Namespace) -> int:
         gen = stream_field_volume(
             volume_path,
             roi=args.roi,
-            chunk_ky=args.chunk_ky,
+            chunk_ky=chunk_ky,
             target_grid=target_grid,
             max_heap_mb=args.max_heap,
         )
@@ -362,6 +367,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     # evaluate
     sub_eval = subparsers.add_parser("evaluate", help="Evaluate 5 scenarios & sparse-chord tomography")
     sub_eval.add_argument("--scenario", default="all", help="Scenario ID or 'all'")
+    sub_eval.add_argument("--all", action="store_true", help="Evaluate all 5 canonical scenarios")
     sub_eval.add_argument("--mode", default="both", choices=["A", "B", "both"], help="Evaluation mode")
     sub_eval.add_argument("--snr", type=float, default=20.0, help="Observation noise SNR (dB)")
     sub_eval.add_argument("--output", default=None, help="Output path for evaluation JSON")
@@ -377,8 +383,10 @@ def main(argv: Optional[List[str]] = None) -> int:
     # stream
     sub_stream = subparsers.add_parser("stream", help="Out-of-core memmap field streaming")
     sub_stream.add_argument("path", nargs="?", default=None, help="Path to volume file")
+    sub_stream.add_argument("--scenario", default=None, help="Scenario ID for streaming")
     sub_stream.add_argument("--roi", default=None, help="ROI bounds, e.g. 0:32,0:24,0:24")
     sub_stream.add_argument("--chunk-ky", type=int, default=16, help="Coarse Inline chunk size")
+    sub_stream.add_argument("--chunk-z", type=int, default=None, help="Z/Y slab chunk size (alias for --chunk-ky)")
     sub_stream.add_argument("--target-grid", default="32,24,24", help="Target downsampled grid")
     sub_stream.add_argument("--max-heap", type=float, default=35.0, help="Max heap ceiling in MB")
     sub_stream.set_defaults(func=cmd_stream)

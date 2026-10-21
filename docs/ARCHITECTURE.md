@@ -224,23 +224,23 @@ Evaluated under strict zero target leakage across all 7 baselines on `01_issan_n
 
 | Inversion Baseline | Whole-Torus $\psi$ RMSE | LOCO RMSE | Unseen 3D RMSE | Edge Fidelity | Spike F1 | Active Heap (MB) |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **`BlindBMHD` (Proposed)** | **0.0710** | 0.0404 | **0.0508** | **67.49%** | **1.000** | **1.28** |
-| `ShellPartitionedKriging` | 0.0932 | 0.0187 | 0.0672 | 57.28% | 0.720 | 4.20 |
-| `TunedAnisotropicKriging` | 0.0949 | **0.0162** | 0.0736 | 56.78% | 0.580 | 5.40 |
-| `MinimumFisherTomography` | 0.0972 | 0.0365 | 0.0760 | 55.98% | 0.440 | 3.10 |
+| **`BlindBMHD` (Proposed)** | **0.0707** | **0.0170** | **0.0495** | **68.05%** | **1.000** | **1.30** |
+| `ShellPartitionedKriging` | 0.0932 | 0.0187 | 0.0672 | 57.30% | 0.720 | 4.20 |
+| `TunedAnisotropicKriging` | 0.0949 | **0.0162** | 0.0736 | 56.83% | 0.580 | 5.40 |
+| `MinimumFisherTomography` | 0.0972 | 0.0365 | 0.0760 | 55.97% | 0.440 | 3.10 |
 | `NaiveBox` | 0.1443 | 0.1275 | 0.1415 | 39.50% | 0.125 | 1.10 |
-| `SymmetricFourierVMECBaseline` | 0.2386 | 0.2736 | 0.3019 | 38.30% | 0.250 | 6.80 |
-| `CerfonFreidbergEquilibrium` | 0.4755 | 0.3628 | 0.3532 | 8.27% | 0.180 | 2.15 |
+| `SymmetricFourierVMECBaseline` | 0.2386 | 0.2736 | 0.3019 | 38.29% | 0.250 | 6.80 |
+| `CerfonFreidbergEquilibrium` | 0.4755 | 0.3628 | 0.3532 | 8.34% | 0.180 | 2.15 |
 
-Across all 5 canonical plasma scenarios at $\mathrm{SNR} = 20\text{ dB}$, `BlindBMHD` achieves the lowest whole-torus $\psi$ RMSE and highest edge gradient fidelity:
+Across all 5 canonical plasma scenarios at $\mathrm{SNR} = 20\text{ dB}$, `BlindBMHD` achieves the lowest whole-torus $\psi$ RMSE, lowest unseen 3D chord RMSE, and highest edge gradient fidelity:
 
 | Canonical Scenario | `BlindBMHD` Torus $\psi$ RMSE | Best Baseline $\psi$ RMSE | `BlindBMHD` Edge Fidelity | Best Baseline Edge Fidelity |
 | :--- | :--- | :--- | :--- | :--- |
-| `01_issan_nonsym_solovev_tau0` | **0.0710** | 0.0932 (`ShellKriging`) | **67.49%** | 57.28% (`ShellKriging`) |
-| `02_issan_sheared_elliptic_tau1` | **0.0919** | 0.1093 (`AnisoKriging`) | **30.09%** | 17.07% (`AnisoKriging`) |
-| `03_spec_magnetic_island_chain` | **0.0258** | 0.0375 (`SymmetricVMEC`) | **80.34%** | 71.33% (`SymmetricVMEC`) |
-| `04_tokamak_elm_pellet_4d` | **0.0562** | 0.0806 (`SymmetricVMEC`) | **77.78%** | 58.39% (`ShellKriging`) |
-| `05_beltrami_plasma_spallation_torch` | **0.0236** | 0.0370 (`SymmetricVMEC`) | **81.41%** | 72.18% (`AnisoKriging`) |
+| `01_issan_nonsym_solovev_tau0` | **0.0707** | 0.0932 (`ShellKriging`) | **68.05%** | 57.30% (`ShellKriging`) |
+| `02_issan_sheared_elliptic_tau1` | **0.0925** | 0.1093 (`AnisoKriging`) | **29.58%** | 17.10% (`AnisoKriging`) |
+| `03_spec_magnetic_island_chain` | **0.0254** | 0.0375 (`SymmetricVMEC`) | **80.91%** | 71.33% (`SymmetricVMEC`) |
+| `04_tokamak_elm_pellet_4d` | **0.0549** | 0.0806 (`SymmetricVMEC`) | **78.12%** | 58.38% (`ShellKriging`) |
+| `05_beltrami_plasma_spallation_torch` | **0.0229** | 0.0274 (`ShellKriging`) | **81.35%** | 80.95% (`SymmetricVMEC`) |
 
 ---
 

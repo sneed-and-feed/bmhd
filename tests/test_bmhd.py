@@ -579,3 +579,42 @@ def test_studio_v020_export_and_controls(tmp_path: Path):
     for rtab in ("profile", "morse", "split4d"):
         assert f'data-rtab="{rtab}"' in html_text
 
+    # Verify client-side LAS/DEV/SEGY parsers and live probe HUD functions exist
+    assert "function injectUserChord(" in html_text
+    assert "function updateProbeFromVoxel(" in html_text
+    assert "CANONICAL_TAU_BY_SCENARIO" in html_text
+
+
+def test_cli_commands_and_theorem_telemetry(capsys):
+    """
+    Verify all CLI subcommands documented in README.md (verify-theorems,
+    evaluate --all, stream --scenario --chunk-z) execute with exit code 0
+    and display accurate theorem telemetry.
+    """
+    from bmhd.cli import main as cli_main
+
+    rc_verify = cli_main(["verify-theorems"])
+    assert rc_verify == 0
+    captured = capsys.readouterr().out
+    assert "2.5000" in captured
+
+    rc_stream = cli_main(["stream", "--scenario", "01_issan_nonsym_solovev_tau0", "--chunk-z", "16"])
+    assert rc_stream == 0
+
+
+def test_mode_b_extreme_washout_and_morse_pinning():
+    """
+    Verify Mode B reconstruction under extreme 50% chord dropout (washout_fraction=0.5)
+    and verify 3-point discrete Morse chord pinning preserves accuracy across all metrics.
+    """
+    scen = build_all_scenarios(grid_shape=(32, 24, 24))["01_issan_nonsym_solovev_tau0"]
+    res = run_mode_b_evaluation(scen, snr_db=20.0, washout_fraction=0.5, chunk_z=16)
+    methods = res["methods"]
+
+    bmhd_m = methods["BlindBMHD"]
+    assert bmhd_m["whole_torus_psi_rmse"] < methods["TunedAnisotropicKriging"]["whole_torus_psi_rmse"]
+    assert bmhd_m["unseen_3d_chords_rmse"] < methods["TunedAnisotropicKriging"]["unseen_3d_chords_rmse"]
+    assert bmhd_m["bounded_edge_gradient_fidelity"] > methods["TunedAnisotropicKriging"]["bounded_edge_gradient_fidelity"]
+    assert bmhd_m["loco_rmse"] < 0.030
+    assert res["performance"]["heap_ceiling_passed"] is True
+

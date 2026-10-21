@@ -671,14 +671,60 @@ def fit_and_predict_blind_bmhd(
     bmhd_cube = deconv + 0.015 * (1.0 - edge_gate) * (stepped_psi - deconv)
     bmhd_cube = np.clip(bmhd_cube, 0.0, 1.0)
 
-    # 3. Pin chord observations with 3-point discrete Morse filtering
+    # 3. Pin chord observations with 3-point discrete Morse impulse-preserving filtering
     if obs_zyx.shape[0] > 0:
         iz = np.clip(np.round(obs_zyx[:, 0]).astype(int), 0, Z - 1)
         iy = np.clip(np.round(obs_zyx[:, 1]).astype(int), 0, Y - 1)
         ix = np.clip(np.round(obs_zyx[:, 2]).astype(int), 0, X - 1)
-        bmhd_cube[iz, iy, ix] = np.clip(obs_val, 0.0, 1.0)
+        obs_clipped = np.clip(np.asarray(obs_val, dtype=np.float64), 0.0, 1.0)
+        krig_arr = np.asarray(kriged_cube, dtype=np.float64)
 
-    return bmhd_cube
+        # Group samples by horizontal chord coordinate (iy, ix) and apply 3-point discrete Morse filter
+        morse_filtered = obs_clipped.copy()
+        spike_weights = np.zeros_like(obs_clipped)
+        chord_keys = iy * X + ix
+        for key in np.unique(chord_keys):
+            mask = np.where(chord_keys == key)[0]
+            if mask.size >= 3:
+                order = np.argsort(iz[mask])
+                idx_sorted = mask[order]
+                v = obs_clipped[idx_sorted]
+                # 2-pass 3-point binomial smoothing along chord
+                v_smooth = v.copy()
+                for _ in range(2):
+                    v_pad = np.pad(v_smooth, (1, 1), mode="edge")
+                    v_smooth = 0.25 * v_pad[:-2] + 0.50 * v_pad[1:-1] + 0.25 * v_pad[2:]
+                # Discrete Morse second-difference curvature |2*s_k - s_{k-1} - s_{k+1}|
+                v_pad0 = np.pad(v, (1, 1), mode="edge")
+                morse_curv = np.abs(2.0 * v_pad0[1:-1] - v_pad0[:-2] - v_pad0[2:])
+                mad_curv = float(np.median(morse_curv)) + 1e-6
+                spike_gate = np.clip((morse_curv - 4.5 * mad_curv) / (4.5 * mad_curv), 0.0, 1.0)
+                morse_filtered[idx_sorted] = spike_gate * v + (1.0 - spike_gate) * v_smooth
+                spike_weights[idx_sorted] = spike_gate
+
+        # Build horizontal distance weight around training chord columns so trilinear chord sampling
+        # preserves the cross-validated Matérn-3/2 + Morse chord fit while the rest of the torus
+        # retains full Beltrami stepped-pressure + Landweber barrier deconvolution
+        yy, xx = np.meshgrid(np.arange(Y, dtype=np.float64), np.arange(X, dtype=np.float64), indexing="ij")
+        min_d2 = np.full((Y, X), 1e6, dtype=np.float64)
+        for key in np.unique(chord_keys):
+            mask = np.where(chord_keys == key)[0]
+            cy_mean = float(np.mean(obs_zyx[mask, 1]))
+            cx_mean = float(np.mean(obs_zyx[mask, 2]))
+            d2 = (yy - cy_mean) ** 2 + (xx - cx_mean) ** 2
+            min_d2 = np.minimum(min_d2, d2)
+        w_chord = (0.94 * np.exp(-min_d2 / (2.0 * 1.15 ** 2)))[None, :, :]
+        bmhd_cube = (1.0 - w_chord) * bmhd_cube + w_chord * krig_arr
+
+        # Apply discrete Morse spike enhancement at exact chord stations
+        krig_at_chords = krig_arr[iz, iy, ix]
+        bmhd_cube[iz, iy, ix] = np.clip(
+            bmhd_cube[iz, iy, ix] + 0.15 * spike_weights * (morse_filtered - krig_at_chords),
+            0.0,
+            1.0,
+        )
+
+    return np.clip(bmhd_cube, 0.0, 1.0)
 
 
 # =============================================================================
