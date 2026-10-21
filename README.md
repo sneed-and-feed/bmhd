@@ -9,6 +9,8 @@
 
 Repository: [https://github.com/sneed-and-feed/bmhd](https://github.com/sneed-and-feed/bmhd)
 
+![BMHD Portable Studio Workstation](results/studio_screenshot.png)
+
 ---
 
 ## 1. Executive Summary & Hardware Invariants
@@ -278,7 +280,9 @@ Evaluated under strict zero target leakage across all 7 baselines on `01_issan_n
 
 ## 10. Portable WebGL Workstation (`results/bmhd_portable_studio.html`)
 
-The package includes a zero-install, single-file interactive 3D WebGL/Canvas workstation:
+The package includes a zero-install, single-file interactive 3D WebGL/Canvas workstation (esults/bmhd_portable_studio.html):
+
+![BMHD Portable Studio Workstation](results/studio_screenshot.png)
 
 - **Interactive 3D Viewport:** Real-time chair-cut torus viewer, dynamic octant clipping, and 3D laser-chord tubes with locked Beltrami spikes (yellow rings) and rejected glare washouts (purple squares).
 - **Real-Time Symmetry Modulation:** Dynamic reactive modulation from `tau0` (odd-in-z vertical parity drift) and `tau1` (phase shear) sliders, with a zero snap detent (`Snap tau=0.00`).
