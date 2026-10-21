@@ -136,7 +136,7 @@ V(\delta) = \frac{\pi^2 a b \delta}{\Omega}
 **Hamada Line Integrals:**
 
 ```math
-\oint \frac{\mathrm{d}\ell}{|\mathbf{B}|} = \frac{2\pi}{\Omega} \quad (\text{Family 1}), \qquad \oint \frac{\mathrm{d}\ell}{|\mathbf{B}|} = \frac{4}{\lambda}\mathbf{K}(k) \quad (\text{Family 2})
+\oint \frac{\mathrm{d}\ell}{\lvert\mathbf{B}\rvert} = \frac{2\pi}{\Omega} \quad (\text{Family 1}), \qquad \oint \frac{\mathrm{d}\ell}{\lvert\mathbf{B}\rvert} = \frac{4}{\lambda}\mathbf{K}(k) \quad (\text{Family 2})
 ```
 
 where $\mathbf{K}(k)$ is the complete elliptic integral of the first kind.
@@ -185,12 +185,12 @@ The runtime engine in `bmhd/engine.py` audits all formal theorems via `BMHDModel
 
 | Theorem | Lean Declaration | Invariant Property | Verified Residual |
 | :--- | :--- | :--- | :--- |
-| **Thm 2.1 & 2.2** | `skew_triad_swap_neg` | Skew-symmetry & odd parity tie-break | `0.00e+0` residual |
-| **Thm 2.3** | `darksnail_readout_energy_conservation` | Pointwise tangent orthogonality | `4.12e-9` ($\le 1.0\times 10^{-8}$) |
-| **Thm 2.4** | `darksnail_step0_system1_homotopy` | Exact reduction to symmetric baseline | `0.00e+0` residual |
-| **Thm 2.5** | `rope2d_medoid_relative_invariance` | 3-point discrete Morse spike recovery | `1.0000` (100.0% clean) |
-| **Thm 2.6** | `darksnail_multistep_spherical_invariance` | Multi-step radial flux escape ($K=16$) | `0.000e+00` drift |
-| **Thm 2.7** | `so6_tensor_rotor_conservation` | $\mathrm{SO}(6)$ Kelvin-Mandel tensor conservation | `3.15e-14` ($\le 1.14\times 10^{-13}$) |
+| Thm 2.1 & 2.2 | `skew_triad_swap_neg` | Skew-symmetry & odd parity tie-break | `0.00e+0` residual |
+| Thm 2.3 | `darksnail_readout_energy_conservation` | Pointwise tangent orthogonality | `4.12e-9` $(\le 1.0\times 10^{-8})$ |
+| Thm 2.4 | `darksnail_step0_system1_homotopy` | Exact reduction to symmetric baseline | `0.00e+0` residual |
+| Thm 2.5 | `rope2d_medoid_relative_invariance` | 3-point discrete Morse spike recovery | `1.0000` (100.0% clean) |
+| Thm 2.6 | `darksnail_multistep_spherical_invariance` | Multi-step radial flux escape $(K=16)$ | `0.000e+00` drift |
+| Thm 2.7 | `so6_tensor_rotor_conservation` | $\mathrm{SO}(6)$ Kelvin-Mandel tensor conservation | `3.15e-14` $(\le 1.14\times 10^{-13})$ |
 
 ---
 
@@ -198,9 +198,9 @@ The runtime engine in `bmhd/engine.py` audits all formal theorems via `BMHDModel
 
 The deck evaluates on $(Z=32, Y=24, X=24)$ grids ($18,432$ voxels) with 8 synthetic 1D diagnostic sightlines per scenario (4 vertical for Leave-One-Chord-Out cross-validation, 4 angled/tangential for unseen 3D holdouts):
 
-1. **`01_issan_nonsym_solovev_tau0`:** Stretched Solov'ev equilibrium with broken stellarator symmetry ($\tau_0 = 0.38$), sharp H-mode pedestal pressure barrier, and sub-cm ELM current filament spikes.
-2. **`02_issan_sheared_elliptic_tau1`:** Non-stellarator-symmetric elliptic equilibrium with non-uniform sheared transform $\iota(\psi)$ ($\tau_1 = 0.42$) and Internal Transport Barrier (ITB) step jump across $\psi = 0.50$.
-3. **`03_spec_magnetic_island_chain`:** Multi-shell relaxed Beltrami plasma ($\nabla \times \mathbf{B} = \mu_i \mathbf{B}$) with a resonant $m/n = 2/1$ magnetic island chain and `beta_1` cavity core flattened-pressure pockets.
+1. **`01_issan_nonsym_solovev_tau0`:** Stretched Solov'ev equilibrium with broken stellarator symmetry $(\tau_0 = 0.38)$, sharp H-mode pedestal pressure barrier, and sub-cm ELM current filament spikes.
+2. **`02_issan_sheared_elliptic_tau1`:** Non-stellarator-symmetric elliptic equilibrium with non-uniform sheared transform $(\iota(\psi), \; \tau_1 = 0.42)$ and Internal Transport Barrier (ITB) step jump across $\psi = 0.50$.
+3. **`03_spec_magnetic_island_chain`:** Multi-shell relaxed Beltrami plasma $(\nabla \times \mathbf{B} = \mu_i \mathbf{B})$ with a resonant $m/n = 2/1$ magnetic island chain and `beta_1` cavity core flattened-pressure pockets.
 4. **`04_tokamak_elm_pellet_4d`:** 4D time-resolved tokamak H-mode pedestal with SOL X-point separatrix, sub-cm ELM filaments, 10% divertor Bremsstrahlung glare washout, and cryogenic pellet front vs AC coil ripple.
 5. **`05_beltrami_plasma_spallation_torch`:** Magnetically nozzle-steered Beltrami plasma vortex impinging on anisotropic crystalline granite with a water-filled fracture stringer, coupling magnetic nozzle flux with $\mathrm{SO}(6)$ thermal spallation stress.
 
@@ -210,7 +210,7 @@ The deck evaluates on $(Z=32, Y=24, X=24)$ grids ($18,432$ voxels) with 8 synthe
 
 ### 8.1 Mode A (Analytical Forward & Invariant Verification)
 
-| Scenario ID | Skew Residual | Orthogonality | Homotopy Error | Radial Drift ($K=16$) | Peak Heap |
+| Scenario ID | Skew Residual | Orthogonality | Homotopy Error | Radial Drift $(K=16)$ | Peak Heap |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | `01_issan_nonsym_solovev_tau0` | `0.00e+0` | `4.12e-9` | `0.00e+0` | `0.000e+00` | 1.48 MB |
 | `02_issan_sheared_elliptic_tau1` | `0.00e+0` | `3.85e-9` | `0.00e+0` | `0.000e+00` | 1.52 MB |
