@@ -1190,6 +1190,14 @@ class TheoremAuditResult(dict):
         raise KeyError(key)
 
     @property
+    def all_passed(self) -> bool:
+        return self.all_theorems_verified
+
+    @property
+    def passed(self) -> bool:
+        return self.all_theorems_verified
+
+    @property
     def all_theorems_verified(self) -> bool:
         return all(
             v.get("passed", False)
