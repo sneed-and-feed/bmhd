@@ -15,11 +15,11 @@ Repository: [https://github.com/sneed-and-feed/bmhd](https://github.com/sneed-an
 
 ## 1. Executive Summary & Hardware Invariants
 
-The `bmhd` package (`v0.1.0`, CC0-1.0 Public Domain) provides exact closed-form 3D non-axisymmetric, non-stellarator-symmetric ideal magnetohydrodynamic (MHD) equilibria, multi-region stepped-pressure Beltrami shell relaxation (MRxMHD / SPEC), and sparse diagnostic laser-chord tomography powered by the machine-checked invariants of `formalization/OcclusionTriad.lean`.
+The `bmhd` package (`v0.2.0`, CC0-1.0 Public Domain) provides exact closed-form 3D non-axisymmetric, non-stellarator-symmetric ideal magnetohydrodynamic (MHD) equilibria, multi-region stepped-pressure Beltrami shell relaxation (MRxMHD / SPEC), and an industry-standard 3D CAD/CAE toroidal flux-surface and sparse diagnostic laser-chord workstation powered by the machine-checked invariants of `formalization/OcclusionTriad.lean`.
 
 It satisfies strict real-time control loop SWaP-C constraints:
 
-- **Real-Time SWaP-C Envelope:** Strict `< 35 MB` peak memory ceiling (`~1.30 to 1.60 MB` active heap) evaluated in $Z$ slabs (`chunk_z = 16`). Field volumes are streamed out-of-core via inline `np.memmap` windowing to fit in a 4 MB L2/L3 SRAM cache.
+- **Real-Time SWaP-C Envelope:** Strict `< 35 MB` peak memory ceiling (`~1.28 MB` active heap, `10.74 MB` peak heap) evaluated in $Z$ slabs (`chunk_z = 16`). Field volumes are streamed out-of-core via inline `np.memmap` windowing to fit in a 4 MB L2/L3 SRAM cache.
 - **Machine-Checked Invariants:** Direct runtime enforcement of Theorems 2.1 to 2.7 from `formalization/OcclusionTriad.lean`:
   - Theorems 2.1 and 2.2: Exact skew-symmetry with `0.00e+0` residual and deterministic odd-parity vertical drift tie-breaking.
   - Theorems 2.3 and 2.6: Pointwise tangent orthogonality with float32 residual $\le 1.0\times 10^{-8}$ and zero radial flux escape across multi-step Poincare tracking.
@@ -264,31 +264,46 @@ The deck evaluates on $(Z=32, Y=24, X=24)$ grids ($18,432$ voxels) with 8 synthe
 
 ### 9.2 Mode B (Blind Sparse-Chord Tomography Reconstruction at SNR = 20 dB)
 
-Evaluated under strict zero target leakage across all 7 baselines on `01_issan_nonsym_solovev_tau0`:
+Evaluated under strict zero target leakage across all 7 baselines on `01_issan_nonsym_solovev_tau0` (reproducible via `python scripts/evaluate_bmhd.py`):
 
-| Inversion Baseline | Flux $\psi$ RMSE | Field $B$ RMSE (T) | LOCO RMSE | Unseen 3D RMSE | Edge Fidelity | Spike F1 | Heap (MB) |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **`BlindBMHD` (Proposed)** | **0.0142** | **0.0285** | **0.0182** | **0.0245** | **96.8%** | **1.000** | **1.48** |
-| `ShellPartitionedKriging` | 0.0384 | 0.0712 | 0.0410 | 0.0620 | 84.5% | 0.720 | 4.80 |
-| `TunedAnisotropicKriging` | 0.0612 | 0.1140 | 0.0685 | 0.0980 | 68.2% | 0.580 | 6.20 |
-| `MinimumFisherTomography` | 0.0725 | 0.1290 | 0.0792 | 0.1150 | 59.4% | 0.440 | 3.10 |
-| `CerfonFreidbergEquilibrium` | 0.0890 | 0.1580 | 0.0945 | 0.1420 | 52.0% | 0.310 | 2.20 |
-| `SymmetricFourierVMECBaseline` | 0.1240 | 0.2310 | 0.1380 | 0.2180 | 39.8% | 0.125 | 8.50 |
-| `NaiveBox` | 0.1680 | 0.3120 | 0.1890 | 0.2850 | 26.5% | 0.125 | 1.10 |
+| Inversion Baseline | Whole-Torus $\psi$ RMSE | LOCO RMSE | Unseen 3D RMSE | Edge Fidelity | Spike F1 | Active Heap (MB) |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **`BlindBMHD` (Proposed)** | **0.0710** | 0.0404 | **0.0508** | **67.49%** | **1.000** | **1.28** |
+| `ShellPartitionedKriging` | 0.0932 | 0.0187 | 0.0672 | 57.28% | 0.720 | 4.20 |
+| `TunedAnisotropicKriging` | 0.0949 | **0.0162** | 0.0736 | 56.78% | 0.580 | 5.40 |
+| `MinimumFisherTomography` | 0.0972 | 0.0365 | 0.0760 | 55.98% | 0.440 | 3.10 |
+| `NaiveBox` | 0.1443 | 0.1275 | 0.1415 | 39.50% | 0.125 | 1.10 |
+| `SymmetricFourierVMECBaseline` | 0.2386 | 0.2736 | 0.3019 | 38.30% | 0.250 | 6.80 |
+| `CerfonFreidbergEquilibrium` | 0.4755 | 0.3628 | 0.3532 | 8.27% | 0.180 | 2.15 |
+
+Across all 5 canonical plasma scenarios at $\mathrm{SNR} = 20\text{ dB}$, `BlindBMHD` achieves the lowest whole-torus $\psi$ RMSE and highest edge gradient fidelity:
+
+| Canonical Scenario | `BlindBMHD` Torus $\psi$ RMSE | Best Baseline $\psi$ RMSE | `BlindBMHD` Edge Fidelity | Best Baseline Edge Fidelity |
+| :--- | :--- | :--- | :--- | :--- |
+| `01_issan_nonsym_solovev_tau0` | **0.0710** | 0.0932 (`ShellKriging`) | **67.49%** | 57.28% (`ShellKriging`) |
+| `02_issan_sheared_elliptic_tau1` | **0.0919** | 0.1093 (`AnisoKriging`) | **30.09%** | 17.07% (`AnisoKriging`) |
+| `03_spec_magnetic_island_chain` | **0.0258** | 0.0375 (`SymmetricVMEC`) | **80.34%** | 71.33% (`SymmetricVMEC`) |
+| `04_tokamak_elm_pellet_4d` | **0.0562** | 0.0806 (`SymmetricVMEC`) | **77.78%** | 58.39% (`ShellKriging`) |
+| `05_beltrami_plasma_spallation_torch` | **0.0236** | 0.0370 (`SymmetricVMEC`) | **81.41%** | 72.18% (`AnisoKriging`) |
 
 ---
 
-## 10. Portable WebGL Workstation (`results/bmhd_portable_studio.html`)
+## 10. Portable 3D CAD/CAE WebGL Workstation (`results/bmhd_portable_studio.html`)
 
-The package includes a zero-install, single-file interactive 3D WebGL/Canvas workstation (`results/bmhd_portable_studio.html`):
+The package includes a zero-install, single-file interactive 3D WebGL/Canvas CAE workstation (`results/bmhd_portable_studio.html`, `v0.2.0`):
 
-![BMHD Portable Studio — SPEC Beltrami Shells & Current Density |J|](results/studio_screenshot_spec_islands.png)
+![BMHD Portable Studio — SPEC Beltrami Shells & Field Strength |B|](results/studio_screenshot_spec_islands.png)
 
-- **Interactive 3D Viewport:** Real-time chair-cut torus viewer, dynamic octant clipping, and 3D laser-chord tubes with locked Beltrami spikes (yellow rings) and rejected glare washouts (purple squares).
-- **Real-Time Symmetry Modulation:** Dynamic reactive modulation from `tau0` (odd-in-z vertical parity drift) and `tau1` (phase shear) sliders, with a zero snap detent (`Snap tau=0.00`).
-- **Poincare Puncture Inspector:** Real-time cross-section puncture plots with KAM invariant surfaces, island O-points, and X-points.
-- **Diagnostic Chord Profiler:** Real-time chord trajectory profiles with 100% discrete Morse spike recovery.
-- **Client-Side File Dropzone:** Drag-and-drop parser for `.las` (CWLS LAS 2.0), `.dev` (directional survey), and `.segy` (seismic/field-cube) files.
+- **4 Interactive 3D Render Modes:** Switch seamlessly between `Hybrid Torus + Slicer` (stepped-cutaway 3D nested toroidal flux shells $\psi \in \{0.16, 0.52, 0.90\}$ with chair-cut poloidal cross-section end-caps and elliptical-clipped slicer planes), `3D Flux Shells`, `3D Voxel Slicer`, and `B-Lines & Coils` (3D helical magnetic field streamlines with directional arrowheads and 3D modular stellarator coils).
+- **Industry-Standard 3D Camera & Viewport Controls:**
+  - **6 CAD Camera Presets:** `ISO` (Key `1`), `TOP Z+` (Key `2`), `FRONT` $\phi=0^\circ$ (Key `3`), `SIDE` $\phi=90^\circ$ (Key `4`), `THROAT` cutaway zoom (Key `5`), and `CHORD` sightline alignment (Key `6`).
+  - **Projection & Orbit Controls:** Perspective vs. Orthographic (`PERSP`/`ORTHO`, Key `P`) toggle, 60 FPS turntable `ORBIT` (Key `O`), zoom step/fit buttons, toroidal cutaway wedge angle slider ($160^\circ$ to $340^\circ$), and 6 scientific colormaps (`Turbo`, `Plasma`, `Inferno`, `Viridis`, `Cyan-Gold`, `Coolwarm`).
+  - **3D Orientation Triad Gizmo & Colorbar Legend:** Interactive bottom-left $(X, Y, Z)$ orientation gizmo with click-to-snap axis alignment, continuous vertical colorbar with physical units, live 3D hover voxel/cylindrical coordinate probe HUD, and 1-click `PNG` snapshot and `JSON` telemetry export.
+- **Real-Time Symmetry Modulation & Live Analytical Invariants:** Dynamic reactive modulation from `tau0` (odd-in-z vertical parity drift) and `tau1` (helical phase shear) sliders with zero snap detent (`Snap tau=0.00`), updating the live `arXiv:2610.07304v1` invariant card ($V(\delta)$, $\beta_V$, $\sqrt{g}$, and Hamada integral).
+- **Multi-Tab 2D Diagnostics:**
+  - **Bottom-Left Inspector:** `Poincare (1:1)` (strict 1:1 physical aspect-ratio puncture plots across $\phi \in \{0^\circ, 90^\circ, 180^\circ, 270^\circ\}$ with scenario-specific KAM surfaces, $m/n=2/1$ magnetic islands, O-points, and X-points), `Poloidal psi(R,Z)` contour heatmap, and `Radial p(psi) & iota` equilibrium profiles.
+  - **Bottom-Right Inspector:** `Chord Profile` (BMHD vs. Symmetric-VMEC along any of the 8 optical sightlines), `Morse Spikes` (Theorem 2.5 discrete Morse salience $|2s_k - s_{k-1} - s_{k+1}|$ vs. rejected Bremsstrahlung glare plateaus), and `4D H_clock/nope` orthogonal temporal split.
+- **Client-Side File Dropzone:** Drag-and-drop `ArrayBuffer` parser for `.las` (CWLS LAS 2.0), `.dev` (directional survey), and `.segy` (seismic/field-cube) files.
 
 ---
 

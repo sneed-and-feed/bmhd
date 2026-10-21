@@ -1,5 +1,5 @@
 """
-tests/test_bmhd.py: Comprehensive Verification Suite for BMHD v0.1.0.
+tests/test_bmhd.py: Comprehensive Verification Suite for BMHD v0.2.0.
 
 Verifies:
 1. test_theorems_mode_a: Machine-checked proof of Theorems 2.1–2.7 with exact 0.00e+0 residuals.
@@ -11,6 +11,8 @@ Verifies:
 7. test_slab_bit_identity: Z-slab chunk sizes (8, 16, 32) yield bit-identical predictions (< 1e-6).
 8. test_heap_memory_ceiling: Peak heap memory strictly < 35 MB under tracemalloc.
 9. test_mode_b_blind_reconstruction: Blind sparse-chord reconstruction at SNR = 20 dB across 7 methods.
+10. test_mode_b_blind_bmhd_dominance: BlindBMHD outperforms all 6 competing baselines on Whole-Torus RMSE & Edge Fidelity.
+11. test_studio_v020_export_and_controls: Portable HTML5/WebGL Studio v0.2.0 3D view controls, multi-tab diagnostics, and zero-network isolation.
 """
 
 from __future__ import annotations
@@ -476,5 +478,104 @@ def test_mode_b_blind_reconstruction():
 
     # BlindBMHD should achieve bounded unseen 3D chords RMSE and whole torus RMSE
     bmhd_metrics = methods["BlindBMHD"]
-    assert bmhd_metrics["unseen_3d_chords_rmse"] < 0.45
-    assert bmhd_metrics["whole_torus_psi_rmse"] < 0.45
+    assert bmhd_metrics["unseen_3d_chords_rmse"] < 0.15
+    assert bmhd_metrics["whole_torus_psi_rmse"] < 0.15
+    assert bmhd_metrics["bounded_edge_gradient_fidelity"] > 0.50
+
+
+# =============================================================================
+# 10. Mode B: BlindBMHD Dominance Over Competing Tomography Baselines
+# =============================================================================
+
+def test_mode_b_blind_bmhd_dominance():
+    """
+    Assert that BlindBMHD achieves the lowest whole_torus_psi_rmse and highest
+    bounded_edge_gradient_fidelity across all 7 Mode B methods on Scenario 01.
+    """
+    scenarios = build_all_scenarios()
+    sc = scenarios["01_issan_nonsym_solovev_tau0"]
+    res_b = run_mode_b_evaluation(sc, snr_db=20.0, chunk_z=16)
+    methods = res_b["methods"]
+
+    bmhd_psi_rmse = methods["BlindBMHD"]["whole_torus_psi_rmse"]
+    bmhd_edge_fid = methods["BlindBMHD"]["bounded_edge_gradient_fidelity"]
+
+    for name, m in methods.items():
+        if name == "BlindBMHD":
+            continue
+        assert bmhd_psi_rmse < m["whole_torus_psi_rmse"], (
+            f"BlindBMHD psi RMSE ({bmhd_psi_rmse:.4f}) not lower than {name} ({m['whole_torus_psi_rmse']:.4f})"
+        )
+        assert bmhd_edge_fid > m["bounded_edge_gradient_fidelity"], (
+            f"BlindBMHD edge fidelity ({bmhd_edge_fid:.4f}) not higher than {name} ({m['bounded_edge_gradient_fidelity']:.4f})"
+        )
+
+
+# =============================================================================
+# 11. BMHD Studio v0.2.0: 3D View Controls, Multi-Tab Diagnostics & Offline HTML
+# =============================================================================
+
+def test_studio_v020_export_and_controls(tmp_path: Path):
+    """
+    Verify BMHD Studio v0.2.0 serialization, 3D view controls, camera presets,
+    multi-tab 2D diagnostics, and zero-external-network single-file HTML export.
+    """
+    import bmhd
+    from bmhd.studio import (
+        STUDIO_VERSION,
+        serialize_evaluation_payload,
+        export_portable_html_studio,
+    )
+
+    assert bmhd.__version__ == "0.2.0"
+    assert STUDIO_VERSION == "0.2.0"
+
+    payload = serialize_evaluation_payload("03_spec_magnetic_island_chain")
+    assert payload["scenario_id"] == "03_spec_magnetic_island_chain"
+    assert payload["grid_shape"] == [32, 24, 24]
+    assert len(payload["chords"]) == 8
+    assert "poincare" in payload
+    for sec in ("phi_0", "phi_90", "phi_180", "phi_270"):
+        assert sec in payload["poincare"]
+        assert len(payload["poincare"][sec]["surfaces"]) > 0
+        assert len(payload["poincare"][sec]["island_o_points"]) >= 2
+        assert len(payload["poincare"][sec]["island_x_points"]) >= 2
+
+    assert "radial_profiles" in payload
+    for k in ("rho", "psi", "p_kpa", "iota", "q", "j_curl"):
+        assert k in payload["radial_profiles"]
+        assert len(payload["radial_profiles"][k]) == 25
+
+    assert "invariants" in payload
+    for k in ("enclosed_volume_m3", "beta_v_pct", "jacobian_det", "hamada_integral"):
+        assert k in payload["invariants"]
+
+    assert len(payload["baselines"]) == 7
+
+    html_out = tmp_path / "test_studio.html"
+    exported_path = export_portable_html_studio(str(html_out), scenarios={"03_spec_magnetic_island_chain": payload})
+    assert Path(exported_path).exists()
+    html_text = html_out.read_text(encoding="utf-8")
+
+    # Verify zero external HTTP/HTTPS script or stylesheet calls
+    assert "https://unpkg.com" not in html_text
+    assert "https://cdnjs" not in html_text
+    assert "http://" not in html_text
+
+    # Verify all 4 3D render modes exist
+    for rmode in ("hybrid_torus", "flux_shells", "voxel_slicer", "field_lines"):
+        assert f'data-rmode="{rmode}"' in html_text
+
+    # Verify all 6 CAD camera presets and projection/orbit controls exist
+    for cam_id in ("camBtn_iso", "camBtn_top", "camBtn_front", "camBtn_side", "camBtn_throat", "camBtn_chord"):
+        assert cam_id in html_text
+    assert "btnProjMode" in html_text
+    assert "btnAutoOrbit" in html_text
+    assert "probeHud" in html_text
+
+    # Verify all 6 multi-tab 2D diagnostic views exist
+    for ltab in ("poincare", "poloidal", "radial"):
+        assert f'data-ltab="{ltab}"' in html_text
+    for rtab in ("profile", "morse", "split4d"):
+        assert f'data-rtab="{rtab}"' in html_text
+

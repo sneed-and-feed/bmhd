@@ -50,7 +50,11 @@ jobs:
 
       - name: Run Pytest Test Suite
         run: |
-          python -m pytest tests/test_bmhd.py -v
+          python -m pytest tests/ -v
+
+      - name: Run Challenger Stress & Ablation Suite
+        run: |
+          python scripts/run_challenger_stress_suite.py
 
       - name: Run Full Dual-Mode Benchmark Suite
         run: |

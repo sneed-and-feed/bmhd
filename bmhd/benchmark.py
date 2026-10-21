@@ -197,6 +197,8 @@ def compute_edge_gradient_fidelity(
     diff_p = np.abs(p[:, :, 1:] - p[:, :, :-1])
 
     thresh = float(np.percentile(diff_x, percentile))
+    if thresh <= 1e-6 and np.any(diff_x > 1e-6):
+        thresh = float(np.percentile(diff_x[diff_x > 1e-6], 50.0))
     edges = diff_x >= thresh
     if not np.any(edges):
         return 1.0
@@ -306,6 +308,7 @@ def fit_and_predict_anisotropic_matern_kriging(
     block_id_cube: Optional[np.ndarray] = None,
     penalty: float = 0.0,
     chunk_z: int = 16,
+    prior_cube: Optional[np.ndarray] = None,
 ) -> Tuple[np.ndarray, Dict[str, float]]:
     """
     Baseline 2: 3D Ordinary/Universal Kriging with anisotropic Matérn-3/2 covariance.
@@ -316,26 +319,50 @@ def fit_and_predict_anisotropic_matern_kriging(
     if obs_zyx.shape[0] == 0:
         return np.zeros((Z, Y, X), dtype=np.float64), {"ell_z": 4.5, "ell_xy": 12.0, "nugget": 0.01}
 
-    # 1. Fit linear vertical trend mu(z) = a + b * z on training chord observations
-    z_obs = obs_zyx[:, 0]
-    z_mean = float(np.mean(z_obs))
-    v_mean = float(np.mean(obs_val))
-    z_var = float(np.sum((z_obs - z_mean) ** 2))
-    if z_var < 1e-8:
+    # Prepare prior trend if blind tomography prior is provided, else linear vertical trend
+    has_prior = prior_cube is not None and prior_cube.shape == (Z, Y, X)
+    if has_prior:
+        # Denoise blind prior slightly before residual Kriging
+        smooth_prior = scipy.ndimage.gaussian_filter(np.asarray(prior_cube, dtype=np.float64), sigma=0.75, mode="nearest")
+        obs_coords_clipped = np.vstack([
+            np.clip(obs_zyx[:, 0], 0.0, float(Z - 1)),
+            np.clip(obs_zyx[:, 1], 0.0, float(Y - 1)),
+            np.clip(obs_zyx[:, 2], 0.0, float(X - 1)),
+        ])
+        prior_at_obs = scipy.ndimage.map_coordinates(smooth_prior, obs_coords_clipped, order=1, mode="nearest")
         slope_z = 0.0
-        intercept_z = v_mean
+        intercept_z = 0.0
     else:
-        slope_z = float(np.sum((z_obs - z_mean) * (obs_val - v_mean)) / z_var)
-        intercept_z = v_mean - slope_z * z_mean
+        smooth_prior = None
+        z_obs = obs_zyx[:, 0]
+        z_mean = float(np.mean(z_obs))
+        v_mean = float(np.mean(obs_val))
+        z_var = float(np.sum((z_obs - z_mean) ** 2))
+        if z_var < 1e-8:
+            slope_z = 0.0
+            intercept_z = v_mean
+        else:
+            slope_z = float(np.sum((z_obs - z_mean) * (obs_val - v_mean)) / z_var)
+            intercept_z = v_mean - slope_z * z_mean
+        prior_at_obs = intercept_z + slope_z * obs_zyx[:, 0]
 
     # 2. Inner LOCO-CV hyperparameter grid search on training chords
-    candidate_grid = [
-        (3.0, 8.0, 1e-2),
-        (4.5, 12.0, 1e-2),
-        (6.0, 16.0, 2e-2),
-        (8.0, 22.0, 5e-2),
-    ]
-    best_params = (4.5, 12.0, 1e-2)
+    if has_prior:
+        candidate_grid = [
+            (2.0, 2.5, 2e-2),
+            (3.0, 3.5, 2e-2),
+            (4.0, 5.0, 3e-2),
+            (5.0, 6.5, 5e-2),
+        ]
+        best_params = (3.0, 3.5, 2e-2)
+    else:
+        candidate_grid = [
+            (3.0, 8.0, 1e-2),
+            (4.5, 12.0, 1e-2),
+            (6.0, 16.0, 2e-2),
+            (8.0, 22.0, 5e-2),
+        ]
+        best_params = (4.5, 12.0, 1e-2)
     best_cv_rmse = float("inf")
 
     if (
@@ -352,7 +379,16 @@ def fit_and_predict_anisotropic_matern_kriging(
                 )
                 if sub_zyx.shape[0] < 5:
                     continue
-                sub_res = sub_v - (intercept_z + slope_z * sub_zyx[:, 0])
+                if has_prior and smooth_prior is not None:
+                    sub_c = np.vstack([
+                        np.clip(sub_zyx[:, 0], 0.0, float(Z - 1)),
+                        np.clip(sub_zyx[:, 1], 0.0, float(Y - 1)),
+                        np.clip(sub_zyx[:, 2], 0.0, float(X - 1)),
+                    ])
+                    sub_trend = scipy.ndimage.map_coordinates(smooth_prior, sub_c, order=1, mode="nearest")
+                else:
+                    sub_trend = intercept_z + slope_z * sub_zyx[:, 0]
+                sub_res = sub_v - sub_trend
                 dz = (sub_zyx[:, 0:1] - sub_zyx[:, 0:1].T) / ell_z
                 dy = (sub_zyx[:, 1:2] - sub_zyx[:, 1:2].T) / ell_xy
                 dx = (sub_zyx[:, 2:3] - sub_zyx[:, 2:3].T) / ell_xy
@@ -376,7 +412,16 @@ def fit_and_predict_anisotropic_matern_kriging(
                 dx_v = (val_zyx[:, 2:3] - sub_zyx[:, 2:3].T) / ell_xy
                 r_v = np.sqrt(dz_v * dz_v + dy_v * dy_v + dx_v * dx_v + 1e-12)
                 k_star = (1.0 + math.sqrt(3.0) * r_v) * np.exp(-math.sqrt(3.0) * r_v)
-                val_pred = (intercept_z + slope_z * val_zyx[:, 0]) + k_star @ alpha_sub
+                if has_prior and smooth_prior is not None:
+                    val_c = np.vstack([
+                        np.clip(val_zyx[:, 0], 0.0, float(Z - 1)),
+                        np.clip(val_zyx[:, 1], 0.0, float(Y - 1)),
+                        np.clip(val_zyx[:, 2], 0.0, float(X - 1)),
+                    ])
+                    val_trend = scipy.ndimage.map_coordinates(smooth_prior, val_c, order=1, mode="nearest")
+                else:
+                    val_trend = intercept_z + slope_z * val_zyx[:, 0]
+                val_pred = val_trend + k_star @ alpha_sub
                 fold_sq.append(float(np.mean((val_pred - val_true) ** 2)))
 
             if fold_sq:
@@ -388,7 +433,7 @@ def fit_and_predict_anisotropic_matern_kriging(
     ell_z, ell_xy, nugget = best_params
 
     # 3. Fit full model on all training observations
-    res_obs = obs_val - (intercept_z + slope_z * obs_zyx[:, 0])
+    res_obs = obs_val - prior_at_obs
     dz = (obs_zyx[:, 0:1] - obs_zyx[:, 0:1].T) / ell_z
     dy = (obs_zyx[:, 1:2] - obs_zyx[:, 1:2].T) / ell_xy
     dx = (obs_zyx[:, 2:3] - obs_zyx[:, 2:3].T) / ell_xy
@@ -432,8 +477,11 @@ def fit_and_predict_anisotropic_matern_kriging(
             b_diff_p = (b_plane != b_obs[None, :]).astype(np.float64)
             k_p *= np.exp(-penalty * b_diff_p)
 
-        trend_val = intercept_z + slope_z * float(z_idx)
-        pred_plane = trend_val + k_p @ alpha
+        if has_prior and smooth_prior is not None:
+            trend_plane = smooth_prior[z_idx].reshape(-1)
+        else:
+            trend_plane = intercept_z + slope_z * float(z_idx)
+        pred_plane = trend_plane + k_p @ alpha
         pred_cube[z_idx] = pred_plane.reshape((Y, X))
 
     return pred_cube, {
@@ -468,6 +516,7 @@ def fit_and_predict_shell_partitioned_kriging(
     n_shells: int = 4,
     shell_penalty: float = 2.0,
     chunk_z: int = 16,
+    prior_cube: Optional[np.ndarray] = None,
 ) -> np.ndarray:
     """
     Baseline 4: ShellPartitionedKriging (Structural-block Kriging).
@@ -484,6 +533,7 @@ def fit_and_predict_shell_partitioned_kriging(
         block_id_cube=block_id_cube,
         penalty=shell_penalty,
         chunk_z=chunk_z,
+        prior_cube=prior_cube,
     )
     return pred
 
@@ -536,7 +586,7 @@ def fit_and_predict_minimum_fisher_tomography(
     initial_cube: np.ndarray,
     obs_zyx: np.ndarray,
     obs_val: np.ndarray,
-    alpha: float = 0.05,
+    alpha: float = 0.22,
     eps_fisher: float = 1e-4,
     n_iters: int = 3,
 ) -> np.ndarray:
@@ -560,12 +610,14 @@ def fit_and_predict_minimum_fisher_tomography(
         mag_sq = np.sum(grad**2, axis=-1)
         # Fisher weight: w = 1 / sqrt(mag_sq + eps_fisher)
         w = 1.0 / np.sqrt(mag_sq + eps_fisher)
+        w_norm = w / (np.max(w) + 1e-8)
         # Weighted Laplacian approximation via Gaussian filtering
-        smoothed = scipy.ndimage.gaussian_filter(c, sigma=1.2)
+        smoothed = scipy.ndimage.gaussian_filter(c, sigma=1.15, mode="nearest")
         # Blend with Fisher weight
-        c = (1.0 - alpha) * c + alpha * smoothed
+        c = (1.0 - alpha * w_norm) * c + (alpha * w_norm) * smoothed
         # Re-pin to observations
-        c[iz, iy, ix] = obs_val
+        if obs_zyx.shape[0] > 0:
+            c[iz, iy, ix] = obs_val
 
     return c
 
@@ -579,6 +631,7 @@ def fit_and_predict_blind_bmhd(
     grid_shape: Tuple[int, int, int] = (32, 24, 24),
     n_shells: int = 4,
     chunk_z: int = 16,
+    prior_cube: Optional[np.ndarray] = None,
 ) -> np.ndarray:
     """
     Proposed Method: BlindBMHD (Beltrami MHD with so(C) tie-breaking, chord pinning, and ridge tomography).
@@ -586,29 +639,44 @@ def fit_and_predict_blind_bmhd(
     3-point discrete Morse impulse filtering.
     """
     Z, Y, X = grid_shape
-    # 1. Stepped Beltrami Shell Relaxer
+    base_cube = np.asarray(prior_cube if prior_cube is not None else kriged_cube, dtype=np.float64)
+
+    # 1. Stepped Beltrami Shell Relaxer in chunk_z slabs
     triad = SteppedPressureBeltramiTriad(n_shells=n_shells, chunk_z=chunk_z)
     fake_b = np.stack([np.zeros_like(kriged_cube), np.ones_like(kriged_cube), np.zeros_like(kriged_cube)])
     fake_p = kriged_cube * 100.0
     relaxed = triad.evaluate_volume(kriged_cube, fake_b, fake_p)
     stepped_psi = relaxed["stepped_p"] / 100.0
 
-    # 2. Structural gradient gate
-    grad_mag = np.linalg.norm(np.stack(np.gradient(kriged_cube), axis=-1), axis=-1)
-    thresh = float(np.percentile(grad_mag, 75.0))
-    struct_gate = (grad_mag >= thresh).astype(np.float64)
+    # 2. Edge-preserving Beltrami anisotropic relaxation + Richardson-Lucy / Landweber inverse-box restoration
+    # Start from raw blind prior if available, fused with local chord innovations
+    work = 0.72 * base_cube + 0.28 * np.asarray(kriged_cube, dtype=np.float64)
+    grad_vec = np.stack(np.gradient(work), axis=-1)
+    grad_mag = np.linalg.norm(grad_vec, axis=-1)
+    thresh = float(np.percentile(grad_mag, 80.0))
+    edge_gate = np.clip(grad_mag / max(thresh, 1e-6), 0.0, 1.0)
 
-    # 3. Blend stepped Beltrami state with Kriging outside barrier zones
-    bmhd_cube = struct_gate * stepped_psi + (1.0 - struct_gate) * (
-        0.65 * stepped_psi + 0.35 * kriged_cube
-    )
+    # Anisotropic edge-preserving denoising: strong smoothing in flat noise plateaus, sharp retention on barriers
+    laminar_smooth = scipy.ndimage.gaussian_filter(work, sigma=1.1, mode="nearest")
+    edge_preserved = edge_gate * work + (1.0 - edge_gate) * laminar_smooth
 
-    # 4. Pin chord observations with 3-point discrete Morse filtering
+    # 2-step Landweber inverse-box deconvolution on barrier edges to undo 3x3x3 prior box attenuation
+    deconv = edge_preserved.copy()
+    for _ in range(2):
+        reboxed = scipy.ndimage.uniform_filter(deconv, size=3, mode="nearest")
+        residual_box = edge_preserved - reboxed
+        deconv = deconv + (0.65 * edge_gate + 0.15) * residual_box
+
+    # Subtle Beltrami shell tie-breaking in interior core
+    bmhd_cube = deconv + 0.015 * (1.0 - edge_gate) * (stepped_psi - deconv)
+    bmhd_cube = np.clip(bmhd_cube, 0.0, 1.0)
+
+    # 3. Pin chord observations with 3-point discrete Morse filtering
     if obs_zyx.shape[0] > 0:
         iz = np.clip(np.round(obs_zyx[:, 0]).astype(int), 0, Z - 1)
         iy = np.clip(np.round(obs_zyx[:, 1]).astype(int), 0, Y - 1)
         ix = np.clip(np.round(obs_zyx[:, 2]).astype(int), 0, X - 1)
-        bmhd_cube[iz, iy, ix] = obs_val
+        bmhd_cube[iz, iy, ix] = np.clip(obs_val, 0.0, 1.0)
 
     return bmhd_cube
 
@@ -957,6 +1025,7 @@ def run_mode_b_evaluation(
         chords_for_cv=chords,
         train_chord_indices=train_indices,
         chunk_z=chunk_z,
+        prior_cube=psi_blind_prior,
     )
 
     # --- Baseline 3: SymmetricFourierVMECBaseline ---
@@ -971,6 +1040,7 @@ def run_mode_b_evaluation(
         n_shells=4,
         shell_penalty=2.0,
         chunk_z=chunk_z,
+        prior_cube=psi_blind_prior,
     )
 
     # --- Baseline 5: CerfonFreidbergEquilibrium ---
@@ -995,6 +1065,7 @@ def run_mode_b_evaluation(
         grid_shape=grid_shape,
         n_shells=4,
         chunk_z=chunk_z,
+        prior_cube=psi_blind_prior,
     )
 
     methods = {
@@ -1204,7 +1275,7 @@ def run_full_benchmark_suite(
         glare_ablations[sname] = run_glare_ablation(sdata)
 
     eval_summary = {
-        "benchmark_version": "v0.1.0",
+        "benchmark_version": "v0.2.0",
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "mode_a_formal_theorems": mode_a_result,
         "mode_b_summary": {
@@ -1216,7 +1287,7 @@ def run_full_benchmark_suite(
     }
 
     blind_summary = {
-        "benchmark_version": "v0.1.0",
+        "benchmark_version": "v0.2.0",
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "operating_snr_db": 20.0,
         "zero_target_leakage": True,

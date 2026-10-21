@@ -52,7 +52,7 @@ def cmd_verify_theorems(args: argparse.Namespace) -> int:
     """Run machine-checked runtime invariant theorems audit (Theorems 2.1 - 2.7)."""
     _print_header(
         "BMHD Formal Theorem Verification",
-        "Runtime validation of machine-checked OcclusionTriad.lean invariants (v0.1.0)",
+        "Runtime validation of machine-checked OcclusionTriad.lean invariants (v0.2.0)",
     )
 
     try:
@@ -351,7 +351,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     """Main CLI entry point for the bmhd console executable."""
     parser = argparse.ArgumentParser(
         prog="bmhd",
-        description="BMHD: Beltrami MHD & Non-Symmetric 3D Stellarator Engine (v0.1.0)",
+        description="BMHD: Beltrami MHD & Non-Symmetric 3D Stellarator Engine (v0.2.0)",
     )
     subparsers = parser.add_subparsers(dest="command", help="Available subcommands")
 

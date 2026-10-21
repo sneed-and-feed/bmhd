@@ -1,6 +1,6 @@
 # BMHD Architectural Specification & Theory Mapping
 
-**Beltrami MHD & Non-Symmetric 3D Stellarator Engine (`bmhd` v0.1.0)**  
+**Beltrami MHD & Non-Symmetric 3D Stellarator Engine (`bmhd` v0.2.0)**  
 **License:** CC0-1.0 Public Domain  
 **Target Repository:** `https://github.com/sneed-and-feed/bmhd`  
 **Compliance Standard:** Strict GitHub-Flavored Markdown (GFM) and KaTeX (all 21 rules verified)
@@ -9,9 +9,9 @@
 
 ## 1. Executive Summary & Hardware Invariants
 
-The `bmhd` package is a standalone, real-time 3D/4D magnetohydrodynamic (MHD) flux-surface solver, stepped-pressure Beltrami shell relaxer, and sparse diagnostic laser-chord tomography workstation. It is engineered to satisfy the real-time control loop SWaP-C envelope established across `projectdarksnail`, `g3vm`, and `oatse`:
+The `bmhd` package is a standalone, real-time 3D/4D magnetohydrodynamic (MHD) flux-surface solver, stepped-pressure Beltrami shell relaxer, and industry-standard 3D CAD/CAE toroidal flux-surface and sparse diagnostic laser-chord workstation. It is engineered to satisfy the real-time control loop SWaP-C envelope established across `projectdarksnail`, `g3vm`, and `oatse`:
 
-- **Real-Time Memory Ceiling:** Strict `< 35 MB` peak memory ceiling (`~1.30 to 1.60 MB` active heap) evaluated in $Z$ slabs (`chunk_z = 16`). Field volumes are streamed out-of-core via inline `np.memmap` windowing so the entire active working set fits inside a 4 MB L2/L3 SRAM cache.
+- **Real-Time Memory Ceiling:** Strict `< 35 MB` peak memory ceiling (`~1.28 MB` active heap, `10.74 MB` peak heap) evaluated in $Z$ slabs (`chunk_z = 16`). Field volumes are streamed out-of-core via inline `np.memmap` windowing so the entire active working set fits inside a 4 MB L2/L3 SRAM cache.
 - **Machine-Checked Invariants:** Direct runtime enforcement of Theorems 2.1 to 2.7 from `formalization/OcclusionTriad.lean`:
   - Theorems 2.1 and 2.2: Exact skew-symmetry with `0.00e+0` residual and deterministic odd-parity vertical drift tie-breaking.
   - Theorems 2.3 and 2.6: Pointwise tangent orthogonality with float32 residual $\le 1.0\times 10^{-8}$ and zero radial flux escape across multi-step Poincare tracking.
@@ -220,21 +220,41 @@ The deck evaluates on $(Z=32, Y=24, X=24)$ grids ($18,432$ voxels) with 8 synthe
 
 ### 8.2 Mode B (Blind Sparse-Chord Tomography Reconstruction at SNR = 20 dB)
 
-Evaluated under strict zero target leakage across all 7 baselines on `01_issan_nonsym_solovev_tau0`:
+Evaluated under strict zero target leakage across all 7 baselines on `01_issan_nonsym_solovev_tau0` (reproducible via `python scripts/evaluate_bmhd.py`):
 
-| Inversion Baseline | Flux $\psi$ RMSE | Field $B$ RMSE (T) | LOCO RMSE | Unseen 3D RMSE | Edge Fidelity | Spike F1 | Heap (MB) |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **`BlindBMHD` (Proposed)** | **0.0142** | **0.0285** | **0.0182** | **0.0245** | **96.8%** | **1.000** | **1.48** |
-| `ShellPartitionedKriging` | 0.0384 | 0.0712 | 0.0410 | 0.0620 | 84.5% | 0.720 | 4.80 |
-| `TunedAnisotropicKriging` | 0.0612 | 0.1140 | 0.0685 | 0.0980 | 68.2% | 0.580 | 6.20 |
-| `MinimumFisherTomography` | 0.0725 | 0.1290 | 0.0792 | 0.1150 | 59.4% | 0.440 | 3.10 |
-| `CerfonFreidbergEquilibrium` | 0.0890 | 0.1580 | 0.0945 | 0.1420 | 52.0% | 0.310 | 2.20 |
-| `SymmetricFourierVMECBaseline` | 0.1240 | 0.2310 | 0.1380 | 0.2180 | 39.8% | 0.125 | 8.50 |
-| `NaiveBox` | 0.1680 | 0.3120 | 0.1890 | 0.2850 | 26.5% | 0.125 | 1.10 |
+| Inversion Baseline | Whole-Torus $\psi$ RMSE | LOCO RMSE | Unseen 3D RMSE | Edge Fidelity | Spike F1 | Active Heap (MB) |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **`BlindBMHD` (Proposed)** | **0.0710** | 0.0404 | **0.0508** | **67.49%** | **1.000** | **1.28** |
+| `ShellPartitionedKriging` | 0.0932 | 0.0187 | 0.0672 | 57.28% | 0.720 | 4.20 |
+| `TunedAnisotropicKriging` | 0.0949 | **0.0162** | 0.0736 | 56.78% | 0.580 | 5.40 |
+| `MinimumFisherTomography` | 0.0972 | 0.0365 | 0.0760 | 55.98% | 0.440 | 3.10 |
+| `NaiveBox` | 0.1443 | 0.1275 | 0.1415 | 39.50% | 0.125 | 1.10 |
+| `SymmetricFourierVMECBaseline` | 0.2386 | 0.2736 | 0.3019 | 38.30% | 0.250 | 6.80 |
+| `CerfonFreidbergEquilibrium` | 0.4755 | 0.3628 | 0.3532 | 8.27% | 0.180 | 2.15 |
+
+Across all 5 canonical plasma scenarios at $\mathrm{SNR} = 20\text{ dB}$, `BlindBMHD` achieves the lowest whole-torus $\psi$ RMSE and highest edge gradient fidelity:
+
+| Canonical Scenario | `BlindBMHD` Torus $\psi$ RMSE | Best Baseline $\psi$ RMSE | `BlindBMHD` Edge Fidelity | Best Baseline Edge Fidelity |
+| :--- | :--- | :--- | :--- | :--- |
+| `01_issan_nonsym_solovev_tau0` | **0.0710** | 0.0932 (`ShellKriging`) | **67.49%** | 57.28% (`ShellKriging`) |
+| `02_issan_sheared_elliptic_tau1` | **0.0919** | 0.1093 (`AnisoKriging`) | **30.09%** | 17.07% (`AnisoKriging`) |
+| `03_spec_magnetic_island_chain` | **0.0258** | 0.0375 (`SymmetricVMEC`) | **80.34%** | 71.33% (`SymmetricVMEC`) |
+| `04_tokamak_elm_pellet_4d` | **0.0562** | 0.0806 (`SymmetricVMEC`) | **77.78%** | 58.39% (`ShellKriging`) |
+| `05_beltrami_plasma_spallation_torch` | **0.0236** | 0.0370 (`SymmetricVMEC`) | **81.41%** | 72.18% (`AnisoKriging`) |
 
 ---
 
-## 9. References & BibTeX Bibliography
+## 9. 3D CAD/CAE WebGL Workstation Architecture (`bmhd/studio.py` v0.2.0)
+
+`bmhd/studio.py` compiles a single-file, zero-external-network HTML5/WebGL workstation (`results/bmhd_portable_studio.html`) containing all 5 pre-computed 3D plasma scenarios, 40 diagnostic sightline trajectories, Poincaré maps, radial profiles, and Mode B scorecards:
+
+- **4 Selectable 3D Render Modes:** `hybrid_torus` (stepped-cutaway 3D nested toroidal flux shells $\psi \in \{0.16, 0.52, 0.90\}$ with chair-cut poloidal cross-section end-caps and elliptical-clipped slicer planes), `flux_shells`, `voxel_slicer`, and `field_lines` (3D helical $\mathbf{B}$-field streamlines and 3D modular coils).
+- **6 CAD Camera Presets & Projection Modes:** `ISO`, `TOP Z+`, `FRONT`, `SIDE`, `THROAT`, and `CHORD` camera presets, Perspective/Orthographic (`PERSP`/`ORTHO`) toggle, 60 FPS turntable `ORBIT`, interactive 3D orientation triad gizmo, vertical colorbar legend, and live hover voxel/cylindrical probe HUD.
+- **Multi-Tab 2D Diagnostics:** 1:1 physical aspect-ratio Poincaré puncture plot across $\phi \in \{0^\circ, 90^\circ, 180^\circ, 270^\circ\}$, Poloidal $\psi(R,Z)$ contour heatmap, Radial $p(\psi)$ & $\iota(\psi)$ profile plot, Chord Profile (BMHD vs. Symmetric-VMEC), Discrete Morse Salience inspector, and 4D $H_{\mathrm{clock}} \oplus H_{\mathrm{nope}}$ temporal split view.
+
+---
+
+## 10. References & BibTeX Bibliography
 
 ```bibtex
 @article{Issan2026,
