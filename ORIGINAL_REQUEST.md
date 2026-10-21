@@ -155,3 +155,19 @@ Required Action Before Final Sign-off:
    - The 1D chord profile curve + yellow spike dots are visibly rendered in `#canvasChordProfile` with `#selectChord` populated, and
    - All 7 baselines (`BlindBMHD`, `ShellPartitionedKriging`, `TunedAnisotropicKriging`, `MinimumFisherTomography`, `CerfonFreidbergEquilibrium`, `SymmetricFourierVMECBaseline`, `NaiveBox`) are visibly populated in the right-hand `7-Baseline Tomography Benchmark` table.
 4. Re-run pytest and push the updated commit to `https://github.com/sneed-and-feed/bmhd`.
+
+
+## 2026-10-21T15:10:14Z
+
+SECOND VISUAL/NUMERICAL AUDIT FINDING IN `results/studio_screenshot.png`:
+
+Thank you for fixing the canvas rendering and 7-baseline table! Reviewing the new `results/studio_screenshot.png` reveals 2 numerical/data issues that must be fixed before Victory Audit sign-off:
+
+1. **Flat `1.00` Chord Profile & 97% Saturated Orange Cube in Scenario 01 (`bmhd/scenarios.py` & `bmhd/studio.py`):**
+   - Look at the bottom-right panel (`SELECTED DIAGNOSTIC LASER CHORD PROFILE`) in `results/studio_screenshot.png`: the Y-axis goes from `1.00` to `1.00` and the cyan curve for `01_issan_nonsym_solovev_tau0_chord0_core_thomson` is completely flat at `1.00`! And in `#canvas3d`, ~97% of the chair-cut block is solid orange (`psi = 1.00`).
+   - **Root Cause 1 (`R0=0.0` in `build_scenario_01` line 432 and `build_scenario_02` line 536 of `bmhd/scenarios.py`):** `R0=0.0` placed `chord0_core_thomson` at `(x=0, y=0)`, which is the central hole of the torus (where `s -> 0` and `psi_norm = 1.0` everywhere!), instead of on the magnetic axis (`R0 = 0.90` in Scenario 01, `R0 = 1.05` in Scenario 02)!
+   - **Root Cause 2 (`delta = 1/64` clipping on full Cartesian box in `build_scenario_01`):** On the `[-1.2, 1.2]^2 x [-0.5, 0.5]` grid, `raw_fields["psi_raw"]` spans `[0, ~0.35]`, so normalizing by `delta = 1/64 = 0.015625` clips 97% of voxels to `1.0`! In `build_scenario_01`, normalize `psi_base = np.clip(raw_fields["psi_raw"] / 0.22, 0.0, 1.0)` (keeping `delta = 1/64` in `metadata` for the analytical paper invariant check) so that the nested toroidal flux surfaces (`psi in [0, 1]`) fill the 3D cross-section and the 3D chair-cut slices show the full blue-cyan-green-yellow-orange toroidal flux structure!
+2. **Interactive `tau0` / `tau1` Slider Coupling in `bmhd/studio.py`:**
+   - Ensure that in `render3DViewport()`, `renderPoincarePlot()`, and `renderChordProfile()`, changing `STATE.tau0` and `STATE.tau1` (including clicking `Snap tau=0.00`) visibly modulates the displayed flux/field slices, Poincaré KAM surfaces (`r_pt`, `z_pt`), and chord profile in real time.
+
+Please apply this fix to `bmhd/scenarios.py` and `bmhd/studio.py`, re-run `scripts/evaluate_bmhd.py`, regenerate `results/bmhd_portable_studio.html` and `results/studio_screenshot.png`, re-verify `pytest`, and push the updated commit to `https://github.com/sneed-and-feed/bmhd`.

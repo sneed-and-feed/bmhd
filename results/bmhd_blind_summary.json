@@ -1,6 +1,6 @@
 {
   "benchmark_version": "v0.1.0",
-  "timestamp": "2026-10-21T14:51:27Z",
+  "timestamp": "2026-10-21T15:21:17Z",
   "operating_snr_db": 20.0,
   "zero_target_leakage": true,
   "baselines_evaluated": [
@@ -20,65 +20,65 @@
       "washout_fraction": 0.0,
       "methods": {
         "NaiveBox": {
-          "loco_rmse": 0.0005774197310725754,
-          "unseen_3d_chords_rmse": 0.005564506307679257,
-          "whole_torus_psi_rmse": 0.10606242476166888,
-          "bounded_edge_gradient_fidelity": 0.0,
-          "edge_fidelity_pct": "0.00%"
+          "loco_rmse": 0.12749628640810143,
+          "unseen_3d_chords_rmse": 0.1414644618032197,
+          "whole_torus_psi_rmse": 0.14425378381566364,
+          "bounded_edge_gradient_fidelity": 0.39502093151692363,
+          "edge_fidelity_pct": "39.50%"
         },
         "TunedAnisotropicKriging": {
-          "loco_rmse": 0.024948125459893184,
-          "unseen_3d_chords_rmse": 0.031065050799928554,
-          "whole_torus_psi_rmse": 0.14166624230210367,
-          "bounded_edge_gradient_fidelity": 0.0,
-          "edge_fidelity_pct": "0.00%"
+          "loco_rmse": 0.018671513336195482,
+          "unseen_3d_chords_rmse": 0.31481252765341217,
+          "whole_torus_psi_rmse": 0.3723399268631289,
+          "bounded_edge_gradient_fidelity": 0.15790583029935779,
+          "edge_fidelity_pct": "15.79%"
         },
         "SymmetricFourierVMECBaseline": {
-          "loco_rmse": 0.016840235779498974,
-          "unseen_3d_chords_rmse": 0.020514596162590236,
-          "whole_torus_psi_rmse": 0.13687730673701193,
-          "bounded_edge_gradient_fidelity": 0.0,
-          "edge_fidelity_pct": "0.00%"
+          "loco_rmse": 0.26521907686778956,
+          "unseen_3d_chords_rmse": 0.3882015853729634,
+          "whole_torus_psi_rmse": 0.38410038639743,
+          "bounded_edge_gradient_fidelity": 0.10597010470648283,
+          "edge_fidelity_pct": "10.60%"
         },
         "ShellPartitionedKriging": {
-          "loco_rmse": 0.04499916127030477,
-          "unseen_3d_chords_rmse": 0.0850726878228927,
-          "whole_torus_psi_rmse": 0.14823730718178074,
-          "bounded_edge_gradient_fidelity": 0.0,
-          "edge_fidelity_pct": "0.00%"
+          "loco_rmse": 0.02911931015301157,
+          "unseen_3d_chords_rmse": 0.3260386246999557,
+          "whole_torus_psi_rmse": 0.3748673293727184,
+          "bounded_edge_gradient_fidelity": 0.12333741857077929,
+          "edge_fidelity_pct": "12.33%"
         },
         "CerfonFreidbergEquilibrium": {
-          "loco_rmse": 0.04597478052117865,
-          "unseen_3d_chords_rmse": 0.03439166533377402,
-          "whole_torus_psi_rmse": 0.15720419243555234,
-          "bounded_edge_gradient_fidelity": 0.0,
-          "edge_fidelity_pct": "0.00%"
+          "loco_rmse": 0.3627830091130241,
+          "unseen_3d_chords_rmse": 0.3532498183330752,
+          "whole_torus_psi_rmse": 0.47547154468522795,
+          "bounded_edge_gradient_fidelity": 0.0833990626493889,
+          "edge_fidelity_pct": "8.34%"
         },
         "MinimumFisherTomography": {
-          "loco_rmse": 0.03563859952485443,
-          "unseen_3d_chords_rmse": 0.033505893490715866,
-          "whole_torus_psi_rmse": 0.14170486480587877,
-          "bounded_edge_gradient_fidelity": 0.0,
-          "edge_fidelity_pct": "0.00%"
+          "loco_rmse": 0.028559738186769587,
+          "unseen_3d_chords_rmse": 0.3142718197852636,
+          "whole_torus_psi_rmse": 0.3715734317670053,
+          "bounded_edge_gradient_fidelity": 0.15510818185402708,
+          "edge_fidelity_pct": "15.51%"
         },
         "BlindBMHD": {
-          "loco_rmse": 0.029013543454916742,
-          "unseen_3d_chords_rmse": 0.019859310940643794,
-          "whole_torus_psi_rmse": 0.13500198365510824,
-          "bounded_edge_gradient_fidelity": 0.0,
-          "edge_fidelity_pct": "0.00%"
+          "loco_rmse": 0.0427688064171156,
+          "unseen_3d_chords_rmse": 0.31109845675001574,
+          "whole_torus_psi_rmse": 0.37070223582975426,
+          "bounded_edge_gradient_fidelity": 0.10498895737116443,
+          "edge_fidelity_pct": "10.50%"
         }
       },
       "kriging_diagnostics": {
-        "ell_z": 8.0,
-        "ell_xy": 22.0,
-        "nugget": 0.05,
-        "inner_cv_rmse": 0.00018422682973749424
+        "ell_z": 3.0,
+        "ell_xy": 8.0,
+        "nugget": 0.01,
+        "inner_cv_rmse": 0.2469747573690152
       },
       "performance": {
-        "elapsed_seconds": 0.4359402656555176,
-        "active_heap_mb": 1.2970218658447266,
-        "peak_heap_mb": 10.596090316772461,
+        "elapsed_seconds": 0.28557705879211426,
+        "active_heap_mb": 1.2970161437988281,
+        "peak_heap_mb": 10.5961332321167,
         "heap_ceiling_passed": true
       }
     },
@@ -89,64 +89,64 @@
       "washout_fraction": 0.0,
       "methods": {
         "NaiveBox": {
-          "loco_rmse": 0.025795253208300242,
-          "unseen_3d_chords_rmse": 0.02562998875002494,
+          "loco_rmse": 0.15300293327998896,
+          "unseen_3d_chords_rmse": 0.207637166776532,
           "whole_torus_psi_rmse": 0.13137921729604232,
           "bounded_edge_gradient_fidelity": 0.0,
           "edge_fidelity_pct": "0.00%"
         },
         "TunedAnisotropicKriging": {
-          "loco_rmse": 0.02501273289078802,
-          "unseen_3d_chords_rmse": 0.04921626012797139,
-          "whole_torus_psi_rmse": 0.18643395639643828,
+          "loco_rmse": 0.027034760956331602,
+          "unseen_3d_chords_rmse": 0.3418088145824587,
+          "whole_torus_psi_rmse": 0.26703463672129807,
           "bounded_edge_gradient_fidelity": 0.0,
           "edge_fidelity_pct": "0.00%"
         },
         "SymmetricFourierVMECBaseline": {
-          "loco_rmse": 0.016868457491095612,
-          "unseen_3d_chords_rmse": 0.041062314539833625,
-          "whole_torus_psi_rmse": 0.18304366816604478,
+          "loco_rmse": 0.08973834191781623,
+          "unseen_3d_chords_rmse": 0.3361523596726382,
+          "whole_torus_psi_rmse": 0.2448990849321752,
           "bounded_edge_gradient_fidelity": 0.0,
           "edge_fidelity_pct": "0.00%"
         },
         "ShellPartitionedKriging": {
-          "loco_rmse": 0.04489972370728953,
-          "unseen_3d_chords_rmse": 0.1020267297546355,
-          "whole_torus_psi_rmse": 0.19178345803052102,
+          "loco_rmse": 0.06337634227624617,
+          "unseen_3d_chords_rmse": 0.16928843083403497,
+          "whole_torus_psi_rmse": 0.1980149120885406,
           "bounded_edge_gradient_fidelity": 0.0,
           "edge_fidelity_pct": "0.00%"
         },
         "CerfonFreidbergEquilibrium": {
-          "loco_rmse": 0.04617245387639377,
-          "unseen_3d_chords_rmse": 0.03805657116815382,
-          "whole_torus_psi_rmse": 0.19478879032957555,
+          "loco_rmse": 0.29439128912919066,
+          "unseen_3d_chords_rmse": 0.3106314872166999,
+          "whole_torus_psi_rmse": 0.2762604243113911,
           "bounded_edge_gradient_fidelity": 0.0,
           "edge_fidelity_pct": "0.00%"
         },
         "MinimumFisherTomography": {
-          "loco_rmse": 0.03487090896778416,
-          "unseen_3d_chords_rmse": 0.050816569648464836,
-          "whole_torus_psi_rmse": 0.1864401176705282,
+          "loco_rmse": 0.03628042420686781,
+          "unseen_3d_chords_rmse": 0.33939919567318916,
+          "whole_torus_psi_rmse": 0.265396706500748,
           "bounded_edge_gradient_fidelity": 0.0,
           "edge_fidelity_pct": "0.00%"
         },
         "BlindBMHD": {
-          "loco_rmse": 0.027709943006489424,
-          "unseen_3d_chords_rmse": 0.03665609677920307,
-          "whole_torus_psi_rmse": 0.17851813988796444,
+          "loco_rmse": 0.04469340281796202,
+          "unseen_3d_chords_rmse": 0.15843626037426317,
+          "whole_torus_psi_rmse": 0.18907700110322215,
           "bounded_edge_gradient_fidelity": 0.0,
           "edge_fidelity_pct": "0.00%"
         }
       },
       "kriging_diagnostics": {
-        "ell_z": 8.0,
-        "ell_xy": 22.0,
-        "nugget": 0.05,
-        "inner_cv_rmse": 0.00019370102926945812
+        "ell_z": 3.0,
+        "ell_xy": 8.0,
+        "nugget": 0.01,
+        "inner_cv_rmse": 0.44191131012249396
       },
       "performance": {
-        "elapsed_seconds": 0.49259209632873535,
-        "active_heap_mb": 1.2785978317260742,
+        "elapsed_seconds": 0.3142702579498291,
+        "active_heap_mb": 1.2787446975708008,
         "peak_heap_mb": 10.581583976745605,
         "heap_ceiling_passed": true
       }
@@ -214,9 +214,9 @@
         "inner_cv_rmse": 0.3389801350442662
       },
       "performance": {
-        "elapsed_seconds": 0.48431992530822754,
-        "active_heap_mb": 1.2783985137939453,
-        "peak_heap_mb": 10.581583023071289,
+        "elapsed_seconds": 0.33446168899536133,
+        "active_heap_mb": 1.2789278030395508,
+        "peak_heap_mb": 10.581494331359863,
         "heap_ceiling_passed": true
       }
     },
@@ -283,9 +283,9 @@
         "inner_cv_rmse": 0.26801557921076624
       },
       "performance": {
-        "elapsed_seconds": 0.48947954177856445,
-        "active_heap_mb": 1.2782115936279297,
-        "peak_heap_mb": 10.581536293029785,
+        "elapsed_seconds": 0.3439643383026123,
+        "active_heap_mb": 1.278426170349121,
+        "peak_heap_mb": 10.581583023071289,
         "heap_ceiling_passed": true
       }
     },
@@ -352,9 +352,9 @@
         "inner_cv_rmse": 0.15526297218155705
       },
       "performance": {
-        "elapsed_seconds": 0.4475116729736328,
-        "active_heap_mb": 1.2786931991577148,
-        "peak_heap_mb": 10.581583023071289,
+        "elapsed_seconds": 0.3014793395996094,
+        "active_heap_mb": 1.2781314849853516,
+        "peak_heap_mb": 10.581536293029785,
         "heap_ceiling_passed": true
       }
     }

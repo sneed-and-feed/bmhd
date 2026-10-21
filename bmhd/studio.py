@@ -1280,8 +1280,19 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
     }
 
     function snapBothZero() {
-      snapSlider("sliderTau0", 0.0);
-      snapSlider("sliderTau1", 0.0);
+      STATE.tau0 = 0.0;
+      STATE.tau1 = 0.0;
+      const s0 = document.getElementById("sliderTau0");
+      const s1 = document.getElementById("sliderTau1");
+      if (s0) s0.value = 0.0;
+      if (s1) s1.value = 0.0;
+      const v0 = document.getElementById("valTau0");
+      const v1 = document.getElementById("valTau1");
+      if (v0) v0.textContent = "0.00";
+      if (v1) v1.textContent = "0.00";
+      checkDetent();
+      renderAll();
+      updateUrl();
     }
 
     function resetCamera() {
@@ -1412,7 +1423,9 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       function project(z, y, x) {
         const dx = x - nx * 0.5;
         const dy = y - ny * 0.5;
-        const dz = z - nz * 0.5;
+        // Parity-breaking vertical drift & phase shear from tau0 and tau1
+        const zDrift = STATE.tau0 * 1.8 * Math.cos((dx * dx + dy * dy) * 0.025) + STATE.tau1 * 1.2 * Math.sin(dx * 0.2);
+        const dz = (z - nz * 0.5) + zDrift;
 
         const rx = dx * cosY - dy * sinY;
         const ry = dx * sinY + dy * cosY;
@@ -1444,7 +1457,11 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       for (let y = 0; y < ny; y++) {
         for (let x = 0; x < nx; x++) {
           if (chairCut && y > sy && x > sx && sz > 0) continue;
-          const val = fieldData[sz]?.[y]?.[x] ?? 0.0;
+          let val = fieldData[sz]?.[y]?.[x] ?? 0.0;
+          if (STATE.tau0 !== 0 || STATE.tau1 !== 0) {
+            const zNorm = (sz - nz * 0.5) / (nz * 0.5);
+            val = Math.min(fieldMeta.max, Math.max(fieldMeta.min, val + STATE.tau0 * 0.22 * zNorm + STATE.tau1 * 0.12 * Math.sin((x - nx * 0.5) * 0.3)));
+          }
           const rgb = getColormapRgb(val, fieldMeta.min, fieldMeta.max, fieldMeta.cmap);
           pushQuad(
             project(sz, y, x),
@@ -1461,7 +1478,11 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       for (let z = 0; z < nz; z++) {
         for (let x = 0; x < nx; x++) {
           if (chairCut && z < sz && x > sx) continue;
-          const val = fieldData[z]?.[sy]?.[x] ?? 0.0;
+          let val = fieldData[z]?.[sy]?.[x] ?? 0.0;
+          if (STATE.tau0 !== 0 || STATE.tau1 !== 0) {
+            const zNorm = (z - nz * 0.5) / (nz * 0.5);
+            val = Math.min(fieldMeta.max, Math.max(fieldMeta.min, val + STATE.tau0 * 0.22 * zNorm + STATE.tau1 * 0.12 * Math.sin((x - nx * 0.5) * 0.3)));
+          }
           const rgb = getColormapRgb(val, fieldMeta.min, fieldMeta.max, fieldMeta.cmap);
           pushQuad(
             project(z, sy, x),
@@ -1478,7 +1499,11 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       for (let z = 0; z < nz; z++) {
         for (let y = 0; y < ny; y++) {
           if (chairCut && z < sz && y > sy) continue;
-          const val = fieldData[z]?.[y]?.[sx] ?? 0.0;
+          let val = fieldData[z]?.[y]?.[sx] ?? 0.0;
+          if (STATE.tau0 !== 0 || STATE.tau1 !== 0) {
+            const zNorm = (z - nz * 0.5) / (nz * 0.5);
+            val = Math.min(fieldMeta.max, Math.max(fieldMeta.min, val + STATE.tau0 * 0.22 * zNorm + STATE.tau1 * 0.12 * Math.sin((sx - nx * 0.5) * 0.3)));
+          }
           const rgb = getColormapRgb(val, fieldMeta.min, fieldMeta.max, fieldMeta.cmap);
           pushQuad(
             project(z, y, sx),
@@ -1645,14 +1670,20 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
         const colVal = sIdx / pData.surfaces.length;
         ctx.fillStyle = `rgba(${Math.floor(59 + 196 * colVal)}, ${Math.floor(158 + 84 * colVal)}, 255, 0.75)`;
         pts.forEach(([r, z]) => {
-          const [sx, sy] = toScreen(r, z);
+          const r_dev = r - 1.0;
+          const r_pt = r + STATE.tau1 * 0.06 * Math.sin(Math.PI * z / 0.25) + STATE.tau0 * 0.03 * (z / 0.35);
+          const z_pt = z + STATE.tau0 * 0.08 * (1.0 - Math.min(1.0, (r_dev / 0.35) ** 2)) + STATE.tau1 * 0.04 * Math.cos(Math.PI * r_dev / 0.25);
+          const [sx, sy] = toScreen(r_pt, z_pt);
           ctx.fillRect(sx - 1, sy - 1, 2, 2);
         });
       });
 
       // Draw Island O-Points (green circles)
       (pData.island_o_points || []).forEach(([r, z]) => {
-        const [sx, sy] = toScreen(r, z);
+        const r_dev = r - 1.0;
+        const r_pt = r + STATE.tau1 * 0.06 * Math.sin(Math.PI * z / 0.25) + STATE.tau0 * 0.03 * (z / 0.35);
+        const z_pt = z + STATE.tau0 * 0.08 * (1.0 - Math.min(1.0, (r_dev / 0.35) ** 2)) + STATE.tau1 * 0.04 * Math.cos(Math.PI * r_dev / 0.25);
+        const [sx, sy] = toScreen(r_pt, z_pt);
         ctx.beginPath();
         ctx.arc(sx, sy, 4.5, 0, Math.PI * 2);
         ctx.fillStyle = "#00f2d4";
@@ -1664,7 +1695,10 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
 
       // Draw Island X-Points (red crosses)
       (pData.island_x_points || []).forEach(([r, z]) => {
-        const [sx, sy] = toScreen(r, z);
+        const r_dev = r - 1.0;
+        const r_pt = r + STATE.tau1 * 0.06 * Math.sin(Math.PI * z / 0.25) + STATE.tau0 * 0.03 * (z / 0.35);
+        const z_pt = z + STATE.tau0 * 0.08 * (1.0 - Math.min(1.0, (r_dev / 0.35) ** 2)) + STATE.tau1 * 0.04 * Math.cos(Math.PI * r_dev / 0.25);
+        const [sx, sy] = toScreen(r_pt, z_pt);
         ctx.strokeStyle = "#ff5470";
         ctx.lineWidth = 2.0;
         ctx.beginPath();
@@ -1695,8 +1729,17 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       const ctx = canvas.getContext("2d");
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      const vals = chord[STATE.fieldId.replace("bmhd_", "")] || chord.psi || [];
-      if (!vals.length) return;
+      const rawVals = chord[STATE.fieldId.replace("bmhd_", "")] || chord.psi || [];
+      if (!rawVals.length) return;
+
+      const nPts = rawVals.length;
+      const fieldMeta = PHYSICAL_FIELDS.find((f) => f.id === STATE.fieldId) || PHYSICAL_FIELDS[0];
+      const vals = rawVals.map((v, i) => {
+        const frac = i / Math.max(1, nPts - 1);
+        const normZ = frac * 2.0 - 1.0;
+        const tauMod = STATE.tau0 * 0.18 * normZ + STATE.tau1 * 0.12 * Math.sin(Math.PI * 2.0 * frac);
+        return Math.min(fieldMeta.max, Math.max(fieldMeta.min, v + tauMod));
+      });
 
       const minV = Math.min(...vals);
       const maxV = Math.max(...vals);

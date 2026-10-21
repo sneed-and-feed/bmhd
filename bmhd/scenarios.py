@@ -397,7 +397,7 @@ def build_scenario_01(grid_shape: Tuple[int, int, int] = (32, 24, 24)) -> Scenar
     )
     raw_fields = engine.compute_cartesian(X_grid, Y_grid, Z_grid)
 
-    psi_base = raw_fields["psi"]
+    psi_base = np.clip(raw_fields["psi_raw"] / 0.22, 0.0, 1.0)
     bmod_base = raw_fields["B_mod"]
     pkpa_base = raw_fields["p_kpa"]
     jcurl_base = raw_fields["J_curl"]
@@ -429,7 +429,7 @@ def build_scenario_01(grid_shape: Tuple[int, int, int] = (32, 24, 24)) -> Scenar
         grid_shape=grid_shape,
         extents_zyx_m=extents_zyx,
         origin_zyx_m=origin_zyx,
-        R0=0.0,
+        R0=0.90,
         a_minor=0.55,
         has_glare=True,
     )
@@ -533,7 +533,7 @@ def build_scenario_02(grid_shape: Tuple[int, int, int] = (32, 24, 24)) -> Scenar
         grid_shape=grid_shape,
         extents_zyx_m=extents_zyx,
         origin_zyx_m=origin_zyx,
-        R0=0.0,
+        R0=1.05,
         a_minor=0.85,
         has_glare=False,
     )
