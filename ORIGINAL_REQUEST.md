@@ -130,3 +130,28 @@ Please incorporate BOTH of the following official baseline benchmark additions i
 ## 2026-10-21T14:53:17Z
 
 User Request Note: When finished, we will also capture a headless Chrome screenshot of `results/bmhd_portable_studio.html` demonstrating primary functionality (3D WebGL flux-surface & laser-chord viewer + Poincaré puncture plot + HUD metrics) and visually audit it. Please ensure `results/bmhd_portable_studio.html` renders cleanly in headless Chromium/Chrome with 0 console/page errors during your Victory Audit.
+
+
+## 2026-10-21T14:59:03Z
+
+URGENT BLOCKER FOUND IN `results/studio_screenshot.png` & `bmhd/studio.py`:
+
+Visual review of `results/studio_screenshot.png` reveals 4 critical UI/data defects caused by 2 bugs in `bmhd/studio.py`:
+1. The 3D Viewport canvas (`#canvas3d`), Poincaré Puncture Plot canvas (`#canvasPoincare`), and Diagnostic Laser Chord Profile canvas (`#canvasChordProfile`) are all completely blank in `results/studio_screenshot.png`.
+2. The `7-Baseline Tomography Benchmark` table (`#baselineBody`) has 0 rows populated, and the chord selector dropdown (`#selectChord`) is empty.
+
+Exact Root Causes in `bmhd/studio.py`:
+- **Bug A (JS `ReferenceError: PHYSICAL_FIELDS is not defined` at lines 1208 & 1289):** `PHYSICAL_FIELDS` is defined in Python (line 52) but was NEVER injected into the `<script>` block in `generate_studio_html()`. When `onScenarioChange()` calls `updateFieldUnit()` at line 1263, JS throws `ReferenceError: PHYSICAL_FIELDS is not defined` BEFORE reaching `renderAll()` at line 1265, aborting all canvas rendering (`render3DViewport`, `renderPoincarePlot`, `renderChordProfile`).
+  - **Fix A:** Inject `const PHYSICAL_FIELDS = ...;` into the `<script>` tag right below `window.BMHD_OFFLINE_SCENARIOS`. Also ensure `updateUrl()` wraps `window.history.replaceState` in a `try { ... } catch (e) {}` so `file://` origins never throw a `SecurityError`.
+- **Bug B (Empty `chords`, `poincare`, `baselines`, `cavity_core` in `serialize_evaluation_payload` at lines 329–345):** When `bmhd.scenarios.build_scenario(scenario_id)` succeeds, `scen_obj` has `.fields`, so `serialize_evaluation_payload` returns `getattr(scen_obj, "chords_serialized", [])` (which is `[]`), `getattr(scen_obj, "poincare", {})` (which is `{}`), `getattr(scen_obj, "baselines", [])` (which is `[]`), and omits `cavity_core`!
+  - **Fix B:** In `serialize_evaluation_payload()`, start from `base_data = _generate_synthetic_scenario_data(scenario_id, grid_shape=grid_shape, tau0=tau0, tau1=tau1)` (or populate real chords/poincare/baselines/theorems from `scen_obj` / `results/bmhd_blind_summary.json` with fallback to `base_data` whenever a key is empty/missing), ensuring `fields` (`bmhd_psi`, `bmhd_b_mod`, `bmhd_p_kpa`, `bmhd_j_curl`, `bmhd_iota`), `cavity_core`, `chords` (all 8 chords), `poincare` (`phi_0`, `phi_90`, `phi_180`, `phi_270`), `baselines` (all 7 baselines), and `theorems` are ALWAYS non-empty in every scenario of `window.BMHD_OFFLINE_SCENARIOS`! Also ensure `STATE.sliceZ`, `STATE.sliceY`, `STATE.sliceX` and their slider `max` attributes match `scen.grid_shape` (e.g. `32x24x24` vs `24x20x20`).
+
+Required Action Before Final Sign-off:
+1. Fix both bugs in `bmhd/studio.py`.
+2. Regenerate `results/bmhd_portable_studio.html`.
+3. Re-capture `results/studio_screenshot.png` via headless Chrome/Edge and visually verify that:
+   - The 3D chair-cut torus/voxel block + 3D laser chord tubes + yellow spike rings + purple glare boxes are visibly rendered in `#canvas3d`,
+   - The KAM surfaces + O/X points are visibly rendered in `#canvasPoincare`,
+   - The 1D chord profile curve + yellow spike dots are visibly rendered in `#canvasChordProfile` with `#selectChord` populated, and
+   - All 7 baselines (`BlindBMHD`, `ShellPartitionedKriging`, `TunedAnisotropicKriging`, `MinimumFisherTomography`, `CerfonFreidbergEquilibrium`, `SymmetricFourierVMECBaseline`, `NaiveBox`) are visibly populated in the right-hand `7-Baseline Tomography Benchmark` table.
+4. Re-run pytest and push the updated commit to `https://github.com/sneed-and-feed/bmhd`.
