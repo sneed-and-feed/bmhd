@@ -282,7 +282,7 @@ Evaluated under strict zero target leakage across all 7 baselines on `01_issan_n
 
 The package includes a zero-install, single-file interactive 3D WebGL/Canvas workstation (esults/bmhd_portable_studio.html):
 
-![BMHD Portable Studio Workstation](results/studio_screenshot.png)
+![BMHD Portable Studio — SPEC Beltrami Shells & Current Density |J|](results/studio_screenshot_spec_islands.png)
 
 - **Interactive 3D Viewport:** Real-time chair-cut torus viewer, dynamic octant clipping, and 3D laser-chord tubes with locked Beltrami spikes (yellow rings) and rejected glare washouts (purple squares).
 - **Real-Time Symmetry Modulation:** Dynamic reactive modulation from `tau0` (odd-in-z vertical parity drift) and `tau1` (phase shear) sliders, with a zero snap detent (`Snap tau=0.00`).

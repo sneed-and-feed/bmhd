@@ -1142,6 +1142,8 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
         });
         if (btn.getAttribute("data-scen") === STATE.scenarioId) {
           btn.classList.add("active");
+        } else {
+          btn.classList.remove("active");
         }
       });
 
@@ -1314,6 +1316,8 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
     function onScenarioChange() {
       const scen = window.BMHD_OFFLINE_SCENARIOS[STATE.scenarioId];
       if (!scen) return;
+
+      document.getElementById("hudScenarioTitle").textContent = scen.scenario_name;
 
       // Update slice sliders based on grid_shape
       const [nz, ny, nx] = scen.grid_shape;
