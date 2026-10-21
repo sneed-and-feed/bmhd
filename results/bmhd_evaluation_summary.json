@@ -1,0 +1,2540 @@
+{
+  "benchmark_version": "v0.1.0",
+  "timestamp": "2026-10-21T14:51:27Z",
+  "mode_a_formal_theorems": {
+    "theorems_audit": {
+      "theorem_2_1": {
+        "passed": true,
+        "antisymmetry_error": 0.0,
+        "self_interaction_error": 0.0
+      },
+      "theorem_2_2": {
+        "passed": true,
+        "tie_break_gap": 2.5,
+        "formula_error": 0.0
+      },
+      "theorem_2_3": {
+        "passed": true,
+        "orthogonality_residual": 9.778887033462524e-09
+      },
+      "theorem_2_4": {
+        "passed": true,
+        "step0_homotopy_error": 0.0,
+        "mhd_symmetric_homotopy_error": 0.0
+      },
+      "theorem_2_5": {
+        "passed": true,
+        "relative_phase_error": 5.551115123125783e-17,
+        "spike_recovery": 1.0,
+        "washout_rejection": 1.0,
+        "norm_attenuation_loss": 0.3662505856877062
+      },
+      "theorem_2_6": {
+        "passed": true,
+        "spherical_radial_drift": 0.0,
+        "cascade_orthogonality_error": 9.778887033462524e-09
+      },
+      "theorem_2_7": {
+        "passed": true,
+        "so6_orthogonality_error": 4.440892098500626e-16,
+        "stiffness_trace_drift": 1.4210854715202004e-14,
+        "stiffness_frobenius_drift": 3.552713678800501e-15
+      }
+    },
+    "all_theorems_verified": true,
+    "arxiv_invariants_family1": {
+      "enclosed_volume": 0.33750035572639075,
+      "beta_v": 263.3164775937493,
+      "jacobian_determinant": -1.0942699367010549,
+      "hamada_line_integral": 6.792732001649524
+    },
+    "arxiv_invariants_family2": {
+      "enclosed_volume": 1.6509442185234193,
+      "beta_v": 10.622258771929824,
+      "jacobian_determinant": -0.573655436157381,
+      "hamada_line_integral": 6.80949590964396
+    },
+    "stellarator_symmetry_tau0_active": {
+      "bx_sym_error": 0.6702900639243062,
+      "by_sym_error": 0.06894658143425836,
+      "bz_sym_error": 0.15200000000000008,
+      "psi_sym_error": 0.017168400811862227,
+      "max_residual": 0.6702900639243062
+    },
+    "stellarator_symmetry_tau0_zero": {
+      "bx_sym_error": 0.0,
+      "by_sym_error": 0.0,
+      "bz_sym_error": 0.0,
+      "psi_sym_error": 0.0,
+      "max_residual": 0.0
+    },
+    "stellarator_symmetry_tau1_zero": {
+      "bx_sym_error": 0.0,
+      "by_sym_error": 0.0,
+      "bz_sym_error": 0.0,
+      "psi_sym_error": 0.0,
+      "max_residual": 0.0
+    },
+    "field_line_multistep_drift": {
+      "K_1": {
+        "max_spherical_radial_drift": 0.0,
+        "max_tangent_orthogonality_error": 9.313225746154785e-10,
+        "passed": true
+      },
+      "K_4": {
+        "max_spherical_radial_drift": 0.0,
+        "max_tangent_orthogonality_error": 8.381903171539307e-09,
+        "passed": true
+      },
+      "K_8": {
+        "max_spherical_radial_drift": 0.0,
+        "max_tangent_orthogonality_error": 7.450580596923828e-09,
+        "passed": true
+      },
+      "K_16": {
+        "max_spherical_radial_drift": 0.0,
+        "max_tangent_orthogonality_error": 8.381903171539307e-09,
+        "passed": true
+      }
+    },
+    "mode_a_passed": true
+  },
+  "mode_b_summary": {
+    "01_issan_nonsym_solovev_tau0": {
+      "NaiveBox": {
+        "loco_rmse": 0.0005774197310725754,
+        "unseen_3d_chords_rmse": 0.005564506307679257,
+        "whole_torus_psi_rmse": 0.10606242476166888,
+        "bounded_edge_gradient_fidelity": 0.0,
+        "edge_fidelity_pct": "0.00%"
+      },
+      "TunedAnisotropicKriging": {
+        "loco_rmse": 0.024948125459893184,
+        "unseen_3d_chords_rmse": 0.031065050799928554,
+        "whole_torus_psi_rmse": 0.14166624230210367,
+        "bounded_edge_gradient_fidelity": 0.0,
+        "edge_fidelity_pct": "0.00%"
+      },
+      "SymmetricFourierVMECBaseline": {
+        "loco_rmse": 0.016840235779498974,
+        "unseen_3d_chords_rmse": 0.020514596162590236,
+        "whole_torus_psi_rmse": 0.13687730673701193,
+        "bounded_edge_gradient_fidelity": 0.0,
+        "edge_fidelity_pct": "0.00%"
+      },
+      "ShellPartitionedKriging": {
+        "loco_rmse": 0.04499916127030477,
+        "unseen_3d_chords_rmse": 0.0850726878228927,
+        "whole_torus_psi_rmse": 0.14823730718178074,
+        "bounded_edge_gradient_fidelity": 0.0,
+        "edge_fidelity_pct": "0.00%"
+      },
+      "CerfonFreidbergEquilibrium": {
+        "loco_rmse": 0.04597478052117865,
+        "unseen_3d_chords_rmse": 0.03439166533377402,
+        "whole_torus_psi_rmse": 0.15720419243555234,
+        "bounded_edge_gradient_fidelity": 0.0,
+        "edge_fidelity_pct": "0.00%"
+      },
+      "MinimumFisherTomography": {
+        "loco_rmse": 0.03563859952485443,
+        "unseen_3d_chords_rmse": 0.033505893490715866,
+        "whole_torus_psi_rmse": 0.14170486480587877,
+        "bounded_edge_gradient_fidelity": 0.0,
+        "edge_fidelity_pct": "0.00%"
+      },
+      "BlindBMHD": {
+        "loco_rmse": 0.029013543454916742,
+        "unseen_3d_chords_rmse": 0.019859310940643794,
+        "whole_torus_psi_rmse": 0.13500198365510824,
+        "bounded_edge_gradient_fidelity": 0.0,
+        "edge_fidelity_pct": "0.00%"
+      }
+    },
+    "02_issan_sheared_elliptic_tau1": {
+      "NaiveBox": {
+        "loco_rmse": 0.025795253208300242,
+        "unseen_3d_chords_rmse": 0.02562998875002494,
+        "whole_torus_psi_rmse": 0.13137921729604232,
+        "bounded_edge_gradient_fidelity": 0.0,
+        "edge_fidelity_pct": "0.00%"
+      },
+      "TunedAnisotropicKriging": {
+        "loco_rmse": 0.02501273289078802,
+        "unseen_3d_chords_rmse": 0.04921626012797139,
+        "whole_torus_psi_rmse": 0.18643395639643828,
+        "bounded_edge_gradient_fidelity": 0.0,
+        "edge_fidelity_pct": "0.00%"
+      },
+      "SymmetricFourierVMECBaseline": {
+        "loco_rmse": 0.016868457491095612,
+        "unseen_3d_chords_rmse": 0.041062314539833625,
+        "whole_torus_psi_rmse": 0.18304366816604478,
+        "bounded_edge_gradient_fidelity": 0.0,
+        "edge_fidelity_pct": "0.00%"
+      },
+      "ShellPartitionedKriging": {
+        "loco_rmse": 0.04489972370728953,
+        "unseen_3d_chords_rmse": 0.1020267297546355,
+        "whole_torus_psi_rmse": 0.19178345803052102,
+        "bounded_edge_gradient_fidelity": 0.0,
+        "edge_fidelity_pct": "0.00%"
+      },
+      "CerfonFreidbergEquilibrium": {
+        "loco_rmse": 0.04617245387639377,
+        "unseen_3d_chords_rmse": 0.03805657116815382,
+        "whole_torus_psi_rmse": 0.19478879032957555,
+        "bounded_edge_gradient_fidelity": 0.0,
+        "edge_fidelity_pct": "0.00%"
+      },
+      "MinimumFisherTomography": {
+        "loco_rmse": 0.03487090896778416,
+        "unseen_3d_chords_rmse": 0.050816569648464836,
+        "whole_torus_psi_rmse": 0.1864401176705282,
+        "bounded_edge_gradient_fidelity": 0.0,
+        "edge_fidelity_pct": "0.00%"
+      },
+      "BlindBMHD": {
+        "loco_rmse": 0.027709943006489424,
+        "unseen_3d_chords_rmse": 0.03665609677920307,
+        "whole_torus_psi_rmse": 0.17851813988796444,
+        "bounded_edge_gradient_fidelity": 0.0,
+        "edge_fidelity_pct": "0.00%"
+      }
+    },
+    "03_spec_magnetic_island_chain": {
+      "NaiveBox": {
+        "loco_rmse": 0.06911675282472249,
+        "unseen_3d_chords_rmse": 0.09436548630148386,
+        "whole_torus_psi_rmse": 0.068469974762753,
+        "bounded_edge_gradient_fidelity": 0.5361593104659037,
+        "edge_fidelity_pct": "53.62%"
+      },
+      "TunedAnisotropicKriging": {
+        "loco_rmse": 0.015095552353223941,
+        "unseen_3d_chords_rmse": 0.1916188900902488,
+        "whole_torus_psi_rmse": 0.31327750802011234,
+        "bounded_edge_gradient_fidelity": 0.24263396416299132,
+        "edge_fidelity_pct": "24.26%"
+      },
+      "SymmetricFourierVMECBaseline": {
+        "loco_rmse": 0.0768586112744565,
+        "unseen_3d_chords_rmse": 0.18407611075971353,
+        "whole_torus_psi_rmse": 0.3031872570323053,
+        "bounded_edge_gradient_fidelity": 0.23893411923677654,
+        "edge_fidelity_pct": "23.89%"
+      },
+      "ShellPartitionedKriging": {
+        "loco_rmse": 0.01801352343075404,
+        "unseen_3d_chords_rmse": 0.17642914461149584,
+        "whole_torus_psi_rmse": 0.30954774658315615,
+        "bounded_edge_gradient_fidelity": 0.2095220199969482,
+        "edge_fidelity_pct": "20.95%"
+      },
+      "CerfonFreidbergEquilibrium": {
+        "loco_rmse": 0.37599667936722475,
+        "unseen_3d_chords_rmse": 0.38086989068613164,
+        "whole_torus_psi_rmse": 0.4685214887400471,
+        "bounded_edge_gradient_fidelity": 0.09640700290445992,
+        "edge_fidelity_pct": "9.64%"
+      },
+      "MinimumFisherTomography": {
+        "loco_rmse": 0.02443078933436342,
+        "unseen_3d_chords_rmse": 0.19241231128016692,
+        "whole_torus_psi_rmse": 0.3130677363022419,
+        "bounded_edge_gradient_fidelity": 0.22796468083472787,
+        "edge_fidelity_pct": "22.80%"
+      },
+      "BlindBMHD": {
+        "loco_rmse": 0.04545900852563712,
+        "unseen_3d_chords_rmse": 0.19502878503710194,
+        "whole_torus_psi_rmse": 0.3152091708702857,
+        "bounded_edge_gradient_fidelity": 0.10025714329488755,
+        "edge_fidelity_pct": "10.03%"
+      }
+    },
+    "04_tokamak_elm_pellet_4d": {
+      "NaiveBox": {
+        "loco_rmse": 0.2088128704298581,
+        "unseen_3d_chords_rmse": 0.1705345931060115,
+        "whole_torus_psi_rmse": 0.1355768183276495,
+        "bounded_edge_gradient_fidelity": 0.30307392763200636,
+        "edge_fidelity_pct": "30.31%"
+      },
+      "TunedAnisotropicKriging": {
+        "loco_rmse": 0.0952019532665157,
+        "unseen_3d_chords_rmse": 0.38175236480136926,
+        "whole_torus_psi_rmse": 0.4135391371570154,
+        "bounded_edge_gradient_fidelity": 0.040161025908469594,
+        "edge_fidelity_pct": "4.02%"
+      },
+      "SymmetricFourierVMECBaseline": {
+        "loco_rmse": 0.11121340402518005,
+        "unseen_3d_chords_rmse": 0.35868469665816516,
+        "whole_torus_psi_rmse": 0.4052429038132276,
+        "bounded_edge_gradient_fidelity": 0.03987324773199297,
+        "edge_fidelity_pct": "3.99%"
+      },
+      "ShellPartitionedKriging": {
+        "loco_rmse": 0.05890427607477377,
+        "unseen_3d_chords_rmse": 0.18984176719022,
+        "whole_torus_psi_rmse": 0.3482116230063968,
+        "bounded_edge_gradient_fidelity": 0.13298776402659518,
+        "edge_fidelity_pct": "13.30%"
+      },
+      "CerfonFreidbergEquilibrium": {
+        "loco_rmse": 0.3551682701350505,
+        "unseen_3d_chords_rmse": 0.44913861443946734,
+        "whole_torus_psi_rmse": 0.5236358208312475,
+        "bounded_edge_gradient_fidelity": 0.04521208118569098,
+        "edge_fidelity_pct": "4.52%"
+      },
+      "MinimumFisherTomography": {
+        "loco_rmse": 0.060278189061014134,
+        "unseen_3d_chords_rmse": 0.38164365651209736,
+        "whole_torus_psi_rmse": 0.4132893745569853,
+        "bounded_edge_gradient_fidelity": 0.04409247947000816,
+        "edge_fidelity_pct": "4.41%"
+      },
+      "BlindBMHD": {
+        "loco_rmse": 0.06474769163937927,
+        "unseen_3d_chords_rmse": 0.36888862008544215,
+        "whole_torus_psi_rmse": 0.4108149221732377,
+        "bounded_edge_gradient_fidelity": 0.042727731492205656,
+        "edge_fidelity_pct": "4.27%"
+      }
+    },
+    "05_beltrami_plasma_spallation_torch": {
+      "NaiveBox": {
+        "loco_rmse": 0.07239949405403981,
+        "unseen_3d_chords_rmse": 0.06487008389014652,
+        "whole_torus_psi_rmse": 0.0504382963572233,
+        "bounded_edge_gradient_fidelity": 0.6898553620042069,
+        "edge_fidelity_pct": "68.99%"
+      },
+      "TunedAnisotropicKriging": {
+        "loco_rmse": 0.041442852134158416,
+        "unseen_3d_chords_rmse": 0.2379921941759657,
+        "whole_torus_psi_rmse": 0.6965454015342967,
+        "bounded_edge_gradient_fidelity": 0.10512040708337644,
+        "edge_fidelity_pct": "10.51%"
+      },
+      "SymmetricFourierVMECBaseline": {
+        "loco_rmse": 0.03392253800473471,
+        "unseen_3d_chords_rmse": 0.2855466124683432,
+        "whole_torus_psi_rmse": 0.695739236751203,
+        "bounded_edge_gradient_fidelity": 0.10447911752757988,
+        "edge_fidelity_pct": "10.45%"
+      },
+      "ShellPartitionedKriging": {
+        "loco_rmse": 0.041837584745943165,
+        "unseen_3d_chords_rmse": 0.29186763790471415,
+        "whole_torus_psi_rmse": 0.7177235694548783,
+        "bounded_edge_gradient_fidelity": 0.1062070277711129,
+        "edge_fidelity_pct": "10.62%"
+      },
+      "CerfonFreidbergEquilibrium": {
+        "loco_rmse": 0.09406162289332276,
+        "unseen_3d_chords_rmse": 0.33626007244858463,
+        "whole_torus_psi_rmse": 0.7748854007670429,
+        "bounded_edge_gradient_fidelity": 0.06143935312970983,
+        "edge_fidelity_pct": "6.14%"
+      },
+      "MinimumFisherTomography": {
+        "loco_rmse": 0.047163047227151395,
+        "unseen_3d_chords_rmse": 0.238835995170565,
+        "whole_torus_psi_rmse": 0.6965866533439451,
+        "bounded_edge_gradient_fidelity": 0.10464770406674262,
+        "edge_fidelity_pct": "10.46%"
+      },
+      "BlindBMHD": {
+        "loco_rmse": 0.07190463826678847,
+        "unseen_3d_chords_rmse": 0.24444419807955436,
+        "whole_torus_psi_rmse": 0.7019263143041498,
+        "bounded_edge_gradient_fidelity": 0.10515430044871654,
+        "edge_fidelity_pct": "10.52%"
+      }
+    }
+  },
+  "snr_sweeps": {
+    "01_issan_nonsym_solovev_tau0": {
+      "inf_dB": {
+        "NaiveBox": {
+          "loco_rmse": 4.979187476347144e-07,
+          "unseen_3d_chords_rmse": 0.005346783805366867,
+          "whole_torus_psi_rmse": 0.10606289093102436,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "TunedAnisotropicKriging": {
+          "loco_rmse": 4.239734207189668e-17,
+          "unseen_3d_chords_rmse": 4.9391408796373674e-17,
+          "whole_torus_psi_rmse": 0.13164016326145508,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "SymmetricFourierVMECBaseline": {
+          "loco_rmse": 4.239734207189668e-17,
+          "unseen_3d_chords_rmse": 4.9391408796373674e-17,
+          "whole_torus_psi_rmse": 0.13164016326145508,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "ShellPartitionedKriging": {
+          "loco_rmse": 4.239734207189668e-17,
+          "unseen_3d_chords_rmse": 4.9391408796373674e-17,
+          "whole_torus_psi_rmse": 0.13164016326145508,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "CerfonFreidbergEquilibrium": {
+          "loco_rmse": 4.239734207189668e-17,
+          "unseen_3d_chords_rmse": 4.9391408796373674e-17,
+          "whole_torus_psi_rmse": 0.13164016326145508,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "MinimumFisherTomography": {
+          "loco_rmse": 4.239734207189668e-17,
+          "unseen_3d_chords_rmse": 4.9391408796373674e-17,
+          "whole_torus_psi_rmse": 0.13164016326145508,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "BlindBMHD": {
+          "loco_rmse": 4.239734207189668e-17,
+          "unseen_3d_chords_rmse": 4.9391408796373674e-17,
+          "whole_torus_psi_rmse": 0.13164016326145508,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        }
+      },
+      "20_dB": {
+        "NaiveBox": {
+          "loco_rmse": 0.0005774197310725754,
+          "unseen_3d_chords_rmse": 0.005564506307679257,
+          "whole_torus_psi_rmse": 0.10606242476166888,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "TunedAnisotropicKriging": {
+          "loco_rmse": 0.024948125459893184,
+          "unseen_3d_chords_rmse": 0.031065050799928554,
+          "whole_torus_psi_rmse": 0.14166624230210367,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "SymmetricFourierVMECBaseline": {
+          "loco_rmse": 0.016840235779498974,
+          "unseen_3d_chords_rmse": 0.020514596162590236,
+          "whole_torus_psi_rmse": 0.13687730673701193,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "ShellPartitionedKriging": {
+          "loco_rmse": 0.04499916127030477,
+          "unseen_3d_chords_rmse": 0.0850726878228927,
+          "whole_torus_psi_rmse": 0.14823730718178074,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "CerfonFreidbergEquilibrium": {
+          "loco_rmse": 0.04597478052117865,
+          "unseen_3d_chords_rmse": 0.03439166533377402,
+          "whole_torus_psi_rmse": 0.15720419243555234,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "MinimumFisherTomography": {
+          "loco_rmse": 0.03563859952485443,
+          "unseen_3d_chords_rmse": 0.033505893490715866,
+          "whole_torus_psi_rmse": 0.14170486480587877,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "BlindBMHD": {
+          "loco_rmse": 0.029013543454916742,
+          "unseen_3d_chords_rmse": 0.019859310940643794,
+          "whole_torus_psi_rmse": 0.13500198365510824,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        }
+      },
+      "10_dB": {
+        "NaiveBox": {
+          "loco_rmse": 0.0018262361078971569,
+          "unseen_3d_chords_rmse": 0.006287453202413105,
+          "whole_torus_psi_rmse": 0.10609652262849627,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "TunedAnisotropicKriging": {
+          "loco_rmse": 0.07889289980489872,
+          "unseen_3d_chords_rmse": 0.09823631615661067,
+          "whole_torus_psi_rmse": 0.19925514728128144,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "SymmetricFourierVMECBaseline": {
+          "loco_rmse": 0.053253501397478115,
+          "unseen_3d_chords_rmse": 0.06487284915233595,
+          "whole_torus_psi_rmse": 0.16296563441619683,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "ShellPartitionedKriging": {
+          "loco_rmse": 0.14229984241139929,
+          "unseen_3d_chords_rmse": 0.26902346019281265,
+          "whole_torus_psi_rmse": 0.232300423124704,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "CerfonFreidbergEquilibrium": {
+          "loco_rmse": 0.14538502137326756,
+          "unseen_3d_chords_rmse": 0.10875599498098083,
+          "whole_torus_psi_rmse": 0.3237936746711445,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "MinimumFisherTomography": {
+          "loco_rmse": 0.11269914711713534,
+          "unseen_3d_chords_rmse": 0.10595493846967316,
+          "whole_torus_psi_rmse": 0.19956735343523654,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "BlindBMHD": {
+          "loco_rmse": 0.09292217191471476,
+          "unseen_3d_chords_rmse": 0.0657380225584099,
+          "whole_torus_psi_rmse": 0.15426763416409175,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        }
+      },
+      "5_dB": {
+        "NaiveBox": {
+          "loco_rmse": 0.0032476570321492795,
+          "unseen_3d_chords_rmse": 0.007415876612581384,
+          "whole_torus_psi_rmse": 0.10619369356758841,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "TunedAnisotropicKriging": {
+          "loco_rmse": 0.14029361932131681,
+          "unseen_3d_chords_rmse": 0.1746916183393769,
+          "whole_torus_psi_rmse": 0.2913104303619427,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "SymmetricFourierVMECBaseline": {
+          "loco_rmse": 0.09469960504761624,
+          "unseen_3d_chords_rmse": 0.11536205191816584,
+          "whole_torus_psi_rmse": 0.20837148034643901,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "ShellPartitionedKriging": {
+          "loco_rmse": 0.25304887981197915,
+          "unseen_3d_chords_rmse": 0.47839888007830705,
+          "whole_torus_psi_rmse": 0.3562210180011506,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "CerfonFreidbergEquilibrium": {
+          "loco_rmse": 0.25853519003615033,
+          "unseen_3d_chords_rmse": 0.1933985465929745,
+          "whole_torus_psi_rmse": 0.5502924547079411,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "MinimumFisherTomography": {
+          "loco_rmse": 0.20041057284734953,
+          "unseen_3d_chords_rmse": 0.1884174854725619,
+          "whole_torus_psi_rmse": 0.2920019914273277,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "BlindBMHD": {
+          "loco_rmse": 0.1797718328528204,
+          "unseen_3d_chords_rmse": 0.14460566448380768,
+          "whole_torus_psi_rmse": 0.23225971617582974,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        }
+      }
+    },
+    "02_issan_sheared_elliptic_tau1": {
+      "inf_dB": {
+        "NaiveBox": {
+          "loco_rmse": 0.025817969776984074,
+          "unseen_3d_chords_rmse": 0.025453519182429454,
+          "whole_torus_psi_rmse": 0.13136342424624645,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "TunedAnisotropicKriging": {
+          "loco_rmse": 2.119867103594834e-17,
+          "unseen_3d_chords_rmse": 0.028604432228049034,
+          "whole_torus_psi_rmse": 0.1738891602501441,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "SymmetricFourierVMECBaseline": {
+          "loco_rmse": 2.119867103594834e-17,
+          "unseen_3d_chords_rmse": 0.028604432228049034,
+          "whole_torus_psi_rmse": 0.1738891602501441,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "ShellPartitionedKriging": {
+          "loco_rmse": 2.119867103594834e-17,
+          "unseen_3d_chords_rmse": 0.028604432228049034,
+          "whole_torus_psi_rmse": 0.1738891602501441,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "CerfonFreidbergEquilibrium": {
+          "loco_rmse": 2.119867103594834e-17,
+          "unseen_3d_chords_rmse": 0.028604432228049034,
+          "whole_torus_psi_rmse": 0.1738891602501441,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "MinimumFisherTomography": {
+          "loco_rmse": 2.119867103594834e-17,
+          "unseen_3d_chords_rmse": 0.028604432228049034,
+          "whole_torus_psi_rmse": 0.1738891602501441,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "BlindBMHD": {
+          "loco_rmse": 2.119867103594834e-17,
+          "unseen_3d_chords_rmse": 0.028604432228049034,
+          "whole_torus_psi_rmse": 0.1738891602501441,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        }
+      },
+      "20_dB": {
+        "NaiveBox": {
+          "loco_rmse": 0.025795253208300242,
+          "unseen_3d_chords_rmse": 0.02562998875002494,
+          "whole_torus_psi_rmse": 0.13137921729604232,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "TunedAnisotropicKriging": {
+          "loco_rmse": 0.02501273289078802,
+          "unseen_3d_chords_rmse": 0.04921626012797139,
+          "whole_torus_psi_rmse": 0.18643395639643828,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "SymmetricFourierVMECBaseline": {
+          "loco_rmse": 0.016868457491095612,
+          "unseen_3d_chords_rmse": 0.041062314539833625,
+          "whole_torus_psi_rmse": 0.18304366816604478,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "ShellPartitionedKriging": {
+          "loco_rmse": 0.04489972370728953,
+          "unseen_3d_chords_rmse": 0.1020267297546355,
+          "whole_torus_psi_rmse": 0.19178345803052102,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "CerfonFreidbergEquilibrium": {
+          "loco_rmse": 0.04617245387639377,
+          "unseen_3d_chords_rmse": 0.03805657116815382,
+          "whole_torus_psi_rmse": 0.19478879032957555,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "MinimumFisherTomography": {
+          "loco_rmse": 0.03487090896778416,
+          "unseen_3d_chords_rmse": 0.050816569648464836,
+          "whole_torus_psi_rmse": 0.1864401176705282,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "BlindBMHD": {
+          "loco_rmse": 0.027709943006489424,
+          "unseen_3d_chords_rmse": 0.03665609677920307,
+          "whole_torus_psi_rmse": 0.17851813988796444,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        }
+      },
+      "10_dB": {
+        "NaiveBox": {
+          "loco_rmse": 0.025821296932783667,
+          "unseen_3d_chords_rmse": 0.026108249932654263,
+          "whole_torus_psi_rmse": 0.13146108348346927,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "TunedAnisotropicKriging": {
+          "loco_rmse": 0.07909720644029467,
+          "unseen_3d_chords_rmse": 0.11176193950955639,
+          "whole_torus_psi_rmse": 0.24043948729734632,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "SymmetricFourierVMECBaseline": {
+          "loco_rmse": 0.05334274628558843,
+          "unseen_3d_chords_rmse": 0.08036944177802192,
+          "whole_torus_psi_rmse": 0.2127156071174365,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "ShellPartitionedKriging": {
+          "loco_rmse": 0.14198539322729636,
+          "unseen_3d_chords_rmse": 0.2855886282618902,
+          "whole_torus_psi_rmse": 0.2699352362193645,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "CerfonFreidbergEquilibrium": {
+          "loco_rmse": 0.14601011940847491,
+          "unseen_3d_chords_rmse": 0.10435431515674488,
+          "whole_torus_psi_rmse": 0.34462501031730286,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "MinimumFisherTomography": {
+          "loco_rmse": 0.11027149641858783,
+          "unseen_3d_chords_rmse": 0.11865609765941931,
+          "whole_torus_psi_rmse": 0.24064861318213787,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "BlindBMHD": {
+          "loco_rmse": 0.08875952251666558,
+          "unseen_3d_chords_rmse": 0.0740503535602067,
+          "whole_torus_psi_rmse": 0.19826852192373973,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        }
+      },
+      "5_dB": {
+        "NaiveBox": {
+          "loco_rmse": 0.02597547796007038,
+          "unseen_3d_chords_rmse": 0.026805696634614243,
+          "whole_torus_psi_rmse": 0.1316335266145081,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "TunedAnisotropicKriging": {
+          "loco_rmse": 0.14065693360437886,
+          "unseen_3d_chords_rmse": 0.18690722692683592,
+          "whole_torus_psi_rmse": 0.3258067403731624,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "SymmetricFourierVMECBaseline": {
+          "loco_rmse": 0.09485830739459758,
+          "unseen_3d_chords_rmse": 0.1292757957839281,
+          "whole_torus_psi_rmse": 0.2576782031742637,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "ShellPartitionedKriging": {
+          "loco_rmse": 0.25248970130238424,
+          "unseen_3d_chords_rmse": 0.49642649965105246,
+          "whole_torus_psi_rmse": 0.3878656816672594,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "CerfonFreidbergEquilibrium": {
+          "loco_rmse": 0.25964678900141536,
+          "unseen_3d_chords_rmse": 0.18729907796324233,
+          "whole_torus_psi_rmse": 0.5635036595110331,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "MinimumFisherTomography": {
+          "loco_rmse": 0.1960935315953576,
+          "unseen_3d_chords_rmse": 0.19987456159125042,
+          "whole_torus_psi_rmse": 0.326370760555167,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "BlindBMHD": {
+          "loco_rmse": 0.17422392043955984,
+          "unseen_3d_chords_rmse": 0.14911905436726658,
+          "whole_torus_psi_rmse": 0.2703336408327057,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        }
+      }
+    },
+    "03_spec_magnetic_island_chain": {
+      "inf_dB": {
+        "NaiveBox": {
+          "loco_rmse": 0.06888966525129155,
+          "unseen_3d_chords_rmse": 0.09539364804509738,
+          "whole_torus_psi_rmse": 0.0683286217199039,
+          "bounded_edge_gradient_fidelity": 0.5355670026927879,
+          "edge_fidelity_pct": "53.56%"
+        },
+        "TunedAnisotropicKriging": {
+          "loco_rmse": 0.008368472646264169,
+          "unseen_3d_chords_rmse": 0.19225735801400587,
+          "whole_torus_psi_rmse": 0.3130271465616413,
+          "bounded_edge_gradient_fidelity": 0.2415638690737001,
+          "edge_fidelity_pct": "24.16%"
+        },
+        "SymmetricFourierVMECBaseline": {
+          "loco_rmse": 0.07532219286565697,
+          "unseen_3d_chords_rmse": 0.18342635517725872,
+          "whole_torus_psi_rmse": 0.3029752104564646,
+          "bounded_edge_gradient_fidelity": 0.23786999227596328,
+          "edge_fidelity_pct": "23.79%"
+        },
+        "ShellPartitionedKriging": {
+          "loco_rmse": 0.010768386169968397,
+          "unseen_3d_chords_rmse": 0.177771773410297,
+          "whole_torus_psi_rmse": 0.30899817287026926,
+          "bounded_edge_gradient_fidelity": 0.2074162919342012,
+          "edge_fidelity_pct": "20.74%"
+        },
+        "CerfonFreidbergEquilibrium": {
+          "loco_rmse": 0.37526435076231346,
+          "unseen_3d_chords_rmse": 0.3813728483508047,
+          "whole_torus_psi_rmse": 0.46981725003714925,
+          "bounded_edge_gradient_fidelity": 0.09639929988759655,
+          "edge_fidelity_pct": "9.64%"
+        },
+        "MinimumFisherTomography": {
+          "loco_rmse": 0.017020500060303374,
+          "unseen_3d_chords_rmse": 0.1931410679670585,
+          "whole_torus_psi_rmse": 0.312824075043648,
+          "bounded_edge_gradient_fidelity": 0.2266457504483832,
+          "edge_fidelity_pct": "22.66%"
+        },
+        "BlindBMHD": {
+          "loco_rmse": 0.04124362847773786,
+          "unseen_3d_chords_rmse": 0.1954614043242226,
+          "whole_torus_psi_rmse": 0.3152718340664904,
+          "bounded_edge_gradient_fidelity": 0.09871053955328857,
+          "edge_fidelity_pct": "9.87%"
+        }
+      },
+      "20_dB": {
+        "NaiveBox": {
+          "loco_rmse": 0.06911675282472249,
+          "unseen_3d_chords_rmse": 0.09436548630148386,
+          "whole_torus_psi_rmse": 0.068469974762753,
+          "bounded_edge_gradient_fidelity": 0.5361593104659037,
+          "edge_fidelity_pct": "53.62%"
+        },
+        "TunedAnisotropicKriging": {
+          "loco_rmse": 0.015095552353223941,
+          "unseen_3d_chords_rmse": 0.1916188900902488,
+          "whole_torus_psi_rmse": 0.31327750802011234,
+          "bounded_edge_gradient_fidelity": 0.24263396416299132,
+          "edge_fidelity_pct": "24.26%"
+        },
+        "SymmetricFourierVMECBaseline": {
+          "loco_rmse": 0.0768586112744565,
+          "unseen_3d_chords_rmse": 0.18407611075971353,
+          "whole_torus_psi_rmse": 0.3031872570323053,
+          "bounded_edge_gradient_fidelity": 0.23893411923677654,
+          "edge_fidelity_pct": "23.89%"
+        },
+        "ShellPartitionedKriging": {
+          "loco_rmse": 0.01801352343075404,
+          "unseen_3d_chords_rmse": 0.17642914461149584,
+          "whole_torus_psi_rmse": 0.30954774658315615,
+          "bounded_edge_gradient_fidelity": 0.2095220199969482,
+          "edge_fidelity_pct": "20.95%"
+        },
+        "CerfonFreidbergEquilibrium": {
+          "loco_rmse": 0.37599667936722475,
+          "unseen_3d_chords_rmse": 0.38086989068613164,
+          "whole_torus_psi_rmse": 0.4685214887400471,
+          "bounded_edge_gradient_fidelity": 0.09640700290445992,
+          "edge_fidelity_pct": "9.64%"
+        },
+        "MinimumFisherTomography": {
+          "loco_rmse": 0.02443078933436342,
+          "unseen_3d_chords_rmse": 0.19241231128016692,
+          "whole_torus_psi_rmse": 0.3130677363022419,
+          "bounded_edge_gradient_fidelity": 0.22796468083472787,
+          "edge_fidelity_pct": "22.80%"
+        },
+        "BlindBMHD": {
+          "loco_rmse": 0.04545900852563712,
+          "unseen_3d_chords_rmse": 0.19502878503710194,
+          "whole_torus_psi_rmse": 0.3152091708702857,
+          "bounded_edge_gradient_fidelity": 0.10025714329488755,
+          "edge_fidelity_pct": "10.03%"
+        }
+      },
+      "10_dB": {
+        "NaiveBox": {
+          "loco_rmse": 0.06988729206704801,
+          "unseen_3d_chords_rmse": 0.09244298185022508,
+          "whole_torus_psi_rmse": 0.06914686936280313,
+          "bounded_edge_gradient_fidelity": 0.5374400443316565,
+          "edge_fidelity_pct": "53.74%"
+        },
+        "TunedAnisotropicKriging": {
+          "loco_rmse": 0.03987868221767852,
+          "unseen_3d_chords_rmse": 0.19139716274272356,
+          "whole_torus_psi_rmse": 0.3144905347435299,
+          "bounded_edge_gradient_fidelity": 0.24452901285403816,
+          "edge_fidelity_pct": "24.45%"
+        },
+        "SymmetricFourierVMECBaseline": {
+          "loco_rmse": 0.08251832018961679,
+          "unseen_3d_chords_rmse": 0.18590202885436533,
+          "whole_torus_psi_rmse": 0.30395857461811276,
+          "bounded_edge_gradient_fidelity": 0.2412343914731616,
+          "edge_fidelity_pct": "24.12%"
+        },
+        "ShellPartitionedKriging": {
+          "loco_rmse": 0.041193542654154244,
+          "unseen_3d_chords_rmse": 0.1860244109985055,
+          "whole_torus_psi_rmse": 0.3030171004669129,
+          "bounded_edge_gradient_fidelity": 0.23774148521488325,
+          "edge_fidelity_pct": "23.77%"
+        },
+        "CerfonFreidbergEquilibrium": {
+          "loco_rmse": 0.3836366024160257,
+          "unseen_3d_chords_rmse": 0.3817395262985711,
+          "whole_torus_psi_rmse": 0.46951979249103454,
+          "bounded_edge_gradient_fidelity": 0.09877470405190869,
+          "edge_fidelity_pct": "9.88%"
+        },
+        "MinimumFisherTomography": {
+          "loco_rmse": 0.053859353736643883,
+          "unseen_3d_chords_rmse": 0.19187387608924966,
+          "whole_torus_psi_rmse": 0.3142362571671658,
+          "bounded_edge_gradient_fidelity": 0.23026876045167377,
+          "edge_fidelity_pct": "23.03%"
+        },
+        "BlindBMHD": {
+          "loco_rmse": 0.06439560439813068,
+          "unseen_3d_chords_rmse": 0.19596989661911574,
+          "whole_torus_psi_rmse": 0.31568817210944916,
+          "bounded_edge_gradient_fidelity": 0.11078427250158629,
+          "edge_fidelity_pct": "11.08%"
+        }
+      },
+      "5_dB": {
+        "NaiveBox": {
+          "loco_rmse": 0.07121529192637562,
+          "unseen_3d_chords_rmse": 0.0907816726605846,
+          "whole_torus_psi_rmse": 0.07051775337550137,
+          "bounded_edge_gradient_fidelity": 0.5388967161232778,
+          "edge_fidelity_pct": "53.89%"
+        },
+        "TunedAnisotropicKriging": {
+          "loco_rmse": 0.06957257029108181,
+          "unseen_3d_chords_rmse": 0.19307201593843154,
+          "whole_torus_psi_rmse": 0.31697642653096986,
+          "bounded_edge_gradient_fidelity": 0.24607115917716027,
+          "edge_fidelity_pct": "24.61%"
+        },
+        "SymmetricFourierVMECBaseline": {
+          "loco_rmse": 0.09217228210276197,
+          "unseen_3d_chords_rmse": 0.18866228579255218,
+          "whole_torus_psi_rmse": 0.305353321924263,
+          "bounded_edge_gradient_fidelity": 0.24334194609100324,
+          "edge_fidelity_pct": "24.33%"
+        },
+        "ShellPartitionedKriging": {
+          "loco_rmse": 0.06989451527129638,
+          "unseen_3d_chords_rmse": 0.2045416367913349,
+          "whole_torus_psi_rmse": 0.31797848727759187,
+          "bounded_edge_gradient_fidelity": 0.22355255395707385,
+          "edge_fidelity_pct": "22.36%"
+        },
+        "CerfonFreidbergEquilibrium": {
+          "loco_rmse": 0.40223868925317474,
+          "unseen_3d_chords_rmse": 0.3858706135331676,
+          "whole_torus_psi_rmse": 0.4770353335151767,
+          "bounded_edge_gradient_fidelity": 0.10496646988888725,
+          "edge_fidelity_pct": "10.50%"
+        },
+        "MinimumFisherTomography": {
+          "loco_rmse": 0.09084082677645516,
+          "unseen_3d_chords_rmse": 0.19299423721023382,
+          "whole_torus_psi_rmse": 0.316622536173547,
+          "bounded_edge_gradient_fidelity": 0.23195500496794963,
+          "edge_fidelity_pct": "23.20%"
+        },
+        "BlindBMHD": {
+          "loco_rmse": 0.09610200533806883,
+          "unseen_3d_chords_rmse": 0.19605051219824463,
+          "whole_torus_psi_rmse": 0.31740998054495384,
+          "bounded_edge_gradient_fidelity": 0.11900970414504086,
+          "edge_fidelity_pct": "11.90%"
+        }
+      }
+    },
+    "04_tokamak_elm_pellet_4d": {
+      "inf_dB": {
+        "NaiveBox": {
+          "loco_rmse": 0.20843139474622024,
+          "unseen_3d_chords_rmse": 0.17080785563792267,
+          "whole_torus_psi_rmse": 0.135544378254625,
+          "bounded_edge_gradient_fidelity": 0.30292208972622325,
+          "edge_fidelity_pct": "30.29%"
+        },
+        "TunedAnisotropicKriging": {
+          "loco_rmse": 0.09491603865873485,
+          "unseen_3d_chords_rmse": 0.3805346396333181,
+          "whole_torus_psi_rmse": 0.4116037170843658,
+          "bounded_edge_gradient_fidelity": 0.038047803116952106,
+          "edge_fidelity_pct": "3.80%"
+        },
+        "SymmetricFourierVMECBaseline": {
+          "loco_rmse": 0.11113645306141094,
+          "unseen_3d_chords_rmse": 0.3547787175825956,
+          "whole_torus_psi_rmse": 0.4030946334559677,
+          "bounded_edge_gradient_fidelity": 0.03775542731727033,
+          "edge_fidelity_pct": "3.78%"
+        },
+        "ShellPartitionedKriging": {
+          "loco_rmse": 0.05816794172313019,
+          "unseen_3d_chords_rmse": 0.1980031937291666,
+          "whole_torus_psi_rmse": 0.34536657430849177,
+          "bounded_edge_gradient_fidelity": 0.13309920715005286,
+          "edge_fidelity_pct": "13.31%"
+        },
+        "CerfonFreidbergEquilibrium": {
+          "loco_rmse": 0.35437159926001527,
+          "unseen_3d_chords_rmse": 0.45048631393289446,
+          "whole_torus_psi_rmse": 0.5254814585883615,
+          "bounded_edge_gradient_fidelity": 0.0452175970498262,
+          "edge_fidelity_pct": "4.52%"
+        },
+        "MinimumFisherTomography": {
+          "loco_rmse": 0.06010279772707911,
+          "unseen_3d_chords_rmse": 0.3804035890844464,
+          "whole_torus_psi_rmse": 0.41135160555684963,
+          "bounded_edge_gradient_fidelity": 0.04197327486203051,
+          "edge_fidelity_pct": "4.20%"
+        },
+        "BlindBMHD": {
+          "loco_rmse": 0.06417218195404883,
+          "unseen_3d_chords_rmse": 0.3748728572673271,
+          "whole_torus_psi_rmse": 0.4085548776687884,
+          "bounded_edge_gradient_fidelity": 0.040383982936548324,
+          "edge_fidelity_pct": "4.04%"
+        }
+      },
+      "20_dB": {
+        "NaiveBox": {
+          "loco_rmse": 0.2088128704298581,
+          "unseen_3d_chords_rmse": 0.1705345931060115,
+          "whole_torus_psi_rmse": 0.1355768183276495,
+          "bounded_edge_gradient_fidelity": 0.30307392763200636,
+          "edge_fidelity_pct": "30.31%"
+        },
+        "TunedAnisotropicKriging": {
+          "loco_rmse": 0.0952019532665157,
+          "unseen_3d_chords_rmse": 0.38175236480136926,
+          "whole_torus_psi_rmse": 0.4135391371570154,
+          "bounded_edge_gradient_fidelity": 0.040161025908469594,
+          "edge_fidelity_pct": "4.02%"
+        },
+        "SymmetricFourierVMECBaseline": {
+          "loco_rmse": 0.11121340402518005,
+          "unseen_3d_chords_rmse": 0.35868469665816516,
+          "whole_torus_psi_rmse": 0.4052429038132276,
+          "bounded_edge_gradient_fidelity": 0.03987324773199297,
+          "edge_fidelity_pct": "3.99%"
+        },
+        "ShellPartitionedKriging": {
+          "loco_rmse": 0.05890427607477377,
+          "unseen_3d_chords_rmse": 0.18984176719022,
+          "whole_torus_psi_rmse": 0.3482116230063968,
+          "bounded_edge_gradient_fidelity": 0.13298776402659518,
+          "edge_fidelity_pct": "13.30%"
+        },
+        "CerfonFreidbergEquilibrium": {
+          "loco_rmse": 0.3551682701350505,
+          "unseen_3d_chords_rmse": 0.44913861443946734,
+          "whole_torus_psi_rmse": 0.5236358208312475,
+          "bounded_edge_gradient_fidelity": 0.04521208118569098,
+          "edge_fidelity_pct": "4.52%"
+        },
+        "MinimumFisherTomography": {
+          "loco_rmse": 0.060278189061014134,
+          "unseen_3d_chords_rmse": 0.38164365651209736,
+          "whole_torus_psi_rmse": 0.4132893745569853,
+          "bounded_edge_gradient_fidelity": 0.04409247947000816,
+          "edge_fidelity_pct": "4.41%"
+        },
+        "BlindBMHD": {
+          "loco_rmse": 0.06474769163937927,
+          "unseen_3d_chords_rmse": 0.36888862008544215,
+          "whole_torus_psi_rmse": 0.4108149221732377,
+          "bounded_edge_gradient_fidelity": 0.042727731492205656,
+          "edge_fidelity_pct": "4.27%"
+        }
+      },
+      "10_dB": {
+        "NaiveBox": {
+          "loco_rmse": 0.20969214627501856,
+          "unseen_3d_chords_rmse": 0.17004008470100654,
+          "whole_torus_psi_rmse": 0.13576827302498,
+          "bounded_edge_gradient_fidelity": 0.3034022433436475,
+          "edge_fidelity_pct": "30.34%"
+        },
+        "TunedAnisotropicKriging": {
+          "loco_rmse": 0.09720411771389557,
+          "unseen_3d_chords_rmse": 0.38508794711016536,
+          "whole_torus_psi_rmse": 0.4193699076859504,
+          "bounded_edge_gradient_fidelity": 0.04589862683782964,
+          "edge_fidelity_pct": "4.59%"
+        },
+        "SymmetricFourierVMECBaseline": {
+          "loco_rmse": 0.11218412269795565,
+          "unseen_3d_chords_rmse": 0.36755907235185187,
+          "whole_torus_psi_rmse": 0.41044503620026523,
+          "bounded_edge_gradient_fidelity": 0.045579226840507636,
+          "edge_fidelity_pct": "4.56%"
+        },
+        "ShellPartitionedKriging": {
+          "loco_rmse": 0.07050772927252581,
+          "unseen_3d_chords_rmse": 0.21571874795538026,
+          "whole_torus_psi_rmse": 0.342574498174348,
+          "bounded_edge_gradient_fidelity": 0.13248128379761293,
+          "edge_fidelity_pct": "13.25%"
+        },
+        "CerfonFreidbergEquilibrium": {
+          "loco_rmse": 0.3633702346926582,
+          "unseen_3d_chords_rmse": 0.4485874270868355,
+          "whole_torus_psi_rmse": 0.523250580395258,
+          "bounded_edge_gradient_fidelity": 0.046394404957666,
+          "edge_fidelity_pct": "4.64%"
+        },
+        "MinimumFisherTomography": {
+          "loco_rmse": 0.06513440364617952,
+          "unseen_3d_chords_rmse": 0.38500751641933295,
+          "whole_torus_psi_rmse": 0.41913023793495824,
+          "bounded_edge_gradient_fidelity": 0.050889657486237194,
+          "edge_fidelity_pct": "5.09%"
+        },
+        "BlindBMHD": {
+          "loco_rmse": 0.07282371637330556,
+          "unseen_3d_chords_rmse": 0.3744102688247109,
+          "whole_torus_psi_rmse": 0.4174548660353321,
+          "bounded_edge_gradient_fidelity": 0.04591313739685532,
+          "edge_fidelity_pct": "4.59%"
+        }
+      },
+      "5_dB": {
+        "NaiveBox": {
+          "loco_rmse": 0.21078251521604113,
+          "unseen_3d_chords_rmse": 0.16963874624869904,
+          "whole_torus_psi_rmse": 0.13618721921967977,
+          "bounded_edge_gradient_fidelity": 0.3037759370177445,
+          "edge_fidelity_pct": "30.38%"
+        },
+        "TunedAnisotropicKriging": {
+          "loco_rmse": 0.1016493383868032,
+          "unseen_3d_chords_rmse": 0.39002637566150045,
+          "whole_torus_psi_rmse": 0.4286422879990388,
+          "bounded_edge_gradient_fidelity": 0.053440577964870006,
+          "edge_fidelity_pct": "5.34%"
+        },
+        "SymmetricFourierVMECBaseline": {
+          "loco_rmse": 0.11459238831689196,
+          "unseen_3d_chords_rmse": 0.37832921090621957,
+          "whole_torus_psi_rmse": 0.4172622617886838,
+          "bounded_edge_gradient_fidelity": 0.052841276559837946,
+          "edge_fidelity_pct": "5.28%"
+        },
+        "ShellPartitionedKriging": {
+          "loco_rmse": 0.08169638867793619,
+          "unseen_3d_chords_rmse": 0.22879645147014258,
+          "whole_torus_psi_rmse": 0.3382601985204567,
+          "bounded_edge_gradient_fidelity": 0.14154974248577523,
+          "edge_fidelity_pct": "14.15%"
+        },
+        "CerfonFreidbergEquilibrium": {
+          "loco_rmse": 0.3832781524552595,
+          "unseen_3d_chords_rmse": 0.4517386125993538,
+          "whole_torus_psi_rmse": 0.5288498677648745,
+          "bounded_edge_gradient_fidelity": 0.04957573239734625,
+          "edge_fidelity_pct": "4.96%"
+        },
+        "MinimumFisherTomography": {
+          "loco_rmse": 0.07663699306915563,
+          "unseen_3d_chords_rmse": 0.38994538703364867,
+          "whole_torus_psi_rmse": 0.428421894533977,
+          "bounded_edge_gradient_fidelity": 0.059481528507896564,
+          "edge_fidelity_pct": "5.95%"
+        },
+        "BlindBMHD": {
+          "loco_rmse": 0.08265805159557346,
+          "unseen_3d_chords_rmse": 0.38285903517960707,
+          "whole_torus_psi_rmse": 0.42787267729092826,
+          "bounded_edge_gradient_fidelity": 0.05599856804921455,
+          "edge_fidelity_pct": "5.60%"
+        }
+      }
+    },
+    "05_beltrami_plasma_spallation_torch": {
+      "inf_dB": {
+        "NaiveBox": {
+          "loco_rmse": 0.0716936217881398,
+          "unseen_3d_chords_rmse": 0.0638783233066027,
+          "whole_torus_psi_rmse": 0.05029190260708784,
+          "bounded_edge_gradient_fidelity": 0.6899932245149369,
+          "edge_fidelity_pct": "69.00%"
+        },
+        "TunedAnisotropicKriging": {
+          "loco_rmse": 0.005982876189527175,
+          "unseen_3d_chords_rmse": 0.2608337312909738,
+          "whole_torus_psi_rmse": 0.7004249631311674,
+          "bounded_edge_gradient_fidelity": 0.10077467927211914,
+          "edge_fidelity_pct": "10.08%"
+        },
+        "SymmetricFourierVMECBaseline": {
+          "loco_rmse": 0.01844631223087986,
+          "unseen_3d_chords_rmse": 0.2951470304286225,
+          "whole_torus_psi_rmse": 0.7000256453136218,
+          "bounded_edge_gradient_fidelity": 0.10076132472773569,
+          "edge_fidelity_pct": "10.08%"
+        },
+        "ShellPartitionedKriging": {
+          "loco_rmse": 0.015394314310547068,
+          "unseen_3d_chords_rmse": 0.34079044723420365,
+          "whole_torus_psi_rmse": 0.772282708034074,
+          "bounded_edge_gradient_fidelity": 0.0723821459935372,
+          "edge_fidelity_pct": "7.24%"
+        },
+        "CerfonFreidbergEquilibrium": {
+          "loco_rmse": 0.08361829514849164,
+          "unseen_3d_chords_rmse": 0.3410324122793378,
+          "whole_torus_psi_rmse": 0.7798243043688272,
+          "bounded_edge_gradient_fidelity": 0.03740862057722982,
+          "edge_fidelity_pct": "3.74%"
+        },
+        "MinimumFisherTomography": {
+          "loco_rmse": 0.007470130393639704,
+          "unseen_3d_chords_rmse": 0.26069550298024224,
+          "whole_torus_psi_rmse": 0.7004744020200468,
+          "bounded_edge_gradient_fidelity": 0.10063224206912358,
+          "edge_fidelity_pct": "10.06%"
+        },
+        "BlindBMHD": {
+          "loco_rmse": 0.05114366506527212,
+          "unseen_3d_chords_rmse": 0.2951991550080002,
+          "whole_torus_psi_rmse": 0.7059185092722348,
+          "bounded_edge_gradient_fidelity": 0.11318899495053447,
+          "edge_fidelity_pct": "11.32%"
+        }
+      },
+      "20_dB": {
+        "NaiveBox": {
+          "loco_rmse": 0.07239949405403981,
+          "unseen_3d_chords_rmse": 0.06487008389014652,
+          "whole_torus_psi_rmse": 0.0504382963572233,
+          "bounded_edge_gradient_fidelity": 0.6898553620042069,
+          "edge_fidelity_pct": "68.99%"
+        },
+        "TunedAnisotropicKriging": {
+          "loco_rmse": 0.041442852134158416,
+          "unseen_3d_chords_rmse": 0.2379921941759657,
+          "whole_torus_psi_rmse": 0.6965454015342967,
+          "bounded_edge_gradient_fidelity": 0.10512040708337644,
+          "edge_fidelity_pct": "10.51%"
+        },
+        "SymmetricFourierVMECBaseline": {
+          "loco_rmse": 0.03392253800473471,
+          "unseen_3d_chords_rmse": 0.2855466124683432,
+          "whole_torus_psi_rmse": 0.695739236751203,
+          "bounded_edge_gradient_fidelity": 0.10447911752757988,
+          "edge_fidelity_pct": "10.45%"
+        },
+        "ShellPartitionedKriging": {
+          "loco_rmse": 0.041837584745943165,
+          "unseen_3d_chords_rmse": 0.29186763790471415,
+          "whole_torus_psi_rmse": 0.7177235694548783,
+          "bounded_edge_gradient_fidelity": 0.1062070277711129,
+          "edge_fidelity_pct": "10.62%"
+        },
+        "CerfonFreidbergEquilibrium": {
+          "loco_rmse": 0.09406162289332276,
+          "unseen_3d_chords_rmse": 0.33626007244858463,
+          "whole_torus_psi_rmse": 0.7748854007670429,
+          "bounded_edge_gradient_fidelity": 0.06143935312970983,
+          "edge_fidelity_pct": "6.14%"
+        },
+        "MinimumFisherTomography": {
+          "loco_rmse": 0.047163047227151395,
+          "unseen_3d_chords_rmse": 0.238835995170565,
+          "whole_torus_psi_rmse": 0.6965866533439451,
+          "bounded_edge_gradient_fidelity": 0.10464770406674262,
+          "edge_fidelity_pct": "10.46%"
+        },
+        "BlindBMHD": {
+          "loco_rmse": 0.07190463826678847,
+          "unseen_3d_chords_rmse": 0.24444419807955436,
+          "whole_torus_psi_rmse": 0.7019263143041498,
+          "bounded_edge_gradient_fidelity": 0.10515430044871654,
+          "edge_fidelity_pct": "10.52%"
+        }
+      },
+      "10_dB": {
+        "NaiveBox": {
+          "loco_rmse": 0.07401454914125175,
+          "unseen_3d_chords_rmse": 0.06719225739160926,
+          "whole_torus_psi_rmse": 0.05116575328102228,
+          "bounded_edge_gradient_fidelity": 0.689238021839375,
+          "edge_fidelity_pct": "68.92%"
+        },
+        "TunedAnisotropicKriging": {
+          "loco_rmse": 0.12812257188250634,
+          "unseen_3d_chords_rmse": 0.19708159720870694,
+          "whole_torus_psi_rmse": 0.692935129163318,
+          "bounded_edge_gradient_fidelity": 0.12607386561442313,
+          "edge_fidelity_pct": "12.61%"
+        },
+        "SymmetricFourierVMECBaseline": {
+          "loco_rmse": 0.09142217343565144,
+          "unseen_3d_chords_rmse": 0.2673457756255346,
+          "whole_torus_psi_rmse": 0.6889084249439772,
+          "bounded_edge_gradient_fidelity": 0.1180628672963483,
+          "edge_fidelity_pct": "11.81%"
+        },
+        "ShellPartitionedKriging": {
+          "loco_rmse": 0.1397748308635886,
+          "unseen_3d_chords_rmse": 0.23218516472020967,
+          "whole_torus_psi_rmse": 0.6959592185648346,
+          "bounded_edge_gradient_fidelity": 0.047022636690491226,
+          "edge_fidelity_pct": "4.70%"
+        },
+        "CerfonFreidbergEquilibrium": {
+          "loco_rmse": 0.16388572351831068,
+          "unseen_3d_chords_rmse": 0.33911596100397234,
+          "whole_torus_psi_rmse": 0.8018442448338481,
+          "bounded_edge_gradient_fidelity": 0.15690523278182544,
+          "edge_fidelity_pct": "15.69%"
+        },
+        "MinimumFisherTomography": {
+          "loco_rmse": 0.14693453115671098,
+          "unseen_3d_chords_rmse": 0.20206928481240202,
+          "whole_torus_psi_rmse": 0.692875214841157,
+          "bounded_edge_gradient_fidelity": 0.12266699347722942,
+          "edge_fidelity_pct": "12.27%"
+        },
+        "BlindBMHD": {
+          "loco_rmse": 0.13383374341520987,
+          "unseen_3d_chords_rmse": 0.22229696120620376,
+          "whole_torus_psi_rmse": 0.6960530608481543,
+          "bounded_edge_gradient_fidelity": 0.07974560659775132,
+          "edge_fidelity_pct": "7.97%"
+        }
+      },
+      "5_dB": {
+        "NaiveBox": {
+          "loco_rmse": 0.075992273899803,
+          "unseen_3d_chords_rmse": 0.07010520197271572,
+          "whole_torus_psi_rmse": 0.0526497961810874,
+          "bounded_edge_gradient_fidelity": 0.688165481872077,
+          "edge_fidelity_pct": "68.82%"
+        },
+        "TunedAnisotropicKriging": {
+          "loco_rmse": 0.2270519127604483,
+          "unseen_3d_chords_rmse": 0.17309198671832557,
+          "whole_torus_psi_rmse": 0.6968521480940508,
+          "bounded_edge_gradient_fidelity": 0.16595769433003948,
+          "edge_fidelity_pct": "16.60%"
+        },
+        "SymmetricFourierVMECBaseline": {
+          "loco_rmse": 0.16012164343990803,
+          "unseen_3d_chords_rmse": 0.25166189087822927,
+          "whole_torus_psi_rmse": 0.6852864591137224,
+          "bounded_edge_gradient_fidelity": 0.14344315196541169,
+          "edge_fidelity_pct": "14.34%"
+        },
+        "ShellPartitionedKriging": {
+          "loco_rmse": 0.25780534075077494,
+          "unseen_3d_chords_rmse": 0.17331485347193434,
+          "whole_torus_psi_rmse": 0.7477662313045944,
+          "bounded_edge_gradient_fidelity": 0.007679199937574266,
+          "edge_fidelity_pct": "0.77%"
+        },
+        "CerfonFreidbergEquilibrium": {
+          "loco_rmse": 0.2652076415587293,
+          "unseen_3d_chords_rmse": 0.3661956805136266,
+          "whole_torus_psi_rmse": 0.8928969658740263,
+          "bounded_edge_gradient_fidelity": 0.20869022598066678,
+          "edge_fidelity_pct": "20.87%"
+        },
+        "MinimumFisherTomography": {
+          "loco_rmse": 0.2608738058423053,
+          "unseen_3d_chords_rmse": 0.18626862228689003,
+          "whole_torus_psi_rmse": 0.6965404386718206,
+          "bounded_edge_gradient_fidelity": 0.15826791547114372,
+          "edge_fidelity_pct": "15.83%"
+        },
+        "BlindBMHD": {
+          "loco_rmse": 0.23449767260458185,
+          "unseen_3d_chords_rmse": 0.20643038604290337,
+          "whole_torus_psi_rmse": 0.6961686442162437,
+          "bounded_edge_gradient_fidelity": 0.0827780143253154,
+          "edge_fidelity_pct": "8.28%"
+        }
+      }
+    }
+  },
+  "jitter_sweeps": {
+    "01_issan_nonsym_solovev_tau0": {
+      "jitter_0_voxels": {
+        "NaiveBox": {
+          "loco_rmse": 0.0005774197310725754,
+          "unseen_3d_chords_rmse": 0.005564506307679257,
+          "whole_torus_psi_rmse": 0.10606242476166888,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "TunedAnisotropicKriging": {
+          "loco_rmse": 0.024948125459893184,
+          "unseen_3d_chords_rmse": 0.031065050799928554,
+          "whole_torus_psi_rmse": 0.14166624230210367,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "SymmetricFourierVMECBaseline": {
+          "loco_rmse": 0.016840235779498974,
+          "unseen_3d_chords_rmse": 0.020514596162590236,
+          "whole_torus_psi_rmse": 0.13687730673701193,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "ShellPartitionedKriging": {
+          "loco_rmse": 0.04499916127030477,
+          "unseen_3d_chords_rmse": 0.0850726878228927,
+          "whole_torus_psi_rmse": 0.14823730718178074,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "CerfonFreidbergEquilibrium": {
+          "loco_rmse": 0.04597478052117865,
+          "unseen_3d_chords_rmse": 0.03439166533377402,
+          "whole_torus_psi_rmse": 0.15720419243555234,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "MinimumFisherTomography": {
+          "loco_rmse": 0.03563859952485443,
+          "unseen_3d_chords_rmse": 0.033505893490715866,
+          "whole_torus_psi_rmse": 0.14170486480587877,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "BlindBMHD": {
+          "loco_rmse": 0.029013543454916742,
+          "unseen_3d_chords_rmse": 0.019859310940643794,
+          "whole_torus_psi_rmse": 0.13500198365510824,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        }
+      },
+      "jitter_1_voxels": {
+        "NaiveBox": {
+          "loco_rmse": 0.0006176084999282152,
+          "unseen_3d_chords_rmse": 0.0014492333975227205,
+          "whole_torus_psi_rmse": 0.10873121582713316,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "TunedAnisotropicKriging": {
+          "loco_rmse": 0.024948125459893184,
+          "unseen_3d_chords_rmse": 0.031065050799928554,
+          "whole_torus_psi_rmse": 0.14166624230210367,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "SymmetricFourierVMECBaseline": {
+          "loco_rmse": 0.016840235779498974,
+          "unseen_3d_chords_rmse": 0.020514596162590236,
+          "whole_torus_psi_rmse": 0.13687730673701193,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "ShellPartitionedKriging": {
+          "loco_rmse": 0.04499916127030477,
+          "unseen_3d_chords_rmse": 0.0850726878228927,
+          "whole_torus_psi_rmse": 0.14823730718178074,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "CerfonFreidbergEquilibrium": {
+          "loco_rmse": 0.04597478052117865,
+          "unseen_3d_chords_rmse": 0.03439166533377402,
+          "whole_torus_psi_rmse": 0.15720419243555234,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "MinimumFisherTomography": {
+          "loco_rmse": 0.03563859952485443,
+          "unseen_3d_chords_rmse": 0.033505893490715866,
+          "whole_torus_psi_rmse": 0.14170486480587877,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "BlindBMHD": {
+          "loco_rmse": 0.029013543454916742,
+          "unseen_3d_chords_rmse": 0.019859310940643794,
+          "whole_torus_psi_rmse": 0.13500198365510824,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        }
+      },
+      "jitter_2_voxels": {
+        "NaiveBox": {
+          "loco_rmse": 0.0016142515091738358,
+          "unseen_3d_chords_rmse": 0.0005965475402198467,
+          "whole_torus_psi_rmse": 0.11528203603753646,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "TunedAnisotropicKriging": {
+          "loco_rmse": 0.024948125459893184,
+          "unseen_3d_chords_rmse": 0.031065050799928554,
+          "whole_torus_psi_rmse": 0.14166624230210367,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "SymmetricFourierVMECBaseline": {
+          "loco_rmse": 0.016840235779498974,
+          "unseen_3d_chords_rmse": 0.020514596162590236,
+          "whole_torus_psi_rmse": 0.13687730673701193,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "ShellPartitionedKriging": {
+          "loco_rmse": 0.04499916127030477,
+          "unseen_3d_chords_rmse": 0.0850726878228927,
+          "whole_torus_psi_rmse": 0.14823730718178074,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "CerfonFreidbergEquilibrium": {
+          "loco_rmse": 0.04597478052117865,
+          "unseen_3d_chords_rmse": 0.03439166533377402,
+          "whole_torus_psi_rmse": 0.15720419243555234,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "MinimumFisherTomography": {
+          "loco_rmse": 0.03563859952485443,
+          "unseen_3d_chords_rmse": 0.033505893490715866,
+          "whole_torus_psi_rmse": 0.14170486480587877,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "BlindBMHD": {
+          "loco_rmse": 0.029013543454916742,
+          "unseen_3d_chords_rmse": 0.019859310940643794,
+          "whole_torus_psi_rmse": 0.13500198365510824,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        }
+      },
+      "jitter_3_voxels": {
+        "NaiveBox": {
+          "loco_rmse": 0.007893717478874034,
+          "unseen_3d_chords_rmse": 0.0005824058513967011,
+          "whole_torus_psi_rmse": 0.12316924560994333,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "TunedAnisotropicKriging": {
+          "loco_rmse": 0.024948125459893184,
+          "unseen_3d_chords_rmse": 0.031065050799928554,
+          "whole_torus_psi_rmse": 0.14166624230210367,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "SymmetricFourierVMECBaseline": {
+          "loco_rmse": 0.016840235779498974,
+          "unseen_3d_chords_rmse": 0.020514596162590236,
+          "whole_torus_psi_rmse": 0.13687730673701193,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "ShellPartitionedKriging": {
+          "loco_rmse": 0.04499916127030477,
+          "unseen_3d_chords_rmse": 0.0850726878228927,
+          "whole_torus_psi_rmse": 0.14823730718178074,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "CerfonFreidbergEquilibrium": {
+          "loco_rmse": 0.04597478052117865,
+          "unseen_3d_chords_rmse": 0.03439166533377402,
+          "whole_torus_psi_rmse": 0.15720419243555234,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "MinimumFisherTomography": {
+          "loco_rmse": 0.03563859952485443,
+          "unseen_3d_chords_rmse": 0.033505893490715866,
+          "whole_torus_psi_rmse": 0.14170486480587877,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "BlindBMHD": {
+          "loco_rmse": 0.029013543454916742,
+          "unseen_3d_chords_rmse": 0.019859310940643794,
+          "whole_torus_psi_rmse": 0.13500198365510824,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        }
+      }
+    },
+    "02_issan_sheared_elliptic_tau1": {
+      "jitter_0_voxels": {
+        "NaiveBox": {
+          "loco_rmse": 0.025795253208300242,
+          "unseen_3d_chords_rmse": 0.02562998875002494,
+          "whole_torus_psi_rmse": 0.13137921729604232,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "TunedAnisotropicKriging": {
+          "loco_rmse": 0.02501273289078802,
+          "unseen_3d_chords_rmse": 0.04921626012797139,
+          "whole_torus_psi_rmse": 0.18643395639643828,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "SymmetricFourierVMECBaseline": {
+          "loco_rmse": 0.016868457491095612,
+          "unseen_3d_chords_rmse": 0.041062314539833625,
+          "whole_torus_psi_rmse": 0.18304366816604478,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "ShellPartitionedKriging": {
+          "loco_rmse": 0.04489972370728953,
+          "unseen_3d_chords_rmse": 0.1020267297546355,
+          "whole_torus_psi_rmse": 0.19178345803052102,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "CerfonFreidbergEquilibrium": {
+          "loco_rmse": 0.04617245387639377,
+          "unseen_3d_chords_rmse": 0.03805657116815382,
+          "whole_torus_psi_rmse": 0.19478879032957555,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "MinimumFisherTomography": {
+          "loco_rmse": 0.03487090896778416,
+          "unseen_3d_chords_rmse": 0.050816569648464836,
+          "whole_torus_psi_rmse": 0.1864401176705282,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "BlindBMHD": {
+          "loco_rmse": 0.027709943006489424,
+          "unseen_3d_chords_rmse": 0.03665609677920307,
+          "whole_torus_psi_rmse": 0.17851813988796444,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        }
+      },
+      "jitter_1_voxels": {
+        "NaiveBox": {
+          "loco_rmse": 0.02168994935543585,
+          "unseen_3d_chords_rmse": 0.01570576383591971,
+          "whole_torus_psi_rmse": 0.137325289318988,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "TunedAnisotropicKriging": {
+          "loco_rmse": 0.02501273289078802,
+          "unseen_3d_chords_rmse": 0.04921626012797139,
+          "whole_torus_psi_rmse": 0.18643395639643828,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "SymmetricFourierVMECBaseline": {
+          "loco_rmse": 0.016868457491095612,
+          "unseen_3d_chords_rmse": 0.041062314539833625,
+          "whole_torus_psi_rmse": 0.18304366816604478,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "ShellPartitionedKriging": {
+          "loco_rmse": 0.04489972370728953,
+          "unseen_3d_chords_rmse": 0.1020267297546355,
+          "whole_torus_psi_rmse": 0.19178345803052102,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "CerfonFreidbergEquilibrium": {
+          "loco_rmse": 0.04617245387639377,
+          "unseen_3d_chords_rmse": 0.03805657116815382,
+          "whole_torus_psi_rmse": 0.19478879032957555,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "MinimumFisherTomography": {
+          "loco_rmse": 0.03487090896778416,
+          "unseen_3d_chords_rmse": 0.050816569648464836,
+          "whole_torus_psi_rmse": 0.1864401176705282,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "BlindBMHD": {
+          "loco_rmse": 0.027709943006489424,
+          "unseen_3d_chords_rmse": 0.03665609677920307,
+          "whole_torus_psi_rmse": 0.17851813988796444,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        }
+      },
+      "jitter_2_voxels": {
+        "NaiveBox": {
+          "loco_rmse": 0.04683740646449466,
+          "unseen_3d_chords_rmse": 0.018325996784695542,
+          "whole_torus_psi_rmse": 0.1504065813294738,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "TunedAnisotropicKriging": {
+          "loco_rmse": 0.02501273289078802,
+          "unseen_3d_chords_rmse": 0.04921626012797139,
+          "whole_torus_psi_rmse": 0.18643395639643828,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "SymmetricFourierVMECBaseline": {
+          "loco_rmse": 0.016868457491095612,
+          "unseen_3d_chords_rmse": 0.041062314539833625,
+          "whole_torus_psi_rmse": 0.18304366816604478,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "ShellPartitionedKriging": {
+          "loco_rmse": 0.04489972370728953,
+          "unseen_3d_chords_rmse": 0.1020267297546355,
+          "whole_torus_psi_rmse": 0.19178345803052102,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "CerfonFreidbergEquilibrium": {
+          "loco_rmse": 0.04617245387639377,
+          "unseen_3d_chords_rmse": 0.03805657116815382,
+          "whole_torus_psi_rmse": 0.19478879032957555,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "MinimumFisherTomography": {
+          "loco_rmse": 0.03487090896778416,
+          "unseen_3d_chords_rmse": 0.050816569648464836,
+          "whole_torus_psi_rmse": 0.1864401176705282,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "BlindBMHD": {
+          "loco_rmse": 0.027709943006489424,
+          "unseen_3d_chords_rmse": 0.03665609677920307,
+          "whole_torus_psi_rmse": 0.17851813988796444,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        }
+      },
+      "jitter_3_voxels": {
+        "NaiveBox": {
+          "loco_rmse": 0.07038918845059028,
+          "unseen_3d_chords_rmse": 0.030340490277596457,
+          "whole_torus_psi_rmse": 0.16340867834699763,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "TunedAnisotropicKriging": {
+          "loco_rmse": 0.02501273289078802,
+          "unseen_3d_chords_rmse": 0.04921626012797139,
+          "whole_torus_psi_rmse": 0.18643395639643828,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "SymmetricFourierVMECBaseline": {
+          "loco_rmse": 0.016868457491095612,
+          "unseen_3d_chords_rmse": 0.041062314539833625,
+          "whole_torus_psi_rmse": 0.18304366816604478,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "ShellPartitionedKriging": {
+          "loco_rmse": 0.04489972370728953,
+          "unseen_3d_chords_rmse": 0.1020267297546355,
+          "whole_torus_psi_rmse": 0.19178345803052102,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "CerfonFreidbergEquilibrium": {
+          "loco_rmse": 0.04617245387639377,
+          "unseen_3d_chords_rmse": 0.03805657116815382,
+          "whole_torus_psi_rmse": 0.19478879032957555,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "MinimumFisherTomography": {
+          "loco_rmse": 0.03487090896778416,
+          "unseen_3d_chords_rmse": 0.050816569648464836,
+          "whole_torus_psi_rmse": 0.1864401176705282,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        },
+        "BlindBMHD": {
+          "loco_rmse": 0.027709943006489424,
+          "unseen_3d_chords_rmse": 0.03665609677920307,
+          "whole_torus_psi_rmse": 0.17851813988796444,
+          "bounded_edge_gradient_fidelity": 0.0,
+          "edge_fidelity_pct": "0.00%"
+        }
+      }
+    },
+    "03_spec_magnetic_island_chain": {
+      "jitter_0_voxels": {
+        "NaiveBox": {
+          "loco_rmse": 0.06911675282472249,
+          "unseen_3d_chords_rmse": 0.09436548630148386,
+          "whole_torus_psi_rmse": 0.068469974762753,
+          "bounded_edge_gradient_fidelity": 0.5361593104659037,
+          "edge_fidelity_pct": "53.62%"
+        },
+        "TunedAnisotropicKriging": {
+          "loco_rmse": 0.015095552353223941,
+          "unseen_3d_chords_rmse": 0.1916188900902488,
+          "whole_torus_psi_rmse": 0.31327750802011234,
+          "bounded_edge_gradient_fidelity": 0.24263396416299132,
+          "edge_fidelity_pct": "24.26%"
+        },
+        "SymmetricFourierVMECBaseline": {
+          "loco_rmse": 0.0768586112744565,
+          "unseen_3d_chords_rmse": 0.18407611075971353,
+          "whole_torus_psi_rmse": 0.3031872570323053,
+          "bounded_edge_gradient_fidelity": 0.23893411923677654,
+          "edge_fidelity_pct": "23.89%"
+        },
+        "ShellPartitionedKriging": {
+          "loco_rmse": 0.01801352343075404,
+          "unseen_3d_chords_rmse": 0.17642914461149584,
+          "whole_torus_psi_rmse": 0.30954774658315615,
+          "bounded_edge_gradient_fidelity": 0.2095220199969482,
+          "edge_fidelity_pct": "20.95%"
+        },
+        "CerfonFreidbergEquilibrium": {
+          "loco_rmse": 0.37599667936722475,
+          "unseen_3d_chords_rmse": 0.38086989068613164,
+          "whole_torus_psi_rmse": 0.4685214887400471,
+          "bounded_edge_gradient_fidelity": 0.09640700290445992,
+          "edge_fidelity_pct": "9.64%"
+        },
+        "MinimumFisherTomography": {
+          "loco_rmse": 0.02443078933436342,
+          "unseen_3d_chords_rmse": 0.19241231128016692,
+          "whole_torus_psi_rmse": 0.3130677363022419,
+          "bounded_edge_gradient_fidelity": 0.22796468083472787,
+          "edge_fidelity_pct": "22.80%"
+        },
+        "BlindBMHD": {
+          "loco_rmse": 0.04545900852563712,
+          "unseen_3d_chords_rmse": 0.19502878503710194,
+          "whole_torus_psi_rmse": 0.3152091708702857,
+          "bounded_edge_gradient_fidelity": 0.10025714329488755,
+          "edge_fidelity_pct": "10.03%"
+        }
+      },
+      "jitter_1_voxels": {
+        "NaiveBox": {
+          "loco_rmse": 0.10746959879338433,
+          "unseen_3d_chords_rmse": 0.1345132803373828,
+          "whole_torus_psi_rmse": 0.09027572269105351,
+          "bounded_edge_gradient_fidelity": 0.47808268257959396,
+          "edge_fidelity_pct": "47.81%"
+        },
+        "TunedAnisotropicKriging": {
+          "loco_rmse": 0.015095552353223941,
+          "unseen_3d_chords_rmse": 0.1916188900902488,
+          "whole_torus_psi_rmse": 0.31327750802011234,
+          "bounded_edge_gradient_fidelity": 0.24263396416299132,
+          "edge_fidelity_pct": "24.26%"
+        },
+        "SymmetricFourierVMECBaseline": {
+          "loco_rmse": 0.0768586112744565,
+          "unseen_3d_chords_rmse": 0.18407611075971353,
+          "whole_torus_psi_rmse": 0.3031872570323053,
+          "bounded_edge_gradient_fidelity": 0.23893411923677654,
+          "edge_fidelity_pct": "23.89%"
+        },
+        "ShellPartitionedKriging": {
+          "loco_rmse": 0.01801352343075404,
+          "unseen_3d_chords_rmse": 0.17642914461149584,
+          "whole_torus_psi_rmse": 0.30954774658315615,
+          "bounded_edge_gradient_fidelity": 0.2095220199969482,
+          "edge_fidelity_pct": "20.95%"
+        },
+        "CerfonFreidbergEquilibrium": {
+          "loco_rmse": 0.37599667936722475,
+          "unseen_3d_chords_rmse": 0.38086989068613164,
+          "whole_torus_psi_rmse": 0.4685214887400471,
+          "bounded_edge_gradient_fidelity": 0.09640700290445992,
+          "edge_fidelity_pct": "9.64%"
+        },
+        "MinimumFisherTomography": {
+          "loco_rmse": 0.02443078933436342,
+          "unseen_3d_chords_rmse": 0.19241231128016692,
+          "whole_torus_psi_rmse": 0.3130677363022419,
+          "bounded_edge_gradient_fidelity": 0.22796468083472787,
+          "edge_fidelity_pct": "22.80%"
+        },
+        "BlindBMHD": {
+          "loco_rmse": 0.04545900852563712,
+          "unseen_3d_chords_rmse": 0.19502878503710194,
+          "whole_torus_psi_rmse": 0.3152091708702857,
+          "bounded_edge_gradient_fidelity": 0.10025714329488755,
+          "edge_fidelity_pct": "10.03%"
+        }
+      },
+      "jitter_2_voxels": {
+        "NaiveBox": {
+          "loco_rmse": 0.1737508651981265,
+          "unseen_3d_chords_rmse": 0.19955456447781336,
+          "whole_torus_psi_rmse": 0.13217854807396467,
+          "bounded_edge_gradient_fidelity": 0.3157703499946184,
+          "edge_fidelity_pct": "31.58%"
+        },
+        "TunedAnisotropicKriging": {
+          "loco_rmse": 0.015095552353223941,
+          "unseen_3d_chords_rmse": 0.1916188900902488,
+          "whole_torus_psi_rmse": 0.31327750802011234,
+          "bounded_edge_gradient_fidelity": 0.24263396416299132,
+          "edge_fidelity_pct": "24.26%"
+        },
+        "SymmetricFourierVMECBaseline": {
+          "loco_rmse": 0.0768586112744565,
+          "unseen_3d_chords_rmse": 0.18407611075971353,
+          "whole_torus_psi_rmse": 0.3031872570323053,
+          "bounded_edge_gradient_fidelity": 0.23893411923677654,
+          "edge_fidelity_pct": "23.89%"
+        },
+        "ShellPartitionedKriging": {
+          "loco_rmse": 0.01801352343075404,
+          "unseen_3d_chords_rmse": 0.17642914461149584,
+          "whole_torus_psi_rmse": 0.30954774658315615,
+          "bounded_edge_gradient_fidelity": 0.2095220199969482,
+          "edge_fidelity_pct": "20.95%"
+        },
+        "CerfonFreidbergEquilibrium": {
+          "loco_rmse": 0.37599667936722475,
+          "unseen_3d_chords_rmse": 0.38086989068613164,
+          "whole_torus_psi_rmse": 0.4685214887400471,
+          "bounded_edge_gradient_fidelity": 0.09640700290445992,
+          "edge_fidelity_pct": "9.64%"
+        },
+        "MinimumFisherTomography": {
+          "loco_rmse": 0.02443078933436342,
+          "unseen_3d_chords_rmse": 0.19241231128016692,
+          "whole_torus_psi_rmse": 0.3130677363022419,
+          "bounded_edge_gradient_fidelity": 0.22796468083472787,
+          "edge_fidelity_pct": "22.80%"
+        },
+        "BlindBMHD": {
+          "loco_rmse": 0.04545900852563712,
+          "unseen_3d_chords_rmse": 0.19502878503710194,
+          "whole_torus_psi_rmse": 0.3152091708702857,
+          "bounded_edge_gradient_fidelity": 0.10025714329488755,
+          "edge_fidelity_pct": "10.03%"
+        }
+      },
+      "jitter_3_voxels": {
+        "NaiveBox": {
+          "loco_rmse": 0.2331873784841343,
+          "unseen_3d_chords_rmse": 0.2586909367065253,
+          "whole_torus_psi_rmse": 0.17395656199340853,
+          "bounded_edge_gradient_fidelity": 0.24125103493762057,
+          "edge_fidelity_pct": "24.13%"
+        },
+        "TunedAnisotropicKriging": {
+          "loco_rmse": 0.015095552353223941,
+          "unseen_3d_chords_rmse": 0.1916188900902488,
+          "whole_torus_psi_rmse": 0.31327750802011234,
+          "bounded_edge_gradient_fidelity": 0.24263396416299132,
+          "edge_fidelity_pct": "24.26%"
+        },
+        "SymmetricFourierVMECBaseline": {
+          "loco_rmse": 0.0768586112744565,
+          "unseen_3d_chords_rmse": 0.18407611075971353,
+          "whole_torus_psi_rmse": 0.3031872570323053,
+          "bounded_edge_gradient_fidelity": 0.23893411923677654,
+          "edge_fidelity_pct": "23.89%"
+        },
+        "ShellPartitionedKriging": {
+          "loco_rmse": 0.01801352343075404,
+          "unseen_3d_chords_rmse": 0.17642914461149584,
+          "whole_torus_psi_rmse": 0.30954774658315615,
+          "bounded_edge_gradient_fidelity": 0.2095220199969482,
+          "edge_fidelity_pct": "20.95%"
+        },
+        "CerfonFreidbergEquilibrium": {
+          "loco_rmse": 0.37599667936722475,
+          "unseen_3d_chords_rmse": 0.38086989068613164,
+          "whole_torus_psi_rmse": 0.4685214887400471,
+          "bounded_edge_gradient_fidelity": 0.09640700290445992,
+          "edge_fidelity_pct": "9.64%"
+        },
+        "MinimumFisherTomography": {
+          "loco_rmse": 0.02443078933436342,
+          "unseen_3d_chords_rmse": 0.19241231128016692,
+          "whole_torus_psi_rmse": 0.3130677363022419,
+          "bounded_edge_gradient_fidelity": 0.22796468083472787,
+          "edge_fidelity_pct": "22.80%"
+        },
+        "BlindBMHD": {
+          "loco_rmse": 0.04545900852563712,
+          "unseen_3d_chords_rmse": 0.19502878503710194,
+          "whole_torus_psi_rmse": 0.3152091708702857,
+          "bounded_edge_gradient_fidelity": 0.10025714329488755,
+          "edge_fidelity_pct": "10.03%"
+        }
+      }
+    },
+    "04_tokamak_elm_pellet_4d": {
+      "jitter_0_voxels": {
+        "NaiveBox": {
+          "loco_rmse": 0.2088128704298581,
+          "unseen_3d_chords_rmse": 0.1705345931060115,
+          "whole_torus_psi_rmse": 0.1355768183276495,
+          "bounded_edge_gradient_fidelity": 0.30307392763200636,
+          "edge_fidelity_pct": "30.31%"
+        },
+        "TunedAnisotropicKriging": {
+          "loco_rmse": 0.0952019532665157,
+          "unseen_3d_chords_rmse": 0.38175236480136926,
+          "whole_torus_psi_rmse": 0.4135391371570154,
+          "bounded_edge_gradient_fidelity": 0.040161025908469594,
+          "edge_fidelity_pct": "4.02%"
+        },
+        "SymmetricFourierVMECBaseline": {
+          "loco_rmse": 0.11121340402518005,
+          "unseen_3d_chords_rmse": 0.35868469665816516,
+          "whole_torus_psi_rmse": 0.4052429038132276,
+          "bounded_edge_gradient_fidelity": 0.03987324773199297,
+          "edge_fidelity_pct": "3.99%"
+        },
+        "ShellPartitionedKriging": {
+          "loco_rmse": 0.05890427607477377,
+          "unseen_3d_chords_rmse": 0.18984176719022,
+          "whole_torus_psi_rmse": 0.3482116230063968,
+          "bounded_edge_gradient_fidelity": 0.13298776402659518,
+          "edge_fidelity_pct": "13.30%"
+        },
+        "CerfonFreidbergEquilibrium": {
+          "loco_rmse": 0.3551682701350505,
+          "unseen_3d_chords_rmse": 0.44913861443946734,
+          "whole_torus_psi_rmse": 0.5236358208312475,
+          "bounded_edge_gradient_fidelity": 0.04521208118569098,
+          "edge_fidelity_pct": "4.52%"
+        },
+        "MinimumFisherTomography": {
+          "loco_rmse": 0.060278189061014134,
+          "unseen_3d_chords_rmse": 0.38164365651209736,
+          "whole_torus_psi_rmse": 0.4132893745569853,
+          "bounded_edge_gradient_fidelity": 0.04409247947000816,
+          "edge_fidelity_pct": "4.41%"
+        },
+        "BlindBMHD": {
+          "loco_rmse": 0.06474769163937927,
+          "unseen_3d_chords_rmse": 0.36888862008544215,
+          "whole_torus_psi_rmse": 0.4108149221732377,
+          "bounded_edge_gradient_fidelity": 0.042727731492205656,
+          "edge_fidelity_pct": "4.27%"
+        }
+      },
+      "jitter_1_voxels": {
+        "NaiveBox": {
+          "loco_rmse": 0.22944758299309229,
+          "unseen_3d_chords_rmse": 0.2272042565549831,
+          "whole_torus_psi_rmse": 0.15481633815091472,
+          "bounded_edge_gradient_fidelity": 0.2513476955478904,
+          "edge_fidelity_pct": "25.13%"
+        },
+        "TunedAnisotropicKriging": {
+          "loco_rmse": 0.0952019532665157,
+          "unseen_3d_chords_rmse": 0.38175236480136926,
+          "whole_torus_psi_rmse": 0.4135391371570154,
+          "bounded_edge_gradient_fidelity": 0.040161025908469594,
+          "edge_fidelity_pct": "4.02%"
+        },
+        "SymmetricFourierVMECBaseline": {
+          "loco_rmse": 0.11121340402518005,
+          "unseen_3d_chords_rmse": 0.35868469665816516,
+          "whole_torus_psi_rmse": 0.4052429038132276,
+          "bounded_edge_gradient_fidelity": 0.03987324773199297,
+          "edge_fidelity_pct": "3.99%"
+        },
+        "ShellPartitionedKriging": {
+          "loco_rmse": 0.05890427607477377,
+          "unseen_3d_chords_rmse": 0.18984176719022,
+          "whole_torus_psi_rmse": 0.3482116230063968,
+          "bounded_edge_gradient_fidelity": 0.13298776402659518,
+          "edge_fidelity_pct": "13.30%"
+        },
+        "CerfonFreidbergEquilibrium": {
+          "loco_rmse": 0.3551682701350505,
+          "unseen_3d_chords_rmse": 0.44913861443946734,
+          "whole_torus_psi_rmse": 0.5236358208312475,
+          "bounded_edge_gradient_fidelity": 0.04521208118569098,
+          "edge_fidelity_pct": "4.52%"
+        },
+        "MinimumFisherTomography": {
+          "loco_rmse": 0.060278189061014134,
+          "unseen_3d_chords_rmse": 0.38164365651209736,
+          "whole_torus_psi_rmse": 0.4132893745569853,
+          "bounded_edge_gradient_fidelity": 0.04409247947000816,
+          "edge_fidelity_pct": "4.41%"
+        },
+        "BlindBMHD": {
+          "loco_rmse": 0.06474769163937927,
+          "unseen_3d_chords_rmse": 0.36888862008544215,
+          "whole_torus_psi_rmse": 0.4108149221732377,
+          "bounded_edge_gradient_fidelity": 0.042727731492205656,
+          "edge_fidelity_pct": "4.27%"
+        }
+      },
+      "jitter_2_voxels": {
+        "NaiveBox": {
+          "loco_rmse": 0.2977295113677523,
+          "unseen_3d_chords_rmse": 0.31171827352446596,
+          "whole_torus_psi_rmse": 0.19517791426901102,
+          "bounded_edge_gradient_fidelity": 0.1866286544185547,
+          "edge_fidelity_pct": "18.66%"
+        },
+        "TunedAnisotropicKriging": {
+          "loco_rmse": 0.0952019532665157,
+          "unseen_3d_chords_rmse": 0.38175236480136926,
+          "whole_torus_psi_rmse": 0.4135391371570154,
+          "bounded_edge_gradient_fidelity": 0.040161025908469594,
+          "edge_fidelity_pct": "4.02%"
+        },
+        "SymmetricFourierVMECBaseline": {
+          "loco_rmse": 0.11121340402518005,
+          "unseen_3d_chords_rmse": 0.35868469665816516,
+          "whole_torus_psi_rmse": 0.4052429038132276,
+          "bounded_edge_gradient_fidelity": 0.03987324773199297,
+          "edge_fidelity_pct": "3.99%"
+        },
+        "ShellPartitionedKriging": {
+          "loco_rmse": 0.05890427607477377,
+          "unseen_3d_chords_rmse": 0.18984176719022,
+          "whole_torus_psi_rmse": 0.3482116230063968,
+          "bounded_edge_gradient_fidelity": 0.13298776402659518,
+          "edge_fidelity_pct": "13.30%"
+        },
+        "CerfonFreidbergEquilibrium": {
+          "loco_rmse": 0.3551682701350505,
+          "unseen_3d_chords_rmse": 0.44913861443946734,
+          "whole_torus_psi_rmse": 0.5236358208312475,
+          "bounded_edge_gradient_fidelity": 0.04521208118569098,
+          "edge_fidelity_pct": "4.52%"
+        },
+        "MinimumFisherTomography": {
+          "loco_rmse": 0.060278189061014134,
+          "unseen_3d_chords_rmse": 0.38164365651209736,
+          "whole_torus_psi_rmse": 0.4132893745569853,
+          "bounded_edge_gradient_fidelity": 0.04409247947000816,
+          "edge_fidelity_pct": "4.41%"
+        },
+        "BlindBMHD": {
+          "loco_rmse": 0.06474769163937927,
+          "unseen_3d_chords_rmse": 0.36888862008544215,
+          "whole_torus_psi_rmse": 0.4108149221732377,
+          "bounded_edge_gradient_fidelity": 0.042727731492205656,
+          "edge_fidelity_pct": "4.27%"
+        }
+      },
+      "jitter_3_voxels": {
+        "NaiveBox": {
+          "loco_rmse": 0.3782597425267039,
+          "unseen_3d_chords_rmse": 0.376874585862384,
+          "whole_torus_psi_rmse": 0.23471376963858048,
+          "bounded_edge_gradient_fidelity": 0.18772736118209932,
+          "edge_fidelity_pct": "18.77%"
+        },
+        "TunedAnisotropicKriging": {
+          "loco_rmse": 0.0952019532665157,
+          "unseen_3d_chords_rmse": 0.38175236480136926,
+          "whole_torus_psi_rmse": 0.4135391371570154,
+          "bounded_edge_gradient_fidelity": 0.040161025908469594,
+          "edge_fidelity_pct": "4.02%"
+        },
+        "SymmetricFourierVMECBaseline": {
+          "loco_rmse": 0.11121340402518005,
+          "unseen_3d_chords_rmse": 0.35868469665816516,
+          "whole_torus_psi_rmse": 0.4052429038132276,
+          "bounded_edge_gradient_fidelity": 0.03987324773199297,
+          "edge_fidelity_pct": "3.99%"
+        },
+        "ShellPartitionedKriging": {
+          "loco_rmse": 0.05890427607477377,
+          "unseen_3d_chords_rmse": 0.18984176719022,
+          "whole_torus_psi_rmse": 0.3482116230063968,
+          "bounded_edge_gradient_fidelity": 0.13298776402659518,
+          "edge_fidelity_pct": "13.30%"
+        },
+        "CerfonFreidbergEquilibrium": {
+          "loco_rmse": 0.3551682701350505,
+          "unseen_3d_chords_rmse": 0.44913861443946734,
+          "whole_torus_psi_rmse": 0.5236358208312475,
+          "bounded_edge_gradient_fidelity": 0.04521208118569098,
+          "edge_fidelity_pct": "4.52%"
+        },
+        "MinimumFisherTomography": {
+          "loco_rmse": 0.060278189061014134,
+          "unseen_3d_chords_rmse": 0.38164365651209736,
+          "whole_torus_psi_rmse": 0.4132893745569853,
+          "bounded_edge_gradient_fidelity": 0.04409247947000816,
+          "edge_fidelity_pct": "4.41%"
+        },
+        "BlindBMHD": {
+          "loco_rmse": 0.06474769163937927,
+          "unseen_3d_chords_rmse": 0.36888862008544215,
+          "whole_torus_psi_rmse": 0.4108149221732377,
+          "bounded_edge_gradient_fidelity": 0.042727731492205656,
+          "edge_fidelity_pct": "4.27%"
+        }
+      }
+    },
+    "05_beltrami_plasma_spallation_torch": {
+      "jitter_0_voxels": {
+        "NaiveBox": {
+          "loco_rmse": 0.07239949405403981,
+          "unseen_3d_chords_rmse": 0.06487008389014652,
+          "whole_torus_psi_rmse": 0.0504382963572233,
+          "bounded_edge_gradient_fidelity": 0.6898553620042069,
+          "edge_fidelity_pct": "68.99%"
+        },
+        "TunedAnisotropicKriging": {
+          "loco_rmse": 0.041442852134158416,
+          "unseen_3d_chords_rmse": 0.2379921941759657,
+          "whole_torus_psi_rmse": 0.6965454015342967,
+          "bounded_edge_gradient_fidelity": 0.10512040708337644,
+          "edge_fidelity_pct": "10.51%"
+        },
+        "SymmetricFourierVMECBaseline": {
+          "loco_rmse": 0.03392253800473471,
+          "unseen_3d_chords_rmse": 0.2855466124683432,
+          "whole_torus_psi_rmse": 0.695739236751203,
+          "bounded_edge_gradient_fidelity": 0.10447911752757988,
+          "edge_fidelity_pct": "10.45%"
+        },
+        "ShellPartitionedKriging": {
+          "loco_rmse": 0.041837584745943165,
+          "unseen_3d_chords_rmse": 0.29186763790471415,
+          "whole_torus_psi_rmse": 0.7177235694548783,
+          "bounded_edge_gradient_fidelity": 0.1062070277711129,
+          "edge_fidelity_pct": "10.62%"
+        },
+        "CerfonFreidbergEquilibrium": {
+          "loco_rmse": 0.09406162289332276,
+          "unseen_3d_chords_rmse": 0.33626007244858463,
+          "whole_torus_psi_rmse": 0.7748854007670429,
+          "bounded_edge_gradient_fidelity": 0.06143935312970983,
+          "edge_fidelity_pct": "6.14%"
+        },
+        "MinimumFisherTomography": {
+          "loco_rmse": 0.047163047227151395,
+          "unseen_3d_chords_rmse": 0.238835995170565,
+          "whole_torus_psi_rmse": 0.6965866533439451,
+          "bounded_edge_gradient_fidelity": 0.10464770406674262,
+          "edge_fidelity_pct": "10.46%"
+        },
+        "BlindBMHD": {
+          "loco_rmse": 0.07190463826678847,
+          "unseen_3d_chords_rmse": 0.24444419807955436,
+          "whole_torus_psi_rmse": 0.7019263143041498,
+          "bounded_edge_gradient_fidelity": 0.10515430044871654,
+          "edge_fidelity_pct": "10.52%"
+        }
+      },
+      "jitter_1_voxels": {
+        "NaiveBox": {
+          "loco_rmse": 0.10752760166116485,
+          "unseen_3d_chords_rmse": 0.0888965856362819,
+          "whole_torus_psi_rmse": 0.07960035964540045,
+          "bounded_edge_gradient_fidelity": 0.6464540359398976,
+          "edge_fidelity_pct": "64.65%"
+        },
+        "TunedAnisotropicKriging": {
+          "loco_rmse": 0.041442852134158416,
+          "unseen_3d_chords_rmse": 0.2379921941759657,
+          "whole_torus_psi_rmse": 0.6965454015342967,
+          "bounded_edge_gradient_fidelity": 0.10512040708337644,
+          "edge_fidelity_pct": "10.51%"
+        },
+        "SymmetricFourierVMECBaseline": {
+          "loco_rmse": 0.03392253800473471,
+          "unseen_3d_chords_rmse": 0.2855466124683432,
+          "whole_torus_psi_rmse": 0.695739236751203,
+          "bounded_edge_gradient_fidelity": 0.10447911752757988,
+          "edge_fidelity_pct": "10.45%"
+        },
+        "ShellPartitionedKriging": {
+          "loco_rmse": 0.041837584745943165,
+          "unseen_3d_chords_rmse": 0.29186763790471415,
+          "whole_torus_psi_rmse": 0.7177235694548783,
+          "bounded_edge_gradient_fidelity": 0.1062070277711129,
+          "edge_fidelity_pct": "10.62%"
+        },
+        "CerfonFreidbergEquilibrium": {
+          "loco_rmse": 0.09406162289332276,
+          "unseen_3d_chords_rmse": 0.33626007244858463,
+          "whole_torus_psi_rmse": 0.7748854007670429,
+          "bounded_edge_gradient_fidelity": 0.06143935312970983,
+          "edge_fidelity_pct": "6.14%"
+        },
+        "MinimumFisherTomography": {
+          "loco_rmse": 0.047163047227151395,
+          "unseen_3d_chords_rmse": 0.238835995170565,
+          "whole_torus_psi_rmse": 0.6965866533439451,
+          "bounded_edge_gradient_fidelity": 0.10464770406674262,
+          "edge_fidelity_pct": "10.46%"
+        },
+        "BlindBMHD": {
+          "loco_rmse": 0.07190463826678847,
+          "unseen_3d_chords_rmse": 0.24444419807955436,
+          "whole_torus_psi_rmse": 0.7019263143041498,
+          "bounded_edge_gradient_fidelity": 0.10515430044871654,
+          "edge_fidelity_pct": "10.52%"
+        }
+      },
+      "jitter_2_voxels": {
+        "NaiveBox": {
+          "loco_rmse": 0.1794351454798767,
+          "unseen_3d_chords_rmse": 0.16174866581050495,
+          "whole_torus_psi_rmse": 0.1314640944870975,
+          "bounded_edge_gradient_fidelity": 0.5440417688675154,
+          "edge_fidelity_pct": "54.40%"
+        },
+        "TunedAnisotropicKriging": {
+          "loco_rmse": 0.041442852134158416,
+          "unseen_3d_chords_rmse": 0.2379921941759657,
+          "whole_torus_psi_rmse": 0.6965454015342967,
+          "bounded_edge_gradient_fidelity": 0.10512040708337644,
+          "edge_fidelity_pct": "10.51%"
+        },
+        "SymmetricFourierVMECBaseline": {
+          "loco_rmse": 0.03392253800473471,
+          "unseen_3d_chords_rmse": 0.2855466124683432,
+          "whole_torus_psi_rmse": 0.695739236751203,
+          "bounded_edge_gradient_fidelity": 0.10447911752757988,
+          "edge_fidelity_pct": "10.45%"
+        },
+        "ShellPartitionedKriging": {
+          "loco_rmse": 0.041837584745943165,
+          "unseen_3d_chords_rmse": 0.29186763790471415,
+          "whole_torus_psi_rmse": 0.7177235694548783,
+          "bounded_edge_gradient_fidelity": 0.1062070277711129,
+          "edge_fidelity_pct": "10.62%"
+        },
+        "CerfonFreidbergEquilibrium": {
+          "loco_rmse": 0.09406162289332276,
+          "unseen_3d_chords_rmse": 0.33626007244858463,
+          "whole_torus_psi_rmse": 0.7748854007670429,
+          "bounded_edge_gradient_fidelity": 0.06143935312970983,
+          "edge_fidelity_pct": "6.14%"
+        },
+        "MinimumFisherTomography": {
+          "loco_rmse": 0.047163047227151395,
+          "unseen_3d_chords_rmse": 0.238835995170565,
+          "whole_torus_psi_rmse": 0.6965866533439451,
+          "bounded_edge_gradient_fidelity": 0.10464770406674262,
+          "edge_fidelity_pct": "10.46%"
+        },
+        "BlindBMHD": {
+          "loco_rmse": 0.07190463826678847,
+          "unseen_3d_chords_rmse": 0.24444419807955436,
+          "whole_torus_psi_rmse": 0.7019263143041498,
+          "bounded_edge_gradient_fidelity": 0.10515430044871654,
+          "edge_fidelity_pct": "10.52%"
+        }
+      },
+      "jitter_3_voxels": {
+        "NaiveBox": {
+          "loco_rmse": 0.26512356555893773,
+          "unseen_3d_chords_rmse": 0.24122300948926137,
+          "whole_torus_psi_rmse": 0.18561683686963001,
+          "bounded_edge_gradient_fidelity": 0.4013243264871228,
+          "edge_fidelity_pct": "40.13%"
+        },
+        "TunedAnisotropicKriging": {
+          "loco_rmse": 0.041442852134158416,
+          "unseen_3d_chords_rmse": 0.2379921941759657,
+          "whole_torus_psi_rmse": 0.6965454015342967,
+          "bounded_edge_gradient_fidelity": 0.10512040708337644,
+          "edge_fidelity_pct": "10.51%"
+        },
+        "SymmetricFourierVMECBaseline": {
+          "loco_rmse": 0.03392253800473471,
+          "unseen_3d_chords_rmse": 0.2855466124683432,
+          "whole_torus_psi_rmse": 0.695739236751203,
+          "bounded_edge_gradient_fidelity": 0.10447911752757988,
+          "edge_fidelity_pct": "10.45%"
+        },
+        "ShellPartitionedKriging": {
+          "loco_rmse": 0.041837584745943165,
+          "unseen_3d_chords_rmse": 0.29186763790471415,
+          "whole_torus_psi_rmse": 0.7177235694548783,
+          "bounded_edge_gradient_fidelity": 0.1062070277711129,
+          "edge_fidelity_pct": "10.62%"
+        },
+        "CerfonFreidbergEquilibrium": {
+          "loco_rmse": 0.09406162289332276,
+          "unseen_3d_chords_rmse": 0.33626007244858463,
+          "whole_torus_psi_rmse": 0.7748854007670429,
+          "bounded_edge_gradient_fidelity": 0.06143935312970983,
+          "edge_fidelity_pct": "6.14%"
+        },
+        "MinimumFisherTomography": {
+          "loco_rmse": 0.047163047227151395,
+          "unseen_3d_chords_rmse": 0.238835995170565,
+          "whole_torus_psi_rmse": 0.6965866533439451,
+          "bounded_edge_gradient_fidelity": 0.10464770406674262,
+          "edge_fidelity_pct": "10.46%"
+        },
+        "BlindBMHD": {
+          "loco_rmse": 0.07190463826678847,
+          "unseen_3d_chords_rmse": 0.24444419807955436,
+          "whole_torus_psi_rmse": 0.7019263143041498,
+          "bounded_edge_gradient_fidelity": 0.10515430044871654,
+          "edge_fidelity_pct": "10.52%"
+        }
+      }
+    }
+  },
+  "glare_ablations": {
+    "01_issan_nonsym_solovev_tau0": {
+      "0%_glare": {
+        "beltrami_spike_recovery": 1.0,
+        "beltrami_washout_rejection": 1.0,
+        "beltrami_f1": 1.0,
+        "equal_budget_uniform_pooling_f1": 1.0,
+        "passed": true
+      },
+      "10%_glare": {
+        "beltrami_spike_recovery": 1.0,
+        "beltrami_washout_rejection": 1.0,
+        "beltrami_f1": 1.0,
+        "equal_budget_uniform_pooling_f1": 0.75,
+        "passed": true
+      },
+      "20%_glare": {
+        "beltrami_spike_recovery": 1.0,
+        "beltrami_washout_rejection": 1.0,
+        "beltrami_f1": 1.0,
+        "equal_budget_uniform_pooling_f1": 0.5,
+        "passed": true
+      }
+    },
+    "02_issan_sheared_elliptic_tau1": {
+      "0%_glare": {
+        "beltrami_spike_recovery": 1.0,
+        "beltrami_washout_rejection": 1.0,
+        "beltrami_f1": 1.0,
+        "equal_budget_uniform_pooling_f1": 1.0,
+        "passed": true
+      },
+      "10%_glare": {
+        "beltrami_spike_recovery": 1.0,
+        "beltrami_washout_rejection": 1.0,
+        "beltrami_f1": 1.0,
+        "equal_budget_uniform_pooling_f1": 0.75,
+        "passed": true
+      },
+      "20%_glare": {
+        "beltrami_spike_recovery": 1.0,
+        "beltrami_washout_rejection": 1.0,
+        "beltrami_f1": 1.0,
+        "equal_budget_uniform_pooling_f1": 0.5,
+        "passed": true
+      }
+    },
+    "03_spec_magnetic_island_chain": {
+      "0%_glare": {
+        "beltrami_spike_recovery": 0.8197043851410455,
+        "beltrami_washout_rejection": 1.0,
+        "beltrami_f1": 0.8197043851410455,
+        "equal_budget_uniform_pooling_f1": 1.0,
+        "passed": false
+      },
+      "10%_glare": {
+        "beltrami_spike_recovery": 1.0,
+        "beltrami_washout_rejection": 1.0,
+        "beltrami_f1": 1.0,
+        "equal_budget_uniform_pooling_f1": 0.75,
+        "passed": true
+      },
+      "20%_glare": {
+        "beltrami_spike_recovery": 1.0,
+        "beltrami_washout_rejection": 1.0,
+        "beltrami_f1": 1.0,
+        "equal_budget_uniform_pooling_f1": 0.5,
+        "passed": true
+      }
+    },
+    "04_tokamak_elm_pellet_4d": {
+      "0%_glare": {
+        "beltrami_spike_recovery": 0.9306414568181067,
+        "beltrami_washout_rejection": 1.0,
+        "beltrami_f1": 0.9306414568181067,
+        "equal_budget_uniform_pooling_f1": 1.0,
+        "passed": false
+      },
+      "10%_glare": {
+        "beltrami_spike_recovery": 1.0,
+        "beltrami_washout_rejection": 1.0,
+        "beltrami_f1": 1.0,
+        "equal_budget_uniform_pooling_f1": 0.75,
+        "passed": true
+      },
+      "20%_glare": {
+        "beltrami_spike_recovery": 1.0,
+        "beltrami_washout_rejection": 1.0,
+        "beltrami_f1": 1.0,
+        "equal_budget_uniform_pooling_f1": 0.5,
+        "passed": true
+      }
+    },
+    "05_beltrami_plasma_spallation_torch": {
+      "0%_glare": {
+        "beltrami_spike_recovery": 1.0,
+        "beltrami_washout_rejection": 1.0,
+        "beltrami_f1": 1.0,
+        "equal_budget_uniform_pooling_f1": 1.0,
+        "passed": true
+      },
+      "10%_glare": {
+        "beltrami_spike_recovery": 1.0,
+        "beltrami_washout_rejection": 1.0,
+        "beltrami_f1": 1.0,
+        "equal_budget_uniform_pooling_f1": 0.75,
+        "passed": true
+      },
+      "20%_glare": {
+        "beltrami_spike_recovery": 1.0,
+        "beltrami_washout_rejection": 1.0,
+        "beltrami_f1": 1.0,
+        "equal_budget_uniform_pooling_f1": 0.5,
+        "passed": true
+      }
+    }
+  }
+}

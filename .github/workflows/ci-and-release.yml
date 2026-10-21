@@ -1,0 +1,107 @@
+name: CI and Release
+
+on:
+  push:
+    branches: [ main, master ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    name: Test & Verify (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install torch numpy scipy pytest
+          pip install -e .
+
+      - name: Verify Mathematical GFM/KaTeX Compliance (All 21 Rules)
+        run: |
+          python scripts/audit_gfm_math.py README.md docs/ARCHITECTURE.md
+
+      - name: Verify Formal Invariant Theorems (OcclusionTriad.lean Thm 2.1-2.7)
+        run: |
+          python -c "from bmhd.engine import BMHDModel; m = BMHDModel(); res = m.verify_formal_theorems(); print(res); assert res.all_passed"
+
+      - name: Verify 5-Scenario Plasma Deck & Chord I/O
+        run: |
+          python -c "from bmhd.scenarios import build_all_scenarios; s = build_all_scenarios(); assert len(s) == 5, f'Expected 5 scenarios, got {len(s)}'"
+
+      - name: Run Pytest Test Suite
+        run: |
+          python -m pytest tests/test_bmhd.py -v
+
+      - name: Run Full Dual-Mode Benchmark Suite
+        run: |
+          python scripts/evaluate_bmhd.py
+
+      - name: Export Portable HTML5/WebGL Studio
+        run: |
+          python -c "from bmhd.studio import export_portable_html_studio; export_portable_html_studio('results/bmhd_portable_studio.html')"
+
+      - name: Upload Results & Artifacts
+        if: matrix.python-version == '3.11'
+        uses: actions/upload-artifact@v4
+        with:
+          name: bmhd-evaluation-and-studio
+          path: |
+            results/bmhd_portable_studio.html
+            results/bmhd_evaluation_summary.json
+            results/bmhd_blind_summary.json
+            data/stellarator_chords/
+
+  release:
+    name: GitHub Release
+    needs: test
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Dependencies & Build Distribution
+        run: |
+          python -m pip install --upgrade pip build
+          python -m build
+
+      - name: Generate Portable Studio
+        run: |
+          pip install torch numpy scipy
+          pip install -e .
+          python -c "from bmhd.studio import export_portable_html_studio; export_portable_html_studio('results/bmhd_portable_studio.html')"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*
+            results/bmhd_portable_studio.html
+            results/bmhd_evaluation_summary.json
+            results/bmhd_blind_summary.json
+          generate_release_notes: true

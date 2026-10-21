@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bmhd"
+version = "0.1.0"
+description = "BMHD: Beltrami MHD & Non-Symmetric 3D Stellarator Engine - Standalone 3D/4D magnetohydrodynamic flux-surface solver, stepped-pressure Beltrami shell relaxer, and sparse diagnostic laser-chord tomography workstation powered by machine-checked OcclusionTriad.lean invariants"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "CC0-1.0" }
+dependencies = [
+    "torch>=2.0.0",
+    "numpy>=1.24.0",
+    "scipy>=1.10.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+]
+
+[project.scripts]
+bmhd = "bmhd.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/sneed-and-feed/bmhd"
+Repository = "https://github.com/sneed-and-feed/bmhd"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["bmhd*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
