@@ -28,3 +28,5 @@ ENV/
 !data/**/*.las
 !data/**/*.dev
 .agents/
+
+ORIGINAL_REQUEST.md
