@@ -40,7 +40,7 @@ jobs:
         run: |
           python scripts/audit_gfm_math.py README.md docs/ARCHITECTURE.md
 
-      - name: Verify Formal Invariant Theorems (OcclusionTriad.lean Thm 2.1-2.7)
+      - name: Verify Formal Invariant Theorems (OcclusionTriad.lean Thm 2.1-2.8)
         run: |
           python -c "from bmhd.engine import BMHDModel; m = BMHDModel(); res = m.verify_formal_theorems(); print(res); assert res.all_passed"
 
@@ -62,7 +62,7 @@ jobs:
 
       - name: Export Portable HTML5/WebGL Studio
         run: |
-          python -c "from bmhd.studio import export_portable_html_studio; export_portable_html_studio('results/bmhd_portable_studio.html')"
+          python -c "from bmhd.studio import export_portable_html_studio; export_portable_html_studio('studio/bmhd_portable_studio.html')"
 
       - name: Upload Results & Artifacts
         if: matrix.python-version == '3.11'
@@ -70,7 +70,7 @@ jobs:
         with:
           name: bmhd-evaluation-and-studio
           path: |
-            results/bmhd_portable_studio.html
+            studio/bmhd_portable_studio.html
             results/bmhd_evaluation_summary.json
             results/bmhd_blind_summary.json
             data/stellarator_chords/
@@ -98,14 +98,14 @@ jobs:
         run: |
           pip install torch numpy scipy
           pip install -e .
-          python -c "from bmhd.studio import export_portable_html_studio; export_portable_html_studio('results/bmhd_portable_studio.html')"
+          python -c "from bmhd.studio import export_portable_html_studio; export_portable_html_studio('studio/bmhd_portable_studio.html')"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
             dist/*
-            results/bmhd_portable_studio.html
+            studio/bmhd_portable_studio.html
             results/bmhd_evaluation_summary.json
             results/bmhd_blind_summary.json
           generate_release_notes: true
