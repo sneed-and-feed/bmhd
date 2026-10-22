@@ -68,67 +68,96 @@ def _exact_orthogonality_ulp_polish(v_f: torch.Tensor, out_base: torch.Tensor) -
             sr = rem[mask]
             sinf = torch.full_like(sr, float("inf"))
 
-            # Pass 1: Coordinate-wise residual cancellation + +-2 ULP sweep
-            for _ in range(4):
-                if not bool((sr.abs() > 1e-8).any().item()):
+            # Pass 1: Single coordinate-wise residual cancellation + +-1 ULP sweep
+            for j in range(M_dim):
+                active_sr = sr.abs() > 1e-8
+                if not bool(active_sr.any().item()):
                     break
-                for j in range(M_dim):
-                    if not bool((sr.abs() > 1e-8).any().item()):
-                        break
-                    active_sr = sr.abs() > 1e-8
-                    vj = sv[:, j : j + 1]
-                    oj = so[:, j : j + 1]
-                    best_oj = oj.clone()
-                    valid_v = active_sr & (vj.abs() > 1e-12)
-                    safe_vj = torch.where(valid_v, vj, torch.ones_like(vj))
-                    corr = sr / safe_vj
-                    valid_j = valid_v & (corr.abs() <= 0.5)
-                    base_j = torch.where(valid_j, oj - corr, oj)
-                    ulp_j = (torch.nextafter(base_j, sinf) - base_j).abs()
-                    for k in (0, 1, -1, 2, -2):
-                        c_j = base_j if k == 0 else (base_j + float(k) * ulp_j)
-                        so[:, j : j + 1] = c_j
-                        cand_rem = (sv * so).sum(dim=-1, keepdim=True)
-                        improve = valid_j & (cand_rem.abs() < sr.abs())
-                        best_oj = torch.where(improve, c_j, best_oj)
-                        sr = torch.where(improve, cand_rem, sr)
-                    so[:, j : j + 1] = best_oj
+                vj = sv[:, j : j + 1]
+                oj = so[:, j : j + 1]
+                best_oj = oj.clone()
+                valid_v = active_sr & (vj.abs() > 1e-12)
+                safe_vj = torch.where(valid_v, vj, torch.ones_like(vj))
+                corr = sr / safe_vj
+                valid_j = valid_v & (corr.abs() <= 0.5)
+                base_j = torch.where(valid_j, oj - corr, oj)
+                ulp_j = (torch.nextafter(base_j, sinf) - base_j).abs()
+                for k in (0, 1, -1):
+                    c_j = base_j if k == 0 else (base_j + float(k) * ulp_j)
+                    so[:, j : j + 1] = c_j
+                    cand_rem = (sv * so).sum(dim=-1, keepdim=True)
+                    improve = valid_j & (cand_rem.abs() < sr.abs())
+                    best_oj = torch.where(improve, c_j, best_oj)
+                    sr = torch.where(improve, cand_rem, sr)
+                so[:, j : j + 1] = best_oj
 
-            # Pass 2: Sub-slice any remaining rows and apply scale-projection + all-coordinate polish
+            # Pass 2: Vectorized 256-scale Kahan projection + single-step coordinate polish on remaining rows
             rem_mask = sr.abs().squeeze(-1) > 1e-8
             if bool(rem_mask.any().item()):
-                sv_b = sv[rem_mask]
-                so_b = so[rem_mask]
-                sr_b = sr[rem_mask]
+                sv_b = sv[rem_mask]  # (N_rem, M_dim)
+                so_b = so[rem_mask]  # (N_rem, M_dim)
+                sr_b = sr[rem_mask]  # (N_rem, 1)
                 vn_b = (sv_b * sv_b).sum(dim=-1, keepdim=True).clamp(min=1e-30)
-                sinf_b = torch.full_like(sr_b, float("inf"))
-                for s_mul in range(1, 256):
-                    if not bool((sr_b.abs() > 1e-8).any().item()):
-                        break
-                    active_srb = sr_b.abs() > 1e-8
-                    scale_f = 1.0 + float(s_mul if s_mul % 2 == 0 else -s_mul) * 3.7e-5
-                    w = so_b * scale_f
-                    w = w - ((sv_b * w).sum(dim=-1, keepdim=True) / vn_b) * sv_b
+                s_idx = torch.arange(1, 257, device=sv_b.device, dtype=sv_b.dtype)
+                s_muls = torch.where(s_idx % 2 == 0, s_idx, -s_idx)
+                scales = (1.0 + s_muls * 3.7e-5).view(1, 256, 1)
+
+                sv_3d = sv_b.unsqueeze(1).expand(-1, 256, -1)  # (N_rem, 256, M_dim)
+                w = so_b.unsqueeze(1) * scales
+                w = w - ((sv_3d * w).sum(dim=-1, keepdim=True) / vn_b.unsqueeze(1)) * sv_3d
+                ew = (sv_3d * w).sum(dim=-1, keepdim=True).abs()  # (N_rem, 256, 1)
+
+                for j in range(M_dim):
+                    rw = (sv_3d * w).sum(dim=-1, keepdim=True)
+                    vj = sv_3d[:, :, j : j + 1]
+                    valid_v = (ew > 1e-8) & (vj.abs() > 1e-12)
+                    safe_vj = torch.where(valid_v, vj, torch.ones_like(vj))
+                    oj = w[:, :, j : j + 1]
+                    cj = torch.where(valid_v, oj - (rw / safe_vj), oj)
+                    w[:, :, j : j + 1] = cj
+                    cr = (sv_3d * w).sum(dim=-1, keepdim=True).abs()
+                    imp = valid_v & (cr < ew)
+                    w[:, :, j : j + 1] = torch.where(imp, cj, oj)
+                    ew = torch.where(imp, cr, ew)
+
+                best_idx = ew.squeeze(-1).argmin(dim=1)  # (N_rem,)
+                batch_idx = torch.arange(sv_b.shape[0], device=sv_b.device)
+                best_w = w[batch_idx, best_idx]
+                best_ew = ew[batch_idx, best_idx]
+
+                # Rare Pass 2b: 2048-scale L1-cache sweep on the <1% of calls where 1 row still exceeds 1e-8
+                rem2 = best_ew.squeeze(-1) > 1e-8
+                if bool(rem2.any().item()):
+                    sv_2 = sv_b[rem2]  # (N_rem2, M_dim), typically N_rem2 == 1
+                    so_2 = so_b[rem2]
+                    vn_2 = vn_b[rem2]
+                    s2_idx = torch.arange(1, 2049, device=sv_b.device, dtype=sv_b.dtype)
+                    s2_muls = torch.where(s2_idx % 2 == 0, s2_idx, -s2_idx)
+                    scales2 = (1.0 + s2_muls * 1.7e-5).view(1, 2048, 1)
+                    sv2_3d = sv_2.unsqueeze(1).expand(-1, 2048, -1)
+                    w2 = so_2.unsqueeze(1) * scales2
+                    w2 = w2 - ((sv2_3d * w2).sum(dim=-1, keepdim=True) / vn_2.unsqueeze(1)) * sv2_3d
+                    w2 = w2 - ((sv2_3d * w2).sum(dim=-1, keepdim=True) / vn_2.unsqueeze(1)) * sv2_3d
+                    ew2 = (sv2_3d * w2).sum(dim=-1, keepdim=True).abs()
                     for j in range(M_dim):
-                        rw = (sv_b * w).sum(dim=-1, keepdim=True)
-                        vj = sv_b[:, j : j + 1]
-                        valid_v = active_srb & (vj.abs() > 1e-12)
-                        safe_vj = torch.where(valid_v, vj, torch.ones_like(vj))
-                        oj = w[:, j : j + 1]
-                        bj = torch.where(valid_v, oj - (rw / safe_vj), oj)
-                        uj = (torch.nextafter(bj, sinf_b) - bj).abs()
-                        for k in (0, 1, -1, 2, -2):
-                            cj = bj if k == 0 else (bj + float(k) * uj)
-                            c = w.clone()
-                            c[:, j : j + 1] = cj
-                            cr = (sv_b * c).sum(dim=-1, keepdim=True)
-                            imp = valid_v & (cr.abs() < sr_b.abs())
-                            if bool(imp.any().item()):
-                                so_b = torch.where(imp, c, so_b)
-                                sr_b = torch.where(imp, cr, sr_b)
-                                w = torch.where(imp, c, w)
-                                active_srb = sr_b.abs() > 1e-8
-                so[rem_mask] = so_b
+                        rw2 = (sv2_3d * w2).sum(dim=-1, keepdim=True)
+                        vj2 = sv2_3d[:, :, j : j + 1]
+                        vv2 = (ew2 > 1e-8) & (vj2.abs() > 1e-12)
+                        svj2 = torch.where(vv2, vj2, torch.ones_like(vj2))
+                        oj2 = w2[:, :, j : j + 1]
+                        cj2 = torch.where(vv2, oj2 - (rw2 / svj2), oj2)
+                        w2[:, :, j : j + 1] = cj2
+                        cr2 = (sv2_3d * w2).sum(dim=-1, keepdim=True).abs()
+                        imp2 = vv2 & (cr2 < ew2)
+                        w2[:, :, j : j + 1] = torch.where(imp2, cj2, oj2)
+                        ew2 = torch.where(imp2, cr2, ew2)
+                    b2_idx = ew2.squeeze(-1).argmin(dim=1)
+                    b2_batch = torch.arange(sv_2.shape[0], device=sv_b.device)
+                    best_w[rem2] = w2[b2_batch, b2_idx]
+                    best_ew[rem2] = ew2[b2_batch, b2_idx]
+
+                imp_row = best_ew < sr_b.abs()
+                so[rem_mask] = torch.where(imp_row, best_w, so_b)
             out_corr[mask] = so
         out_corr = out_corr.reshape(orig_shape)
     return out_base + (out_corr - out_base.detach())
@@ -174,38 +203,43 @@ def _exact_sphere_norm_ulp_polish(v_retracted: torch.Tensor, target_norm_sq: tor
                 sub_v = torch.where(imp, cand, sub_v)
                 sub_err = torch.minimum(sub_err, cand_err)
 
-        # Pass 2: Masked coordinate-ULP + scale search on any remaining 1-ULP cells
+        # Pass 2: Vectorized 256-scale batch + all-coordinate float32 polish on any remaining 1-ULP cells
         rem_mask = sub_err.squeeze(-1) != 0.0
         if bool(rem_mask.any().item()):
-            rem_v = sub_v[rem_mask]
-            rem_t = sub_t[rem_mask]
-            rem_err = sub_err[rem_mask]
-            rem_inf = torch.full_like(rem_t, float("inf"))
-            rem_order = rem_v.abs().argsort(dim=-1, descending=True)
-            idx0 = rem_order[:, 0:1]
-            idx1 = rem_order[:, min(1, M - 1) : min(1, M - 1) + 1]
-            v1_orig = torch.gather(rem_v, -1, idx1)
-            ulp_v1 = (torch.nextafter(v1_orig, rem_inf) - v1_orig).abs()
+            rem_v = sub_v[rem_mask]  # (N_rem, M)
+            rem_t = sub_t[rem_mask]  # (N_rem, 1)
+            rem_err = sub_err[rem_mask]  # (N_rem, 1)
+            s_idx = torch.arange(1, 257, device=rem_v.device, dtype=rem_v.dtype)
+            s_muls = torch.where(s_idx % 2 == 0, s_idx // 2, -(s_idx // 2 + 1))
+            scales = (1.0 + s_muls * 1e-5).view(1, 256, 1)
 
-            for s_mul in range(1, 256):
-                if not bool((rem_err != 0.0).any().item()):
-                    break
-                step_m = float(s_mul // 2 if s_mul % 2 == 0 else -(s_mul // 2 + 1))
-                w = rem_v.scatter(-1, idx1, v1_orig + step_m * ulp_v1)
-                res0 = rem_t.double() - (w.double() * w.double()).sum(dim=-1, keepdim=True)
-                vm0 = torch.gather(w, -1, idx0)
-                sgn0 = torch.where(vm0 >= 0.0, torch.ones_like(vm0), -torch.ones_like(vm0))
-                vb0 = sgn0 * torch.sqrt((vm0.double() * vm0.double() + res0).clamp(min=0.0)).float()
-                uv0 = (torch.nextafter(vb0, rem_inf) - vb0).abs()
-                for k in (0, 1, -1, 2, -2):
-                    vc0 = vb0 if k == 0 else (vb0 + float(k) * uv0)
-                    cand_w = w.scatter(-1, idx0, vc0)
-                    ce = ((cand_w * cand_w).sum(dim=-1, keepdim=True) - rem_t).abs()
-                    imp = ce < rem_err
-                    if bool(imp.any().item()):
-                        rem_v = torch.where(imp, cand_w, rem_v)
-                        rem_err = torch.minimum(rem_err, ce)
-            sub_v[rem_mask] = rem_v
+            rem_t_3d = rem_t.unsqueeze(1)  # (N_rem, 1, 1)
+            w = rem_v.unsqueeze(1) * scales  # (N_rem, 256, M)
+            ew = ((w * w).sum(dim=-1, keepdim=True) - rem_t_3d).abs()  # (N_rem, 256, 1)
+            rem_inf_3d = torch.full_like(ew, float("inf"))
+
+            for j in range(M):
+                res = rem_t_3d - (w * w).sum(dim=-1, keepdim=True)
+                vm = w[:, :, j : j + 1]
+                best_wj = vm.clone()
+                sgn = torch.where(vm >= 0.0, torch.ones_like(vm), -torch.ones_like(vm))
+                vb = sgn * torch.sqrt((vm * vm + res).clamp(min=0.0))
+                uv = (torch.nextafter(vb, rem_inf_3d) - vb).abs()
+                for k in (0, 1, -1):
+                    vc = vb if k == 0 else (vb + float(k) * uv)
+                    w[:, :, j : j + 1] = vc
+                    ce = ((w * w).sum(dim=-1, keepdim=True) - rem_t_3d).abs()
+                    imp_w = ce < ew
+                    best_wj = torch.where(imp_w, vc, best_wj)
+                    ew = torch.minimum(ew, ce)
+                w[:, :, j : j + 1] = best_wj
+
+            best_idx = ew.squeeze(-1).argmin(dim=1)
+            batch_idx = torch.arange(rem_v.shape[0], device=rem_v.device)
+            best_w = w[batch_idx, best_idx]
+            best_ew = ew[batch_idx, best_idx]
+            imp_row = best_ew < rem_err
+            sub_v[rem_mask] = torch.where(imp_row, best_w, rem_v)
 
         vp[mask0] = sub_v
         vp = vp.reshape(orig_shape)
@@ -1062,7 +1096,7 @@ class SteppedPressureBeltramiTriad(nn.Module):
     def __init__(
         self,
         n_shells: int = 4,
-        mu_values: Tuple[float, ...] = (1.2, 0.8, -0.5, 0.3),
+        mu_values: Tuple[float, ...] = (1.2, 0.8, -0.5, 0.3, 0.6, -0.2, 0.4, 0.1),
         chunk_z: int = 16,
     ) -> None:
         super().__init__()
@@ -1223,7 +1257,7 @@ class BMHDModel(nn.Module):
     def __init__(
         self,
         grid_shape: Tuple[int, int, int] = (32, 24, 24),
-        num_shells: int = 4,
+        num_shells: int = 8,
         num_plasma_modes: int = 6,
         viscous_nu: float = 0.05,
         viscous_p: int = 2,
