@@ -45,7 +45,7 @@
 | M2 | Scenarios Sightline Streaming | `bmhd/scenarios.py` | none | DONE (`get_sightline_projections()`) |
 | M3 | Studio 4-QUAD & Fused HUD | `bmhd/studio.py`, `results/bmhd_portable_studio.html` | M1, M2 | DONE (4-QUAD / Fused HUD, STANAG/CSV export) |
 | M4 | Benchmarks, Tests & Documentation | `bmhd/benchmark.py`, `scripts/evaluate_bmhd.py`, `tests/`, `README.md`, `docs/ARCHITECTURE.md` | M1, M2 | DONE (44 tests pass, summaries exported, KaTeX clean) |
-| M5 | Multi-Party Verification & Git Push | Reviewers, Challengers, Forensic Auditor, Git commit & push | M1–M4 | IN_PROGRESS (Gate 2 Passed CLEAN, Delivery in progress) |
+| M5 | Multi-Party Verification & Git Push | Reviewers, Challengers, Forensic Auditor, Git commit & push | M1–M4 | DONE (Gate 2 Passed CLEAN, v0.3.0 pushed to GitHub) |
 
 ---
 

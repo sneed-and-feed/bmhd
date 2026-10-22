@@ -1,6 +1,6 @@
 {
-  "benchmark_version": "v0.2.0",
-  "timestamp": "2026-10-22T07:55:58Z",
+  "benchmark_version": "v0.3.0",
+  "timestamp": "2026-10-22T08:04:05Z",
   "mode_a_formal_theorems": {
     "theorems_audit": {
       "theorem_2_1": {
@@ -15,7 +15,7 @@
       },
       "theorem_2_3": {
         "passed": true,
-        "orthogonality_residual": 9.778887033462524e-09
+        "orthogonality_residual": 9.546056389808655e-09
       },
       "theorem_2_4": {
         "passed": true,
@@ -32,7 +32,7 @@
       "theorem_2_6": {
         "passed": true,
         "spherical_radial_drift": 0.0,
-        "cascade_orthogonality_error": 9.313225746154785e-09
+        "cascade_orthogonality_error": 9.778887033462524e-09
       },
       "theorem_2_7": {
         "passed": true,
@@ -44,11 +44,11 @@
         "passed": true,
         "cross3_isomorphism_error": 0.0,
         "mhd_force_orthogonality_error": 6.696060927957603e-10,
-        "tangent_orthogonality_residual": 8.381903171539307e-09,
+        "tangent_orthogonality_residual": 9.546056389808655e-09,
         "equilibrium_flux_confinement_error": 2.0926244070906819e-10,
         "parity_tie_break_margin": 0.475,
-        "parity_flux_confinement_residual": 9.778887033462524e-09,
-        "flux_conservation": 9.778887033462524e-09
+        "parity_flux_confinement_residual": 9.313225746154785e-09,
+        "flux_conservation": 9.313225746154785e-09
       }
     },
     "all_theorems_verified": true,
@@ -88,7 +88,7 @@
     "field_line_multistep_drift": {
       "K_1": {
         "max_spherical_radial_drift": 0.0,
-        "max_tangent_orthogonality_error": 3.725290298461914e-09,
+        "max_tangent_orthogonality_error": 7.450580596923828e-09,
         "passed": true
       },
       "K_4": {
@@ -98,12 +98,12 @@
       },
       "K_8": {
         "max_spherical_radial_drift": 0.0,
-        "max_tangent_orthogonality_error": 3.725290298461914e-09,
+        "max_tangent_orthogonality_error": 7.450580596923828e-09,
         "passed": true
       },
       "K_16": {
         "max_spherical_radial_drift": 0.0,
-        "max_tangent_orthogonality_error": 8.381903171539307e-09,
+        "max_tangent_orthogonality_error": 9.313225746154785e-09,
         "passed": true
       }
     },
@@ -2548,8 +2548,8 @@
     }
   },
   "stylo_diagnostic_bridge": {
-    "bridge_version": "v0.2.0",
-    "timestamp": "2026-10-22T07:55:58Z",
+    "bridge_version": "v0.3.0",
+    "timestamp": "2026-10-22T08:04:05Z",
     "hardware_invariants": {
       "max_heap_ceiling_mb": 3.5,
       "active_l3_resident_mb": 2.33,
@@ -2563,8 +2563,8 @@
       "scenario04_pellet_core_deposition_rmse_px": 0.21,
       "scenario05_flare_washout_rejection_rate": 1.0,
       "scenario05_nozzle_throttle_gain": 0.6599,
-      "single_core_fps": 588.3,
-      "frame_latency_us": 135.8,
+      "single_core_fps": 564.7,
+      "frame_latency_us": 184.0,
       "combined_arena_heap_mb": 2.33,
       "bridge_buffer_overhead_kb": 32.5,
       "post_mask_mad_noise_floor": 0.002432,
@@ -2573,7 +2573,7 @@
     "scenarios": {
       "01_issan_nonsym_solovev_tau0": {
         "drift_parity_recovered": true,
-        "tangent_orthogonality_residual": 9.313225746154785e-09,
+        "tangent_orthogonality_residual": 8.381903171539307e-09,
         "id_swaps": 0,
         "mota": 1.0
       },

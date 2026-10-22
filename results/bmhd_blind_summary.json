@@ -1,6 +1,6 @@
 {
-  "benchmark_version": "v0.2.0",
-  "timestamp": "2026-10-22T07:55:58Z",
+  "benchmark_version": "v0.3.0",
+  "timestamp": "2026-10-22T08:04:05Z",
   "operating_snr_db": 20.0,
   "zero_target_leakage": true,
   "baselines_evaluated": [
@@ -76,9 +76,9 @@
         "inner_cv_rmse": 0.06434231565595974
       },
       "performance": {
-        "elapsed_seconds": 0.3617231845855713,
-        "active_heap_mb": 1.2969608306884766,
-        "peak_heap_mb": 10.742668151855469,
+        "elapsed_seconds": 0.2881598472595215,
+        "active_heap_mb": 1.2968835830688477,
+        "peak_heap_mb": 10.742758750915527,
         "heap_ceiling_passed": true
       }
     },
@@ -145,9 +145,9 @@
         "inner_cv_rmse": 0.1552457245600637
       },
       "performance": {
-        "elapsed_seconds": 0.348865270614624,
-        "active_heap_mb": 1.2803983688354492,
-        "peak_heap_mb": 10.72857666015625,
+        "elapsed_seconds": 0.3591923713684082,
+        "active_heap_mb": 1.2802467346191406,
+        "peak_heap_mb": 10.728719711303711,
         "heap_ceiling_passed": true
       }
     },
@@ -214,9 +214,9 @@
         "inner_cv_rmse": 0.04323161709323354
       },
       "performance": {
-        "elapsed_seconds": 0.3310565948486328,
-        "active_heap_mb": 1.279688835144043,
-        "peak_heap_mb": 10.728815078735352,
+        "elapsed_seconds": 0.38065290451049805,
+        "active_heap_mb": 1.279545783996582,
+        "peak_heap_mb": 10.728582382202148,
         "heap_ceiling_passed": true
       }
     },
@@ -283,9 +283,9 @@
         "inner_cv_rmse": 0.1262076582527731
       },
       "performance": {
-        "elapsed_seconds": 0.34862494468688965,
-        "active_heap_mb": 1.2792863845825195,
-        "peak_heap_mb": 10.728577613830566,
+        "elapsed_seconds": 0.40969181060791016,
+        "active_heap_mb": 1.279317855834961,
+        "peak_heap_mb": 10.728862762451172,
         "heap_ceiling_passed": true
       }
     },
@@ -352,9 +352,9 @@
         "inner_cv_rmse": 0.005864679184711589
       },
       "performance": {
-        "elapsed_seconds": 0.3309943675994873,
-        "active_heap_mb": 1.2793598175048828,
-        "peak_heap_mb": 10.728534698486328,
+        "elapsed_seconds": 0.37764549255371094,
+        "active_heap_mb": 1.279221534729004,
+        "peak_heap_mb": 10.72852897644043,
         "heap_ceiling_passed": true
       }
     }
