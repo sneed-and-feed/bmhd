@@ -129,6 +129,25 @@ class ScenarioData:
             return self.fields[key]
         return self.metadata.get(key, default)
 
+    def get_sightline_projections(
+        self,
+        num_chords: int = 8,
+        resolution: Tuple[int, int] = (128, 128),
+        frame_idx: int = 0,
+        chunk_z: int = 16,
+    ) -> Dict[str, Any]:
+        """
+        Stream 8 tangential and poloidal 128x128 Y8 Z-slab sightline projections.
+        """
+        return get_sightline_projections(
+            self,
+            num_chords=num_chords,
+            resolution=resolution,
+            frame_idx=frame_idx,
+            chunk_z=chunk_z,
+        )
+
+
 
 # =============================================================================
 # Helper: 8 Synthetic Diagnostic Chords Generator
@@ -1061,16 +1080,417 @@ def export_bundled_stellarator_chords(
     return written_files
 
 
+class ScenarioDeck(dict):
+    """
+    Complete dictionary deck of canonical scenarios supporting:
+    1. Standard string key lookup: deck["01_issan_nonsym_solovev_tau0"]
+    2. Short alias lookup: deck["01"], deck["tokamak"], deck["torch"]
+    3. Integer index lookup: deck[0], deck[3], deck[4] (0-based indexing matching catalog order)
+    4. 100% dictionary backward compatibility (isinstance(deck, dict) is True, len(deck) == 5).
+    """
+
+    def __getitem__(self, key: Any) -> ScenarioData:
+        if isinstance(key, int):
+            keys = list(self.keys())
+            if 0 <= key < len(keys):
+                return super().__getitem__(keys[key])
+            elif -len(keys) <= key < 0:
+                return super().__getitem__(keys[key])
+            raise IndexError(f"Scenario index {key} out of range [0, {len(keys)-1}]")
+        if key in self:
+            return super().__getitem__(key)
+        norm_key = str(key).strip().lower()
+        if norm_key in SCENARIO_ALIASES:
+            return super().__getitem__(SCENARIO_ALIASES[norm_key])
+        return super().__getitem__(key)
+
+    def get(self, key: Any, default: Any = None) -> Any:
+        try:
+            return self[key]
+        except (KeyError, IndexError):
+            return default
+
+
+def _sample_slab_trilinear(
+    slab: np.ndarray,
+    z_vox_local: np.ndarray,
+    y_vox: np.ndarray,
+    x_vox: np.ndarray,
+) -> np.ndarray:
+    """
+    Fast vectorized trilinear interpolation from a 3D slab of shape (Z_slab, Y, X).
+    """
+    Z_s, Y_d, X_d = slab.shape
+    valid = (
+        (z_vox_local >= 0.0) & (z_vox_local <= Z_s - 1.0) &
+        (y_vox >= 0.0) & (y_vox <= Y_d - 1.0) &
+        (x_vox >= 0.0) & (x_vox <= X_d - 1.0)
+    )
+    out = np.zeros_like(z_vox_local, dtype=np.float32)
+    if not np.any(valid):
+        return out
+
+    zv = np.clip(z_vox_local, 0.0, Z_s - 1.0)
+    yv = np.clip(y_vox, 0.0, Y_d - 1.0)
+    xv = np.clip(x_vox, 0.0, X_d - 1.0)
+
+    z0 = np.floor(zv).astype(np.int32)
+    z1 = np.clip(z0 + 1, 0, Z_s - 1)
+    zd = (zv - z0).astype(np.float32)
+
+    y0 = np.floor(yv).astype(np.int32)
+    y1 = np.clip(y0 + 1, 0, Y_d - 1)
+    yd = (yv - y0).astype(np.float32)
+
+    x0 = np.floor(xv).astype(np.int32)
+    x1 = np.clip(x0 + 1, 0, X_d - 1)
+    xd = (xv - x0).astype(np.float32)
+
+    c000 = slab[z0, y0, x0]
+    c001 = slab[z0, y0, x1]
+    c010 = slab[z0, y1, x0]
+    c011 = slab[z0, y1, x1]
+    c100 = slab[z1, y0, x0]
+    c101 = slab[z1, y0, x1]
+    c110 = slab[z1, y1, x0]
+    c111 = slab[z1, y1, x1]
+
+    c00 = c000 * (1.0 - xd) + c001 * xd
+    c01 = c010 * (1.0 - xd) + c011 * xd
+    c10 = c100 * (1.0 - xd) + c101 * xd
+    c11 = c110 * (1.0 - xd) + c111 * xd
+
+    c0 = c00 * (1.0 - yd) + c01 * yd
+    c1 = c10 * (1.0 - yd) + c11 * yd
+
+    val = c0 * (1.0 - zd) + c1 * zd
+    out[valid] = val[valid]
+    return out
+
+
+def get_sightline_projections(
+    scenario_data: Union[ScenarioData, str, int, Dict[str, Any]],
+    num_chords: int = 8,
+    resolution: Tuple[int, int] = (128, 128),
+    frame_idx: int = 0,
+    chunk_z: int = 16,
+) -> Dict[str, Any]:
+    """
+    Stream 8 tangential and poloidal 128x128 Y8 Z-slab sightline projections and 2D gradient fields:
+    - 4 poloidal (chords 0-3) and 4 tangential (chords 4-7) camera sightlines.
+    - Sliced and projected in Z-slabs (chunk_z = 16, < 1.5 MB memory footprint).
+    - Returns dictionary with:
+      - "projections": np.ndarray shape (num_chords, 128, 128) float32 in [0, 1].
+      - "grad_psi": np.ndarray shape (num_chords, 128, 128, 2) float32.
+      - "mask_washout": np.ndarray shape (num_chords, 128, 128) bool.
+      - "mask_clock": np.ndarray shape (num_chords, 128, 128) bool.
+      - "dielectric": Optional np.ndarray shape (num_chords, 128, 128) float32
+                     (for Scenario 05 with granite eps_r'=5.5, water stringer eps_r'=9.85).
+      - "psi_2d": np.ndarray shape (num_chords, 128, 128) float32 in [0, 1].
+    """
+    if isinstance(scenario_data, (int, str)):
+        scen = build_scenario(str(scenario_data))
+    elif isinstance(scenario_data, ScenarioDeck):
+        scen = scenario_data[3] if len(scenario_data) > 3 else scenario_data[0]
+    elif isinstance(scenario_data, ScenarioData):
+        scen = scenario_data
+    elif isinstance(scenario_data, dict) and "fields" in scenario_data:
+        scen = scenario_data
+    else:
+        raise TypeError(f"Unsupported scenario_data type: {type(scenario_data)}")
+
+    fields = scen.fields if hasattr(scen, "fields") else scen["fields"]
+    metadata = scen.metadata if hasattr(scen, "metadata") else scen.get("metadata", {})
+    coordinates = scen.coordinates if hasattr(scen, "coordinates") else scen.get("coordinates", {})
+    temporal_frames = getattr(scen, "temporal_frames", None)
+
+    scen_id = str(metadata.get("scenario_id", getattr(scen, "scenario_id", "")))
+    is_scen_04 = ("04" in scen_id) or ("tokamak" in scen_id)
+    is_scen_05 = ("05" in scen_id) or ("spallation" in scen_id) or ("torch" in scen_id)
+
+    if is_scen_04 and temporal_frames is not None and 0 <= frame_idx < len(temporal_frames):
+        psi_base = temporal_frames[frame_idx]
+    else:
+        psi_base = fields["bmhd_psi"]
+
+    psi_vol = np.ascontiguousarray(psi_base, dtype=np.float32)
+    bmod_vol = np.ascontiguousarray(fields["bmhd_b_mod"], dtype=np.float32)
+    pkpa_vol = np.ascontiguousarray(fields["bmhd_p_kpa"], dtype=np.float32)
+    jcurl_vol = np.ascontiguousarray(fields["bmhd_j_curl"], dtype=np.float32)
+
+    Z, Y, X = psi_vol.shape
+    z_coords = np.asarray(coordinates.get("z", np.linspace(-0.5, 0.5, Z)), dtype=np.float32)
+    y_coords = np.asarray(coordinates.get("y", np.linspace(-1.0, 1.0, Y)), dtype=np.float32)
+    x_coords = np.asarray(coordinates.get("x", np.linspace(-1.0, 1.0, X)), dtype=np.float32)
+
+    min_z, max_z = float(z_coords[0]), float(z_coords[-1])
+    min_y, max_y = float(y_coords[0]), float(y_coords[-1])
+    min_x, max_x = float(x_coords[0]), float(x_coords[-1])
+    span_z = max(max_z - min_z, 1e-6)
+    span_y = max(max_y - min_y, 1e-6)
+    span_x = max(max_x - min_x, 1e-6)
+    z_mid = 0.5 * (min_z + max_z)
+
+    R0 = float(metadata.get("R0", 1.0 if not is_scen_05 else 0.0))
+    a_minor = float(metadata.get("a_minor", 0.35))
+    kappa = float(metadata.get("kappa", 1.70 if is_scen_04 else 1.0))
+
+    H, W = resolution
+    projections = np.zeros((num_chords, H, W), dtype=np.float32)
+    psi_2d = np.zeros((num_chords, H, W), dtype=np.float32)
+    grad_psi = np.zeros((num_chords, H, W, 2), dtype=np.float32)
+    mask_washout = np.zeros((num_chords, H, W), dtype=bool)
+    mask_clock = np.zeros((num_chords, H, W), dtype=bool)
+    dielectric = np.zeros((num_chords, H, W), dtype=np.float32) if is_scen_05 else None
+
+    # Line integral accumulators (< 1.5 MB total footprint)
+    emiss_acc = np.zeros((num_chords, H, W), dtype=np.float32)
+    flux_acc = np.zeros((num_chords, H, W), dtype=np.float32)
+    weight_acc = np.zeros((num_chords, H, W), dtype=np.float32)
+    dielectric_acc = np.zeros((num_chords, H, W), dtype=np.float32) if is_scen_05 else None
+
+    p_norm = max(float(np.max(pkpa_vol)), 1e-3)
+    j_norm = max(float(np.max(jcurl_vol)), 1e-3)
+    b_norm = max(float(np.max(bmod_vol)), 1e-3)
+
+    # Precalculate (H, W) screen coordinates
+    eta_v = np.linspace(0.0, 1.0, H, dtype=np.float32)[:, None]   # (H, 1)
+    xi_u = np.linspace(0.0, 1.0, W, dtype=np.float32)[None, :]    # (1, W)
+
+    # Build 8 sightline camera geometries (x_2d, z_2d, depth bounds)
+    chord_configs = []
+    # Chord 0: poloidal_core
+    c0_z = max_z - eta_v * span_z
+    c0_x = (R0 - 1.25 * a_minor) + xi_u * (2.5 * a_minor) if R0 > 0 else min_x + xi_u * span_x
+    chord_configs.append({"type": "poloidal", "z_2d": c0_z, "x_2d": c0_x, "y_span": 1.2 * a_minor})
+
+    # Chord 1: poloidal_hfs
+    c1_z = max_z - eta_v * span_z
+    c1_x = (R0 - 1.30 * a_minor) + xi_u * (1.30 * a_minor) if R0 > 0 else min_x + xi_u * (0.6 * span_x)
+    chord_configs.append({"type": "poloidal", "z_2d": c1_z, "x_2d": c1_x, "y_span": 1.0 * a_minor})
+
+    # Chord 2: poloidal_lfs
+    c2_z = max_z - eta_v * span_z
+    c2_x = R0 + xi_u * (1.30 * a_minor) if R0 > 0 else min_x + (0.4 + 0.6 * xi_u) * span_x
+    chord_configs.append({"type": "poloidal", "z_2d": c2_z, "x_2d": c2_x, "y_span": 1.0 * a_minor})
+
+    # Chord 3: poloidal_divertor
+    c3_z = (min_z + 0.45 * span_z) - eta_v * (0.45 * span_z)
+    c3_x = (R0 - 0.90 * a_minor) + xi_u * (1.80 * a_minor) if R0 > 0 else min_x + xi_u * span_x
+    chord_configs.append({"type": "poloidal", "z_2d": c3_z, "x_2d": c3_x, "y_span": 0.9 * a_minor})
+
+    # Chord 4: tangential_midplane
+    c4_z = z_mid + (0.5 - eta_v) * (0.8 * a_minor)
+    c4_p = (R0 - 1.25 * a_minor) + xi_u * (2.5 * a_minor) if R0 > 0 else (2.0 * xi_u - 1.0) * (0.8 * a_minor)
+    chord_configs.append({"type": "tangential", "z_2d": c4_z, "p_2d": c4_p, "s_span": 0.8 * span_y})
+
+    # Chord 5: tangential_upper
+    c5_z = (z_mid + 0.35 * kappa * a_minor) + (0.5 - eta_v) * (0.6 * a_minor)
+    c5_p = (R0 - 1.25 * a_minor) + xi_u * (2.5 * a_minor) if R0 > 0 else (2.0 * xi_u - 1.0) * (0.8 * a_minor)
+    chord_configs.append({"type": "tangential", "z_2d": c5_z, "p_2d": c5_p, "s_span": 0.8 * span_y})
+
+    # Chord 6: tangential_lower
+    c6_z = (z_mid - 0.35 * kappa * a_minor) + (0.5 - eta_v) * (0.6 * a_minor)
+    c6_p = (R0 - 1.25 * a_minor) + xi_u * (2.5 * a_minor) if R0 > 0 else (2.0 * xi_u - 1.0) * (0.8 * a_minor)
+    chord_configs.append({"type": "tangential", "z_2d": c6_z, "p_2d": c6_p, "s_span": 0.8 * span_y})
+
+    # Chord 7: helical_resonant
+    theta_pitch = 0.35
+    u_rot = (xi_u - 0.5) * math.cos(theta_pitch) - (eta_v - 0.5) * math.sin(theta_pitch)
+    v_rot = (xi_u - 0.5) * math.sin(theta_pitch) + (eta_v - 0.5) * math.cos(theta_pitch)
+    c7_z = z_mid - v_rot * (1.2 * a_minor)
+    c7_p = R0 + u_rot * (2.0 * a_minor) if R0 > 0 else u_rot * (2.0 * a_minor)
+    chord_configs.append({"type": "tangential", "z_2d": c7_z, "p_2d": c7_p, "s_span": 0.8 * span_y})
+
+    N_steps = 10
+    step_samples = np.linspace(-0.5, 0.5, N_steps, dtype=np.float32)
+
+    # Process in Z-slabs (chunk_z = 16)
+    num_slabs = (Z + chunk_z - 1) // chunk_z
+
+    for slab_idx in range(num_slabs):
+        z_start = slab_idx * chunk_z
+        z_end = min((slab_idx + 1) * chunk_z, Z)
+
+        psi_slab = psi_vol[z_start:z_end]
+        p_slab = pkpa_vol[z_start:z_end]
+        j_slab = jcurl_vol[z_start:z_end]
+        b_slab = bmod_vol[z_start:z_end]
+
+        z_slab_min = float(z_coords[z_start])
+        z_slab_max = float(z_coords[z_end - 1])
+        z_pad = 0.5 * (span_z / max(Z - 1, 1))
+        slab_lo = z_slab_min - z_pad
+        slab_hi = z_slab_max + z_pad
+
+        for c_idx in range(min(num_chords, len(chord_configs))):
+            cfg = chord_configs[c_idx]
+            z_cam = cfg["z_2d"]
+
+            z_mask = (z_cam >= slab_lo) & (z_cam <= slab_hi)
+            if not np.any(z_mask):
+                continue
+
+            if cfg["type"] == "poloidal":
+                x_cam = np.broadcast_to(cfg["x_2d"], (H, W))
+                z_cam_2d = np.broadcast_to(z_cam, (H, W))
+                y_span = cfg["y_span"]
+                ds = float(y_span / N_steps)
+
+                for step_frac in step_samples:
+                    y_sample = float(step_frac * y_span)
+
+                    z_vox = ((z_cam_2d - min_z) / span_z) * (Z - 1)
+                    y_vox = ((y_sample - min_y) / span_y) * (Y - 1)
+                    x_vox = ((x_cam - min_x) / span_x) * (X - 1)
+
+                    z_local = z_vox - z_start
+                    p_s = _sample_slab_trilinear(p_slab, z_local, np.broadcast_to(np.float32(y_vox), (H, W)), x_vox)
+                    j_s = _sample_slab_trilinear(j_slab, z_local, np.broadcast_to(np.float32(y_vox), (H, W)), x_vox)
+                    b_s = _sample_slab_trilinear(b_slab, z_local, np.broadcast_to(np.float32(y_vox), (H, W)), x_vox)
+                    psi_s = _sample_slab_trilinear(psi_slab, z_local, np.broadcast_to(np.float32(y_vox), (H, W)), x_vox)
+
+                    emiss = 0.55 * (p_s / p_norm)**2 + 0.35 * (j_s / j_norm) + 0.10 * (b_s / b_norm) + 0.02
+                    emiss_acc[c_idx] += emiss * ds
+                    flux_acc[c_idx] += psi_s * emiss * ds
+                    weight_acc[c_idx] += emiss * ds
+
+                    if is_scen_05:
+                        r_perp = np.sqrt(x_cam**2 + y_sample**2)
+                        eps_val = np.full((H, W), 5.50, dtype=np.float32)
+                        eps_val[r_perp < 0.35] = 4.00
+                        eps_val[r_perp < 0.25] = 1.00
+                        is_fracture = (x_cam >= 0.25) & (x_cam <= 0.28) & (abs(y_sample) < 0.20)
+                        eps_val[is_fracture] = 9.85
+                        dielectric_acc[c_idx] += eps_val * ds
+
+            else:
+                p_cam = np.broadcast_to(cfg["p_2d"], (H, W))
+                z_cam_2d = np.broadcast_to(z_cam, (H, W))
+                s_span = cfg["s_span"]
+                ds = float(s_span / N_steps)
+
+                for step_frac in step_samples:
+                    s_sample = float(step_frac * s_span)
+                    x_sample = p_cam
+                    y_sample = s_sample
+
+                    z_vox = ((z_cam_2d - min_z) / span_z) * (Z - 1)
+                    y_vox = ((y_sample - min_y) / span_y) * (Y - 1)
+                    x_vox = ((x_sample - min_x) / span_x) * (X - 1)
+
+                    z_local = z_vox - z_start
+                    p_s = _sample_slab_trilinear(p_slab, z_local, np.broadcast_to(np.float32(y_vox), (H, W)), x_vox)
+                    j_s = _sample_slab_trilinear(j_slab, z_local, np.broadcast_to(np.float32(y_vox), (H, W)), x_vox)
+                    b_s = _sample_slab_trilinear(b_slab, z_local, np.broadcast_to(np.float32(y_vox), (H, W)), x_vox)
+                    psi_s = _sample_slab_trilinear(psi_slab, z_local, np.broadcast_to(np.float32(y_vox), (H, W)), x_vox)
+
+                    emiss = 0.55 * (p_s / p_norm)**2 + 0.35 * (j_s / j_norm) + 0.10 * (b_s / b_norm) + 0.02
+                    emiss_acc[c_idx] += emiss * ds
+                    flux_acc[c_idx] += psi_s * emiss * ds
+                    weight_acc[c_idx] += emiss * ds
+
+                    if is_scen_05:
+                        r_perp = np.sqrt(x_sample**2 + y_sample**2)
+                        eps_val = np.full((H, W), 5.50, dtype=np.float32)
+                        eps_val[r_perp < 0.35] = 4.00
+                        eps_val[r_perp < 0.25] = 1.00
+                        is_fracture = (x_sample >= 0.25) & (x_sample <= 0.28) & (abs(y_sample) < 0.20)
+                        eps_val[is_fracture] = 9.85
+                        dielectric_acc[c_idx] += eps_val * ds
+
+    # Compute final 2D projections, normalized flux, and gradient maps
+    for c in range(min(num_chords, len(chord_configs))):
+        p_raw = emiss_acc[c]
+        p_min = float(p_raw.min())
+        p_max = float(p_raw.max())
+        if p_max > p_min:
+            projections[c] = np.clip((p_raw - p_min) / (p_max - p_min), 0.0, 1.0).astype(np.float32)
+        else:
+            projections[c] = np.zeros((H, W), dtype=np.float32)
+
+        w = np.maximum(weight_acc[c], 1e-6)
+        psi_norm = np.clip(flux_acc[c] / w, 0.0, 1.0).astype(np.float32)
+        psi_2d[c] = psi_norm
+
+        dpsi_dv = np.gradient(psi_norm, axis=0).astype(np.float32)
+        dpsi_du = np.gradient(psi_norm, axis=1).astype(np.float32)
+        grad_psi[c, :, :, 0] = dpsi_dv
+        grad_psi[c, :, :, 1] = dpsi_du
+
+        if is_scen_05 and dielectric is not None:
+            cfg = chord_configs[c]
+            if cfg["type"] == "poloidal":
+                x_c = np.broadcast_to(cfg["x_2d"], (H, W))
+                z_c = np.broadcast_to(cfg["z_2d"], (H, W))
+                r_c = np.sqrt(x_c**2 + (z_c - z_mid)**2)
+                eps = np.full((H, W), 5.50, dtype=np.float32)
+                eps[r_c < 0.35] = 4.00
+                eps[r_c < 0.25] = 1.00
+                is_frac = (x_c >= 0.25) & (x_c <= 0.28) & (np.abs(z_c - z_mid) < 0.20)
+                eps[is_frac] = 9.85
+            else:
+                p_c = np.broadcast_to(cfg["p_2d"], (H, W))
+                z_c = np.broadcast_to(cfg["z_2d"], (H, W))
+                r_c = np.sqrt(p_c**2 + (z_c - z_mid)**2)
+                eps = np.full((H, W), 5.50, dtype=np.float32)
+                eps[r_c < 0.35] = 4.00
+                eps[r_c < 0.25] = 1.00
+                is_frac = (p_c >= 0.25) & (p_c <= 0.28) & (np.abs(z_c - z_mid) < 0.20)
+                eps[is_frac] = 9.85
+            dielectric[c] = eps
+
+
+    # Apply scenario-specific masks (glare washout, AC coil ripple, molten glass flare)
+    if is_scen_04:
+        # 10% divertor Bremsstrahlung glare on chord 3 (poloidal divertor) and chord 6 (tangential lower)
+        div_row = int(0.72 * H)
+        mask_washout[3, div_row:, :] = True
+        mask_washout[6, div_row:, :] = True
+        projections[3, mask_washout[3]] = 1.0
+        projections[6, mask_washout[6]] = 1.0
+
+        # AC coil ripple (300 Hz) in scrape-off layer outer boundary
+        for c in range(min(num_chords, 8)):
+            ripple_mask = (psi_2d[c] > 0.90) & (~mask_washout[c])
+            mask_clock[c] = ripple_mask
+            ripple_factor = 1.0 + 0.05 * math.sin(2.0 * math.pi * 300.0 * (frame_idx * 1e-3))
+            projections[c, ripple_mask] = np.clip(projections[c, ripple_mask] * ripple_factor, 0.0, 1.0)
+
+    elif is_scen_05:
+        # Molten beta1 glass flare on annular liner zone (r in [0.25, 0.35])
+        for c in (0, 6):
+            if c < num_chords:
+                cfg = chord_configs[c]
+                if cfg["type"] == "poloidal":
+                    r_cam = np.sqrt(np.broadcast_to(cfg["x_2d"], (H, W))**2 + np.broadcast_to(cfg["z_2d"], (H, W))**2)
+                else:
+                    r_cam = np.abs(np.broadcast_to(cfg["p_2d"], (H, W)))
+                flare_mask = (r_cam >= 0.24) & (r_cam <= 0.36)
+                mask_washout[c] = flare_mask
+                projections[c, mask_washout[c]] = 1.0
+
+    return {
+        "projections": projections,
+        "grad_psi": grad_psi,
+        "mask_washout": mask_washout,
+        "mask_clock": mask_clock,
+        "dielectric": dielectric,
+        "psi_2d": psi_2d,
+    }
+
+
 def build_all_scenarios(
     grid_shape: Tuple[int, int, int] = (32, 24, 24),
     export_chords: bool = True,
     export_dir: Union[str, Path] = "data/stellarator_chords",
-) -> Dict[str, ScenarioData]:
+) -> ScenarioDeck:
     """
     Build all 5 canonical scenarios on (Z=32, Y=24, X=24) computational grids (18,432 voxels),
     generate 8 synthetic diagnostic chords per scenario, and optionally export chord files.
+    Returns a ScenarioDeck (dict subclass) supporting both string key and integer index access.
     """
-    scenarios: Dict[str, ScenarioData] = {}
+    scenarios = ScenarioDeck()
 
     for key, builder in SCENARIO_BUILDERS.items():
         scenarios[key] = builder(grid_shape=grid_shape)
@@ -1082,3 +1502,4 @@ def build_all_scenarios(
             pass
 
     return scenarios
+

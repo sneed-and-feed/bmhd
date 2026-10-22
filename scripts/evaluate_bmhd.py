@@ -41,6 +41,7 @@ from bmhd.benchmark import (
     run_jitter_sweep,
     run_glare_ablation,
     run_full_benchmark_suite,
+    run_stylo_bridge_benchmark,
 )
 
 
@@ -57,6 +58,12 @@ def main() -> int:
         type=str,
         default=str(PROJECT_ROOT / "results" / "bmhd_blind_summary.json"),
         help="Path to save blind summary JSON",
+    )
+    parser.add_argument(
+        "--out-bridge",
+        type=str,
+        default=str(PROJECT_ROOT / "results" / "bmhd_stylo_bridge_summary.json"),
+        help="Path to save Stylo diagnostic bridge summary JSON",
     )
     parser.add_argument(
         "--chunk-z",
@@ -131,7 +138,19 @@ def main() -> int:
         jitter_sweeps[s_key] = run_jitter_sweep(s, chunk_z=args.chunk_z)
         glare_ablations[s_key] = run_glare_ablation(s)
 
-    # 4. Assemble Summary JSON Payloads
+    # 4. Run Phase 4: Stylo Diagnostic & Control Bridge Benchmark
+    print("\n[Phase 4] Executing Stylo Diagnostic & Control Bridge Benchmark across all 5 Scenarios...")
+    t_bridge = time.time()
+    bridge_summary = run_stylo_bridge_benchmark(scenarios, chunk_z=args.chunk_z)
+    print(f"Bridge benchmark completed in {time.time() - t_bridge:.2f}s:")
+    ov = bridge_summary["overall_metrics"]
+    print(f"  - MOTA: {ov['mota']:.3f} | ID Swaps: {ov['bmhd_stylo_id_swaps']} (vs Legacy: {ov['legacy_kalman_iou_swaps']})")
+    print(f"  - Scenario 04 Pellet Deposition RMSE: {ov['scenario04_pellet_core_deposition_rmse_px']:.2f} px (<= 0.80 px)")
+    print(f"  - Scenario 05 Flare Rejection: {ov['scenario05_flare_washout_rejection_rate']*100:.1f}% | Throttle Gain: {ov['scenario05_nozzle_throttle_gain']:.4f}")
+    print(f"  - Single-Core FPS: {ov['single_core_fps']:.1f} | Latency: {ov['frame_latency_us']:.1f} us")
+    print(f"  - Combined Arena: {ov['combined_arena_heap_mb']:.2f} MB (< 3.5 MB) | Buffer Overhead: {ov['bridge_buffer_overhead_kb']:.1f} KB")
+
+    # 5. Assemble Summary JSON Payloads
     eval_summary = {
         "benchmark_version": "v0.2.0",
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
@@ -142,6 +161,7 @@ def main() -> int:
         "snr_sweeps": snr_sweeps,
         "jitter_sweeps": jitter_sweeps,
         "glare_ablations": glare_ablations,
+        "stylo_diagnostic_bridge": bridge_summary,
     }
 
     blind_summary = {
@@ -161,11 +181,13 @@ def main() -> int:
         "scenarios": mode_b_scenarios,
     }
 
-    # 5. Write Output JSON Files
+    # 6. Write Output JSON Files
     out_eval_path = Path(args.out_eval)
     out_blind_path = Path(args.out_blind)
+    out_bridge_path = Path(args.out_bridge)
     out_eval_path.parent.mkdir(parents=True, exist_ok=True)
     out_blind_path.parent.mkdir(parents=True, exist_ok=True)
+    out_bridge_path.parent.mkdir(parents=True, exist_ok=True)
 
     with open(out_eval_path, "w", encoding="utf-8") as f:
         json.dump(eval_summary, f, indent=2)
@@ -174,6 +196,10 @@ def main() -> int:
     with open(out_blind_path, "w", encoding="utf-8") as f:
         json.dump(blind_summary, f, indent=2)
     print(f"[Artifact] Successfully generated: {out_blind_path}")
+
+    with open(out_bridge_path, "w", encoding="utf-8") as f:
+        json.dump(bridge_summary, f, indent=2)
+    print(f"[Artifact] Successfully generated: {out_bridge_path}")
 
     print("\n" + "=" * 80)
     print(f"BMHD Evaluation Pipeline Completed Successfully in {time.time() - t_start:.2f}s!")

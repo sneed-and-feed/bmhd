@@ -1,6 +1,6 @@
 {
   "benchmark_version": "v0.2.0",
-  "timestamp": "2026-10-21T20:08:37Z",
+  "timestamp": "2026-10-22T07:55:58Z",
   "mode_a_formal_theorems": {
     "theorems_audit": {
       "theorem_2_1": {
@@ -15,7 +15,7 @@
       },
       "theorem_2_3": {
         "passed": true,
-        "orthogonality_residual": 9.313225746154785e-09
+        "orthogonality_residual": 9.778887033462524e-09
       },
       "theorem_2_4": {
         "passed": true,
@@ -32,13 +32,23 @@
       "theorem_2_6": {
         "passed": true,
         "spherical_radial_drift": 0.0,
-        "cascade_orthogonality_error": 9.778887033462524e-09
+        "cascade_orthogonality_error": 9.313225746154785e-09
       },
       "theorem_2_7": {
         "passed": true,
         "so6_orthogonality_error": 4.440892098500626e-16,
         "stiffness_trace_drift": 1.4210854715202004e-14,
         "stiffness_frobenius_drift": 3.552713678800501e-15
+      },
+      "theorem_2_8": {
+        "passed": true,
+        "cross3_isomorphism_error": 0.0,
+        "mhd_force_orthogonality_error": 6.696060927957603e-10,
+        "tangent_orthogonality_residual": 8.381903171539307e-09,
+        "equilibrium_flux_confinement_error": 2.0926244070906819e-10,
+        "parity_tie_break_margin": 0.475,
+        "parity_flux_confinement_residual": 9.778887033462524e-09,
+        "flux_conservation": 9.778887033462524e-09
       }
     },
     "all_theorems_verified": true,
@@ -78,22 +88,22 @@
     "field_line_multistep_drift": {
       "K_1": {
         "max_spherical_radial_drift": 0.0,
-        "max_tangent_orthogonality_error": 7.450580596923828e-09,
+        "max_tangent_orthogonality_error": 3.725290298461914e-09,
         "passed": true
       },
       "K_4": {
         "max_spherical_radial_drift": 0.0,
-        "max_tangent_orthogonality_error": 9.313225746154785e-09,
+        "max_tangent_orthogonality_error": 7.450580596923828e-09,
         "passed": true
       },
       "K_8": {
         "max_spherical_radial_drift": 0.0,
-        "max_tangent_orthogonality_error": 8.614733815193176e-09,
+        "max_tangent_orthogonality_error": 3.725290298461914e-09,
         "passed": true
       },
       "K_16": {
         "max_spherical_radial_drift": 0.0,
-        "max_tangent_orthogonality_error": 9.313225746154785e-09,
+        "max_tangent_orthogonality_error": 8.381903171539307e-09,
         "passed": true
       }
     },
@@ -2534,6 +2544,66 @@
         "beltrami_f1": 1.0,
         "equal_budget_uniform_pooling_f1": 0.5,
         "passed": true
+      }
+    }
+  },
+  "stylo_diagnostic_bridge": {
+    "bridge_version": "v0.2.0",
+    "timestamp": "2026-10-22T07:55:58Z",
+    "hardware_invariants": {
+      "max_heap_ceiling_mb": 3.5,
+      "active_l3_resident_mb": 2.33,
+      "max_bridge_buffer_overhead_kb": 64.0,
+      "target_frame_rate_fps": 240.0
+    },
+    "overall_metrics": {
+      "mota": 0.983,
+      "bmhd_stylo_id_swaps": 0,
+      "legacy_kalman_iou_swaps": 6,
+      "scenario04_pellet_core_deposition_rmse_px": 0.21,
+      "scenario05_flare_washout_rejection_rate": 1.0,
+      "scenario05_nozzle_throttle_gain": 0.6599,
+      "single_core_fps": 588.3,
+      "frame_latency_us": 135.8,
+      "combined_arena_heap_mb": 2.33,
+      "bridge_buffer_overhead_kb": 32.5,
+      "post_mask_mad_noise_floor": 0.002432,
+      "zero_per_frame_growth_passed": true
+    },
+    "scenarios": {
+      "01_issan_nonsym_solovev_tau0": {
+        "drift_parity_recovered": true,
+        "tangent_orthogonality_residual": 9.313225746154785e-09,
+        "id_swaps": 0,
+        "mota": 1.0
+      },
+      "02_issan_sheared_elliptic_tau1": {
+        "itb_shear_crossing_clean": true,
+        "tangent_orthogonality_residual": 1.7136105034953886e-11,
+        "id_swaps": 0,
+        "mota": 1.0
+      },
+      "03_spec_magnetic_island_chain": {
+        "separatrix_crossing_clean": true,
+        "tangent_orthogonality_residual": 0.012454524018377558,
+        "id_swaps": 0,
+        "mota": 1.0
+      },
+      "04_tokamak_elm_pellet_4d": {
+        "pellet_elm_crossing_swaps": 0,
+        "legacy_swaps": 3,
+        "deposition_depth_rmse_px": 0.21,
+        "bremsstrahlung_glare_rejected": true,
+        "mota": 1.0
+      },
+      "05_beltrami_plasma_spallation_torch": {
+        "molten_glass_flare_rejection_rate": 1.0,
+        "micro_spallation_spike_preservation": 1.0,
+        "throttle_gain_actual": 0.6599,
+        "throttle_gain_expected": 0.6599,
+        "throttle_error": 0.0,
+        "slew_cmd_active": true,
+        "mota": 0.9166666666666666
       }
     }
   }

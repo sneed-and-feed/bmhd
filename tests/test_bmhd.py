@@ -1,5 +1,5 @@
 """
-tests/test_bmhd.py: Comprehensive Verification Suite for BMHD v0.2.0.
+tests/test_bmhd.py: Comprehensive Verification Suite for BMHD v0.3.0.
 
 Verifies:
 1. test_theorems_mode_a: Machine-checked proof of Theorems 2.1–2.7 with exact 0.00e+0 residuals.
@@ -12,7 +12,7 @@ Verifies:
 8. test_heap_memory_ceiling: Peak heap memory strictly < 35 MB under tracemalloc.
 9. test_mode_b_blind_reconstruction: Blind sparse-chord reconstruction at SNR = 20 dB across 7 methods.
 10. test_mode_b_blind_bmhd_dominance: BlindBMHD outperforms all 6 competing baselines on Whole-Torus RMSE & Edge Fidelity.
-11. test_studio_v020_export_and_controls: Portable HTML5/WebGL Studio v0.2.0 3D view controls, multi-tab diagnostics, and zero-network isolation.
+11. test_studio_v020_export_and_controls: Portable HTML5/WebGL Studio v0.3.0 3D view controls, multi-tab diagnostics, and zero-network isolation.
 """
 
 from __future__ import annotations
@@ -121,6 +121,15 @@ def test_theorems_mode_a():
     assert th7["so6_orthogonality_error"] <= 1.14e-13
     assert th7["stiffness_trace_drift"] <= 1.14e-13
     assert th7["stiffness_frobenius_drift"] <= 1.14e-13
+
+    # Theorem 2.8 (Flux-Surface-Locked Tangent Orthogonality & SE(2) Kinematics)
+    assert "theorem_2_8" in audit
+    th8 = audit["theorem_2_8"]
+    assert th8["passed"] is True
+    assert th8["tangent_orthogonality_residual"] <= 1.0e-8
+    assert th8["cross3_isomorphism_error"] <= 1.0e-7
+    assert th8["equilibrium_flux_confinement_error"] <= 1.0e-6
+    assert th8["parity_tie_break_margin"] > 0.0
 
     # Also verify full Mode A suite runner
     mode_a_summary = run_mode_a_evaluation()
@@ -527,8 +536,8 @@ def test_studio_v020_export_and_controls(tmp_path: Path):
         export_portable_html_studio,
     )
 
-    assert bmhd.__version__ == "0.2.0"
-    assert STUDIO_VERSION == "0.2.0"
+    assert bmhd.__version__ == "0.3.0"
+    assert STUDIO_VERSION == "0.3.0"
 
     payload = serialize_evaluation_payload("03_spec_magnetic_island_chain")
     assert payload["scenario_id"] == "03_spec_magnetic_island_chain"

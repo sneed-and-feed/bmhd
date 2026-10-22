@@ -2,7 +2,7 @@
 BMHD: Beltrami MHD & Non-Symmetric 3D Stellarator Engine.
 """
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 from bmhd.mhd import (
     IssanNonSymmetricEquilibriumEngine,

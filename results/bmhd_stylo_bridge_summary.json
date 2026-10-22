@@ -1,0 +1,60 @@
+{
+  "bridge_version": "v0.2.0",
+  "timestamp": "2026-10-22T07:55:58Z",
+  "hardware_invariants": {
+    "max_heap_ceiling_mb": 3.5,
+    "active_l3_resident_mb": 2.33,
+    "max_bridge_buffer_overhead_kb": 64.0,
+    "target_frame_rate_fps": 240.0
+  },
+  "overall_metrics": {
+    "mota": 0.983,
+    "bmhd_stylo_id_swaps": 0,
+    "legacy_kalman_iou_swaps": 6,
+    "scenario04_pellet_core_deposition_rmse_px": 0.21,
+    "scenario05_flare_washout_rejection_rate": 1.0,
+    "scenario05_nozzle_throttle_gain": 0.6599,
+    "single_core_fps": 588.3,
+    "frame_latency_us": 135.8,
+    "combined_arena_heap_mb": 2.33,
+    "bridge_buffer_overhead_kb": 32.5,
+    "post_mask_mad_noise_floor": 0.002432,
+    "zero_per_frame_growth_passed": true
+  },
+  "scenarios": {
+    "01_issan_nonsym_solovev_tau0": {
+      "drift_parity_recovered": true,
+      "tangent_orthogonality_residual": 9.313225746154785e-09,
+      "id_swaps": 0,
+      "mota": 1.0
+    },
+    "02_issan_sheared_elliptic_tau1": {
+      "itb_shear_crossing_clean": true,
+      "tangent_orthogonality_residual": 1.7136105034953886e-11,
+      "id_swaps": 0,
+      "mota": 1.0
+    },
+    "03_spec_magnetic_island_chain": {
+      "separatrix_crossing_clean": true,
+      "tangent_orthogonality_residual": 0.012454524018377558,
+      "id_swaps": 0,
+      "mota": 1.0
+    },
+    "04_tokamak_elm_pellet_4d": {
+      "pellet_elm_crossing_swaps": 0,
+      "legacy_swaps": 3,
+      "deposition_depth_rmse_px": 0.21,
+      "bremsstrahlung_glare_rejected": true,
+      "mota": 1.0
+    },
+    "05_beltrami_plasma_spallation_torch": {
+      "molten_glass_flare_rejection_rate": 1.0,
+      "micro_spallation_spike_preservation": 1.0,
+      "throttle_gain_actual": 0.6599,
+      "throttle_gain_expected": 0.6599,
+      "throttle_error": 0.0,
+      "slew_cmd_active": true,
+      "mota": 0.9166666666666666
+    }
+  }
+}
