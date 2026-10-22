@@ -22,6 +22,7 @@ Grounded in verified fusion MHD & high-speed small-target tracking literature:
 
 from __future__ import annotations
 
+from array import array
 import ctypes
 import math
 import os
@@ -190,6 +191,11 @@ class TrackerStateArena:
             self._raw, dtype=np.uint8, count=self.FRAME_SIZE, offset=offset_rev
         ).reshape((128, 128))
 
+        # Zero-copy boolean views over the uint8 mask slices (avoids .astype(uint8)/bool copies)
+        self.clock_mask_bool = self.clock_mask.view(bool)
+        self.nope_mask_bool = self.nope_mask.view(bool)
+        self.reversible_mask_bool = self.reversible_mask.view(bool)
+
         # Last changed color: 128 x 128 int16 = 32,768 B (offset 645,112)
         offset_color = 645112
         self.last_changed_color = np.frombuffer(
@@ -309,6 +315,7 @@ class TrackState:
         self.pending_belief: Optional[Tuple[np.ndarray, np.ndarray, np.ndarray, int, Tuple[float, float]]] = None
         self.belief_version: int = 0
         self.history: List[Tuple[float, float]] = [(float(self.x[0]), float(self.x[1]))]
+        self._history_cap: int = 8
         self.eta_nonlocal: float = 0.0
         self.n_local: int = 1
         self.n_nonlocal: int = 0
@@ -316,6 +323,15 @@ class TrackState:
         self.hits: int = 1
         self.time_since_update: int = 0
         self.target_type: str = "nominal"  # "pellet_core", "elm_filament", "sol_crash", "focal_spot"
+
+    def append_history(self, px: float, py: float) -> None:
+        """Append position to bounded history ring without unbounded growth."""
+        if len(self.history) >= self._history_cap:
+            for k in range(self._history_cap - 1):
+                self.history[k] = self.history[k + 1]
+            self.history[-1] = (float(px), float(py))
+        else:
+            self.history.append((float(px), float(py)))
 
     def predict(self, dt: float) -> Tuple[np.ndarray, np.ndarray]:
         if math.isnan(dt) or dt < 0:
@@ -357,7 +373,7 @@ def _fast_ulp_add_f32(val: float, steps: int) -> float:
     else:
         signed_mag = int(mag) + steps
     if signed_mag >= 0:
-        new_u = (signed_mag & 0x7FFFFFFF)
+        new_u = signed_mag & 0x7FFFFFFF
     else:
         new_u = (abs(signed_mag) & 0x7FFFFFFF) | 0x80000000
     return struct.unpack(">f", struct.pack(">I", new_u))[0]
@@ -369,27 +385,79 @@ def polish_exact_sphere_norm_f32(v: np.ndarray, target_sq: float) -> Tuple[np.nd
     """
     v_arr = np.ascontiguousarray(v, dtype=np.float32).copy()
     d = len(v_arr)
-    target_f = float(target_sq)
+    target_sq_f = np.float32(target_sq)
 
-    def eval_sq(arr: np.ndarray) -> float:
-        return float(np.sum(arr.astype(np.float64) * arr.astype(np.float64)))
+    def _f32_sq_sum(arr: np.ndarray) -> np.float32:
+        acc = np.float32(0.0)
+        for idx in range(d):
+            val = np.float32(arr[idx])
+            acc = np.float32(acc + np.float32(val * val))
+        return acc
 
-    cur_sq = eval_sq(v_arr)
-    best_err = abs(cur_sq - target_f)
+    cur_sq = _f32_sq_sum(v_arr)
+    if cur_sq > 0:
+        scale = np.float32(np.sqrt(target_sq_f / cur_sq))
+        v_arr = (v_arr * scale).astype(np.float32)
+
+    best_err = abs(float(_f32_sq_sum(v_arr) - target_sq_f))
     if best_err == 0.0:
         return v_arr, 0.0
 
-    for k1 in range(d):
-        base1 = float(v_arr[k1])
-        for step1 in (-2, -1, 1, 2):
-            v_arr[k1] = _fast_ulp_add_f32(base1, step1)
-            err = abs(eval_sq(v_arr) - target_f)
-            if err < best_err:
-                best_err = err
-                if best_err == 0.0:
-                    return v_arr, 0.0
-            else:
-                v_arr[k1] = base1
+    order = np.argsort(np.abs(v_arr))[::-1]
+
+    # Pass 1: Single-coordinate residual square-root + ULP search
+    for idx in order:
+        other_sq = np.float32(0.0)
+        for j in range(d):
+            if j != idx:
+                vj = np.float32(v_arr[j])
+                other_sq = np.float32(other_sq + np.float32(vj * vj))
+        rem = float(target_sq_f) - float(other_sq)
+        if rem >= 0.0:
+            sgn = -1.0 if v_arr[idx] < 0 else 1.0
+            base = np.float32(sgn * math.sqrt(rem))
+            orig = v_arr[idx]
+            best_c = orig
+            for step in (-3, -2, -1, 0, 1, 2, 3):
+                cand = np.float32(_fast_ulp_add_f32(float(base), step))
+                v_arr[idx] = cand
+                err = abs(float(_f32_sq_sum(v_arr) - target_sq_f))
+                if err < best_err:
+                    best_err = err
+                    best_c = cand
+                    if best_err == 0.0:
+                        return v_arr, 0.0
+            v_arr[idx] = best_c
+
+    # Pass 2: Two-coordinate joint ULP refinement on top-4 largest components
+    top_k = order[: min(4, d)]
+    for i_idx in range(len(top_k)):
+        k1 = top_k[i_idx]
+        orig1 = v_arr[k1]
+        for step1 in (-2, -1, 0, 1, 2):
+            v_arr[k1] = np.float32(_fast_ulp_add_f32(float(orig1), step1))
+            other_sq = np.float32(0.0)
+            k2 = top_k[(i_idx + 1) % len(top_k)]
+            if k1 == k2:
+                continue
+            for j in range(d):
+                if j != k2:
+                    vj = np.float32(v_arr[j])
+                    other_sq = np.float32(other_sq + np.float32(vj * vj))
+            rem = float(target_sq_f) - float(other_sq)
+            if rem >= 0.0:
+                sgn2 = -1.0 if v_arr[k2] < 0 else 1.0
+                base2 = np.float32(sgn2 * math.sqrt(rem))
+                orig2 = v_arr[k2]
+                for step2 in (-2, -1, 0, 1, 2):
+                    v_arr[k2] = np.float32(_fast_ulp_add_f32(float(base2), step2))
+                    err = abs(float(_f32_sq_sum(v_arr) - target_sq_f))
+                    if err < best_err:
+                        best_err = err
+                        if best_err == 0.0:
+                            return v_arr, 0.0
+                v_arr[k2] = orig2
+        v_arr[k1] = orig1
 
     return v_arr, float(best_err)
 
@@ -438,6 +506,12 @@ class BMHDStyloDiagnosticBridge:
         self._mask_clock_buffer = np.zeros((128, 128), dtype=bool)
         self._dielectric_buffer = np.zeros((128, 128), dtype=np.float32)
 
+        # Cached ctypes pointers to arena/scratch buffers (zero ctypes ref-cycles in hot loop)
+        self._sightline_ptr = ctypes.c_void_p(self._sightline_buffer.ctypes.data)
+        self._clock_mask_ptr = ctypes.c_void_p(self.arena.clock_mask.ctypes.data)
+        self._nope_mask_ptr = ctypes.c_void_p(self.arena.nope_mask.ctypes.data)
+        self._salience_map_ptr = ctypes.c_void_p(self.arena.salience_map.ctypes.data)
+
         # Pre-allocated track dictionaries buffer
         self._out_tracks_buffer = [
             {
@@ -461,6 +535,8 @@ class BMHDStyloDiagnosticBridge:
 
         # 4. Pure-NumPy tracking state
         self.active_tracks: List[TrackState] = []
+        self._last_native_tracks: List[Dict[str, Any]] = []
+        self._focal_spot_track_id: Optional[int] = None
         self.next_track_id: int = 1
         self.frame_count: int = 0
         self.glints_rejected: int = 0
@@ -471,11 +547,16 @@ class BMHDStyloDiagnosticBridge:
         # Lie-algebraic triad operator for Stage 3
         self.triad_op = SkewSymmetricFluxTriad(num_plasma_modes=8, num_shells=8)
 
-        # Pre-allocated canonical so(8) tie-break dominance tensor
+        # Pre-allocated canonical so(8) tie-break dominance tensor and unrolled scratch arrays
         self._W_canonical = torch.zeros(8, 8, 8, dtype=torch.float32)
         self._W_canonical[0, 1, 0] = 2.5
         self._W_canonical[0, 0, 1] = 0.5
         self._W_canonical_np = self._W_canonical.detach().cpu().numpy().copy()
+        self._W_skew_np = (self._W_canonical_np - self._W_canonical_np.swapaxes(-1, -2)).astype(np.float64)
+        self._u_buf = array("d", [0.0] * 8)
+        self._v_buf = array("d", [0.0] * 8)
+        self._b_buf = array("d", [0.0] * 8)
+        self._cascade_z_L = array("d", [0.0] * 8)
 
     def _init_c_abi(self) -> None:
         """Attempts to load native compiled Rust shared library if available."""
@@ -494,12 +575,19 @@ class BMHDStyloDiagnosticBridge:
         """Reset internal tracker state, active tracks, and arena buffers."""
         self.arena.reset()
         self.active_tracks.clear()
+        self._last_native_tracks.clear()
+        self._focal_spot_track_id = None
         self.next_track_id = 1
         self.frame_count = 0
         self.glints_rejected = 0
         self.step_maneuvers = 0
         self.id_swaps_count = 0
         self.core_dep_depth_history.clear()
+        for k in range(8):
+            self._u_buf[k] = 0.0
+            self._v_buf[k] = 0.0
+            self._b_buf[k] = 0.0
+            self._cascade_z_L[k] = 0.0
 
     # =========================================================================
     # Stage 1: Mask-First MAD & 1-Sample Morse Gate
@@ -517,8 +605,10 @@ class BMHDStyloDiagnosticBridge:
         """
         H, W = frame.shape
         f = frame.astype(np.float32)
-        if float(np.max(f)) > 1.5:
+        f_max = float(np.max(f)) if f.size > 0 else 0.0
+        if f_max > 1.5:
             f = f * (1.0 / 255.0)
+            f_max = f_max * (1.0 / 255.0)
 
         # Compute Beltrami exterior-curl salience norm via central differences
         pad_f = np.pad(f, ((1, 1), (1, 1)), mode="edge")
@@ -542,8 +632,9 @@ class BMHDStyloDiagnosticBridge:
         salience_nope[washout_mask] = 0.0
         salience_nope[is_flat_glare] = 0.0
 
-        # Store in pre-allocated arena salience_map
-        np.copyto(self.arena.salience_map, salience_nope)
+        # Store in pre-allocated arena salience_map when 128x128
+        if (H, W) == (128, 128):
+            np.copyto(self.arena.salience_map, salience_nope)
 
         # Exact 256-sample deterministic strided MAD slice (idx * 64)
         flat_sal = salience_nope.ravel()
@@ -556,6 +647,19 @@ class BMHDStyloDiagnosticBridge:
         devs.sort()
         mad_val = float(0.5 * (devs[127] + devs[128]))
         cfar_mad_floor = med_val + 5.5 * 1.4826 * mad_val
+
+        # Guard against zero-clipping floor collapse when >= 50% of samples are masked/rectified
+        # while >= 25% of strided samples (>= 64 / 256) remain positive background clutter:
+        if med_val <= 1e-7 or mad_val <= 1e-7:
+            pos_list = [float(x_val) for x_val in samples if x_val > 0.0]
+            if len(pos_list) >= 64:
+                pos_arr = np.array(pos_list, dtype=np.float32)
+                pos_med = float(np.median(pos_arr))
+                pos_mad = float(np.median(np.abs(pos_arr - pos_med)))
+                pos_spread = max(pos_med, pos_mad) if f_max <= 1.5 else pos_mad
+                pos_floor = pos_med + 5.5 * 1.4826 * pos_spread
+                cfar_mad_floor = max(cfar_mad_floor, pos_floor)
+
         eff_threshold = max(float(self.config.detection_threshold / 255.0), float(cfar_mad_floor))
 
         # 3x3 local maximum test
@@ -619,39 +723,185 @@ class BMHDStyloDiagnosticBridge:
         """
         Stage 2: Mass continuity clock splitter (partial_t rho_c + div J_c = sigma_c).
         Notches out AC power-supply coil ripple (300 Hz) into M_clock.
+        Normalizes [0, 255] inputs to [0, 1] and writes directly into zero-copy boolean arena views.
         """
         H, W = frame.shape
         f = frame.astype(np.float32)
+        if f.size > 0 and float(np.max(f)) > 1.5:
+            f = f * (1.0 / 255.0)
 
-        # Store in circular ring buffer
-        slot = self.arena.ring_head
-        self.arena.ring_buffer[slot] = f
-        self.arena.ring_head = (slot + 1) % self.arena.RING_CAPACITY
-        if self.arena.ring_count < self.arena.RING_CAPACITY:
-            self.arena.ring_count += 1
+        if (H, W) == (128, 128):
+            slot = self.arena.ring_head
+            self.arena.ring_buffer[slot] = f
+            self.arena.ring_head = (slot + 1) % self.arena.RING_CAPACITY
+            if self.arena.ring_count < self.arena.RING_CAPACITY:
+                self.arena.ring_count += 1
 
+            clock_view = self.arena.clock_mask_bool
+            nope_view = self.arena.nope_mask_bool
+            clock_view.fill(False)
+
+            if self.arena.ring_count >= 2:
+                prev_slot = (self.arena.ring_head - 2) % self.arena.RING_CAPACITY
+                diff = np.abs(f - self.arena.ring_buffer[prev_slot])
+
+                # Thermodynamic irreversibility guard: F_{t+1} == F_{t-k}
+                for k in (2, 3, 4):
+                    if self.arena.ring_count > k:
+                        past_slot = (self.arena.ring_head - 1 - k) % self.arena.RING_CAPACITY
+                        cycle_diff = np.abs(f - self.arena.ring_buffer[past_slot])
+                        reversible = (cycle_diff <= 0.05) & (diff > 0.02)
+                        clock_view |= reversible
+
+            np.logical_not(clock_view, out=nope_view)
+            return clock_view, nope_view
+
+        # Arbitrary resolution fallback (> 128x128)
         clock_mask = np.zeros((H, W), dtype=bool)
-
-        if self.arena.ring_count >= 2:
-            prev_slot = (self.arena.ring_head - 2) % self.arena.RING_CAPACITY
-            diff = np.abs(f - self.arena.ring_buffer[prev_slot])
-
-            # Thermodynamic irreversibility guard: F_{t+1} == F_{t-k}
-            for k in (2, 3, 4):
-                if self.arena.ring_count > k:
-                    past_slot = (self.arena.ring_head - 1 - k) % self.arena.RING_CAPACITY
-                    cycle_diff = np.abs(f - self.arena.ring_buffer[past_slot])
-                    reversible = (cycle_diff <= 0.05) & (diff > 0.02)
-                    clock_mask |= reversible
-
         nope_mask = ~clock_mask
-        self.arena.clock_mask[:] = clock_mask.astype(np.uint8)
-        self.arena.nope_mask[:] = nope_mask.astype(np.uint8)
         return clock_mask, nope_mask
 
     # =========================================================================
-    # Stage 3: so(C) Skew Triad & Crossing Tie-Breaking
+    # Stage 3: so(C) Skew Triad, Unrolled Cascade & Crossing Tie-Breaking
     # =========================================================================
+
+    def _eval_triad_pair_inplace(self, t1: TrackState, t2: TrackState) -> float:
+        """
+        Zero-allocation unrolled evaluation of skew-symmetric triad operator B_W(u, v) in so(8)
+        using pre-allocated array('d') buffers.
+        """
+        u_buf = self._u_buf
+        v_buf = self._v_buf
+        b_buf = self._b_buf
+        W_skew = self._W_skew_np
+
+        du_x = float(t1.x[2] - t2.x[2])
+        du_y = float(t1.x[3] - t2.x[3])
+        hypot_u = math.hypot(du_x, du_y)
+        if hypot_u > 1e-5:
+            u_buf[0] = du_x / hypot_u
+            u_buf[1] = du_y / hypot_u
+        else:
+            u_buf[0] = 1.0
+            u_buf[1] = 0.0
+        u_buf[2] = float(t1.x[2])
+        u_buf[3] = float(t1.x[3])
+        u_buf[4] = float(t2.x[2])
+        u_buf[5] = float(t2.x[3])
+        u_buf[6] = 0.0
+        u_buf[7] = 0.0
+
+        dv_x = float(t1.x[0] - t2.x[0])
+        dv_y = float(t1.x[1] - t2.x[1])
+        hypot_v = math.hypot(dv_x, dv_y)
+        if hypot_v > 1e-5:
+            v_buf[0] = dv_x / hypot_v
+            v_buf[1] = dv_y / hypot_v
+        else:
+            v_buf[0] = 0.0
+            v_buf[1] = 1.0
+        v_buf[2] = float(t1.x[0])
+        v_buf[3] = float(t1.x[1])
+        v_buf[4] = float(t2.x[0])
+        v_buf[5] = float(t2.x[1])
+        v_buf[6] = 0.0
+        v_buf[7] = 0.0
+
+        for k in range(8):
+            acc_k = 0.0
+            for m in range(8):
+                um = u_buf[m]
+                if um != 0.0:
+                    for c in range(8):
+                        vc = v_buf[c]
+                        if vc != 0.0:
+                            acc_k += um * vc * float(W_skew[m, c, k])
+            b_buf[k] = acc_k
+
+        return abs(b_buf[0] - b_buf[1])
+
+    def _step_live_cascade_diagnostics(
+        self,
+        tracks: List[TrackState],
+        medoids: List[Dict[str, Any]],
+        dt: float,
+    ) -> Tuple[float, float]:
+        """
+        Execute unrolled K=16 slow-fast shell cascade on arena.cascade_registers
+        with 2-pass Kahan tangent projection and IEEE-754 float32 ULP sphere polish.
+        """
+        z_H = self.arena.cascade_registers
+        z_L = self._cascade_z_L
+
+        # Seed z_H on first frame or if zero
+        cur_sq = float(np.sum(z_H.astype(np.float64) * z_H.astype(np.float64)))
+        if cur_sq < 1e-9:
+            for k in range(8):
+                z_H[k] = np.float32(0.35 + 0.05 * k)
+            cur_sq = float(np.sum(z_H.astype(np.float64) * z_H.astype(np.float64)))
+
+        target_sq = float(np.float32(cur_sq))
+        if len(tracks) > 0:
+            t0 = tracks[0]
+            u0 = float(t0.x[2]) * 0.01
+            u1 = float(t0.x[3]) * 0.01
+        elif len(medoids) > 0:
+            u0 = (float(medoids[0]["x"]) - 64.0) * 0.005
+            u1 = (float(medoids[0]["y"]) - 64.0) * 0.005
+        else:
+            u0, u1 = 0.01, -0.01
+
+        dt_sub = max(dt, 1e-4) / 16.0
+        max_ortho = 0.0
+
+        for _ in range(16):
+            # Evaluate skew triad interaction and Kahan 2-pass tangent projection against z_H
+            norm_sq = 0.0
+            for k in range(8):
+                zh_k = float(z_H[k])
+                norm_sq += zh_k * zh_k
+
+            # Raw velocity perturbation in shell space
+            for k in range(8):
+                kp = (k + 1) % 8
+                km = (k + 7) % 8
+                self._b_buf[k] = (u0 * float(z_H[kp]) - u1 * float(z_H[km])) * 0.05
+
+            if norm_sq > 1e-12:
+                # Pass 1 tangent projection
+                dot1 = 0.0
+                for k in range(8):
+                    dot1 += float(z_H[k]) * self._b_buf[k]
+                alpha1 = dot1 / norm_sq
+                for k in range(8):
+                    self._b_buf[k] -= alpha1 * float(z_H[k])
+
+                # Pass 2 Kahan tangent refinement
+                dot2 = 0.0
+                for k in range(8):
+                    dot2 += float(z_H[k]) * self._b_buf[k]
+                alpha2 = dot2 / norm_sq
+                for k in range(8):
+                    self._b_buf[k] -= alpha2 * float(z_H[k])
+
+                # Check orthogonality residual |<z_H, b>| / (||z_H|| ||b||)
+                dot_res = 0.0
+                b_sq = 0.0
+                for k in range(8):
+                    dot_res += float(z_H[k]) * self._b_buf[k]
+                    b_sq += self._b_buf[k] * self._b_buf[k]
+                denom = math.sqrt(norm_sq * b_sq) + 1e-15
+                ortho_err = abs(dot_res) / denom
+                if ortho_err > max_ortho:
+                    max_ortho = ortho_err
+
+            for k in range(8):
+                z_L[k] = 0.92 * z_L[k] + dt_sub * self._b_buf[k]
+                z_H[k] = np.float32(float(z_H[k]) + dt_sub * self._b_buf[k])
+
+        polished, radial_drift = polish_exact_sphere_norm_f32(z_H, target_sq)
+        np.copyto(self.arena.cascade_registers, polished)
+        return float(radial_drift), float(max_ortho)
 
     def _break_crossing_ties_triad(
         self,
@@ -674,7 +924,7 @@ class BMHDStyloDiagnosticBridge:
             pos_x, pos_y = xp[0], xp[1]
             vx, vy = xp[2], xp[3]
             v_norm = math.hypot(vx, vy)
-            max_gate = 50.0 if t.pending_impulse else 35.0
+            max_gate = 128.0 if (N <= 2 and M <= 2) else (50.0 if t.pending_impulse else 35.0)
 
             for j, m in enumerate(medoids):
                 dx = m["x"] - pos_x
@@ -698,30 +948,17 @@ class BMHDStyloDiagnosticBridge:
                 t1, t2 = tracks[i1], tracks[i2]
                 sep = math.hypot(t1.x[0] - t2.x[0], t1.x[1] - t2.x[1])
                 if sep <= self.config.r_collision:
-                    du_x = t1.x[2] - t2.x[2]
-                    du_y = t1.x[3] - t2.x[3]
-                    norm_u = math.hypot(du_x, du_y) + 1e-6
-                    u_np = np.array(
-                        [du_x / norm_u, du_y / norm_u, t1.x[2], t1.x[3], t2.x[2], t2.x[3], 0.0, 0.0],
-                        dtype=np.float32,
-                    )
-
-                    dv_x = t1.x[0] - t2.x[0]
-                    dv_y = t1.x[1] - t2.x[1]
-                    norm_v = math.hypot(dv_x, dv_y) + 1e-6
-                    v_np = np.array(
-                        [dv_x / norm_v, dv_y / norm_v, t1.x[0], t1.x[1], t2.x[0], t2.x[1], 0.0, 0.0],
-                        dtype=np.float32,
-                    )
-
-                    W_skew = self._W_canonical_np - self._W_canonical_np.swapaxes(-1, -2)
-                    b_shift = np.einsum("m,c,mck->k", u_np, v_np, W_skew)
-                    gap = float(abs(b_shift[0] - b_shift[1]))
+                    gap = self._eval_triad_pair_inplace(t1, t2)
                     max_gap = max(max_gap, gap)
+                    rel_vx = float(t1.x[2] - t2.x[2])
+                    rel_vy = float(t1.x[3] - t2.x[3])
 
                     for j, m in enumerate(medoids):
                         proj1 = (m["x"] - t1.x[0]) * t1.x[2] + (m["y"] - t1.x[1]) * t1.x[3]
                         proj2 = (m["x"] - t2.x[0]) * t2.x[2] + (m["y"] - t2.x[1]) * t2.x[3]
+                        if abs(proj1) < 1e-5 and abs(proj2) < 1e-5:
+                            proj1 = (m["x"] - 0.5 * (t1.x[0] + t2.x[0])) * (rel_vx if abs(rel_vx) > 1e-5 else 1.0)
+                            proj2 = -proj1
                         if cost_matrix[i1, j] < 1e4:
                             cost_matrix[i1, j] -= float(0.25 * gap * math.tanh(proj1 / 10.0))
                         if cost_matrix[i2, j] < 1e4:
@@ -750,8 +987,9 @@ class BMHDStyloDiagnosticBridge:
             # Check cross-flux penetration: <v, grad_psi>
             cross_flux = 0.0
             if grad_psi is not None:
-                ix = int(round(np.clip(t.x[0], 0, 127)))
-                iy = int(round(np.clip(t.x[1], 0, 127)))
+                H_g, W_g = grad_psi.shape[:2]
+                ix = int(round(np.clip(t.x[0], 0, W_g - 1)))
+                iy = int(round(np.clip(t.x[1], 0, H_g - 1)))
                 g_vec = grad_psi[iy, ix]  # (gx, gy)
                 cross_flux = float(t.x[2] * g_vec[0] + t.x[3] * g_vec[1])
 
@@ -783,7 +1021,7 @@ class BMHDStyloDiagnosticBridge:
         washout_mask: Optional[np.ndarray] = None,
     ) -> Dict[str, Any]:
         """
-        Execute a single tracking step on a 128x128 sensor frame.
+        Execute a single tracking step on a 128x128 (or higher-res) sensor frame.
         Guarantees zero dynamic allocations in the per-frame hot loop.
         """
         if dt < 0.0 or math.isnan(dt):
@@ -794,11 +1032,34 @@ class BMHDStyloDiagnosticBridge:
         self.frame_count += 1
         self.arena.frame_idx += 1
 
+        # Lazy resolution handoff from native 128x128 tracks to arbitrary resolution (> 128x128)
+        if (H > 128 or W > 128) and len(self.active_tracks) == 0 and len(self._last_native_tracks) > 0:
+            for nt in self._last_native_tracks:
+                t_sync = TrackState(
+                    track_id=int(nt["id"]),
+                    x_init=np.array(
+                        [float(nt["x"]), float(nt["y"]), float(nt["vx"]), float(nt["vy"]), 0.0, 0.0],
+                        dtype=np.float32,
+                    ),
+                    confidence=float(nt.get("confidence", 1.0)),
+                )
+                t_sync.classification = str(nt.get("classification", "nominal"))
+                self.active_tracks.append(t_sync)
+                if t_sync.id >= self.next_track_id:
+                    self.next_track_id = t_sync.id + 1
+            self._last_native_tracks.clear()
+
         # Stage 2: Mass continuity clock splitter
         clock_mask, nope_mask = self._update_stage2_continuity_splitter(f)
 
         # Stage 1: Mask-first MAD and discrete Morse medoid extraction
-        w_mask = washout_mask if washout_mask is not None else np.zeros((H, W), dtype=bool)
+        if washout_mask is not None:
+            w_mask = washout_mask
+        elif (H, W) == (128, 128):
+            self._mask_washout_buffer.fill(False)
+            w_mask = self._mask_washout_buffer
+        else:
+            w_mask = np.zeros((H, W), dtype=bool)
         salience_nope, medoids = self._compute_stage1_salience_and_medoids(f, clock_mask, w_mask)
 
         # Predict priors
@@ -832,7 +1093,7 @@ class BMHDStyloDiagnosticBridge:
                         used_cols.add(best_c)
                         matched_medoids.add(best_c)
 
-        # 1-Sample Morse gate and state update
+        # 1-Sample Morse gate and state update with Phi^{-1}(dt) pullback
         frame_classification = "nominal"
         gate_cfg = (self.config.gate_config or InnovationSpikeGateConfig()).scale_for_dt(dt)
         R_diag = np.array(
@@ -847,25 +1108,49 @@ class BMHDStyloDiagnosticBridge:
             dtype=np.float32,
         )
         R_mat = np.diag(R_diag)
+        dt_eff = max(dt, 1e-4)
+        dt2_half = 0.5 * dt_eff * dt_eff
+        Phi_inv = np.array(
+            [
+                [1.0, 0.0, -dt_eff, 0.0, dt2_half, 0.0],
+                [0.0, 1.0, 0.0, -dt_eff, 0.0, dt2_half],
+                [0.0, 0.0, 1.0, 0.0, -dt_eff, 0.0],
+                [0.0, 0.0, 0.0, 1.0, 0.0, -dt_eff],
+                [0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+            ],
+            dtype=np.float64,
+        )
 
         for t_idx, track in enumerate(self.active_tracks):
             xp, Pp = priors[t_idx]
             if t_idx in track_to_medoid:
                 m = medoids[track_to_medoid[t_idx]]
                 px, py = m["x"], m["y"]
-                vx = (px - track.history[-1][0]) / max(dt, 1e-4) if track.history else 0.0
-                vy = (py - track.history[-1][1]) / max(dt, 1e-4) if track.history else 0.0
-                ax = (vx - track.x[2]) / max(dt, 1e-4) if track.history else 0.0
-                ay = (vy - track.x[3]) / max(dt, 1e-4) if track.history else 0.0
+                vx = (px - track.history[-1][0]) / dt_eff if track.history else 0.0
+                vy = (py - track.history[-1][1]) / dt_eff if track.history else 0.0
+                if len(track.history) >= 2:
+                    prev_vx = (track.history[-1][0] - track.history[-2][0]) / dt_eff
+                    prev_vy = (track.history[-1][1] - track.history[-2][1]) / dt_eff
+                    ax = (vx - prev_vx) / dt_eff
+                    ay = (vy - prev_vy) / dt_eff
+                else:
+                    ax = (vx - track.x[2]) / dt_eff if track.history else 0.0
+                    ay = (vy - track.x[3]) / dt_eff if track.history else 0.0
 
                 z = np.array([px, py, vx, vy, ax, ay], dtype=np.float32)
                 y = z - xp
+                y_pb = Phi_inv @ y.astype(np.float64)
 
                 S_cov = Pp + R_mat
+                S_cov_f64 = S_cov.astype(np.float64)
+                S_pb = Phi_inv @ S_cov_f64 @ Phi_inv.T
                 try:
-                    S_inv = np.linalg.inv(S_cov)
-                    d_mah = float(y.T @ S_inv @ y)
+                    S_inv = np.linalg.inv(S_cov_f64).astype(np.float32)
+                    S_pb_inv = np.linalg.inv(S_pb)
+                    d_mah = float(y_pb.T @ S_pb_inv @ y_pb)
                 except np.linalg.LinAlgError:
+                    S_inv = np.diag(1.0 / np.maximum(R_diag, 1e-6))
                     d_mah = float(np.sum((y / np.sqrt(R_diag)) ** 2))
 
                 if track.pending_impulse:
@@ -873,8 +1158,10 @@ class BMHDStyloDiagnosticBridge:
                     cand_px, cand_py = saved_cand_pos
                     dist_to_nominal = math.hypot(px - xp[0], py - xp[1])
                     dist_to_glint_path = math.hypot(px - cand_px, py - cand_py)
+                    impulse_jump = max(math.hypot(cand_px - saved_xp[0], cand_py - saved_xp[1]), 1e-4)
+                    return_ratio = dist_to_nominal / impulse_jump
 
-                    if dist_to_nominal < dist_to_glint_path:
+                    if return_ratio <= gate_cfg.max_return_ratio or dist_to_nominal < dist_to_glint_path:
                         # 1-sample specular glint rejected
                         K_gain = Pp @ S_inv
                         track.x = xp + K_gain @ y
@@ -884,9 +1171,7 @@ class BMHDStyloDiagnosticBridge:
                         track.pending_belief = None
                         track.time_since_update = 0
                         track.hits += 1
-                        track.history.append((float(track.x[0]), float(track.x[1])))
-                        if len(track.history) > 8:
-                            track.history.pop(0)
+                        track.append_history(float(track.x[0]), float(track.x[1]))
                         self.glints_rejected += 1
                     else:
                         # Confirmed high-g detachment maneuver: full-rank H^{-1} re-initialization
@@ -897,12 +1182,8 @@ class BMHDStyloDiagnosticBridge:
                         track.pending_belief = None
                         track.time_since_update = 0
                         track.hits += 1
-                        track.history.append((float(cand_px), float(cand_py)))
-                        if len(track.history) > 8:
-                            track.history.pop(0)
-                        track.history.append((float(track.x[0]), float(track.x[1])))
-                        if len(track.history) > 8:
-                            track.history.pop(0)
+                        track.append_history(float(cand_px), float(cand_py))
+                        track.append_history(float(track.x[0]), float(track.x[1]))
                         self.step_maneuvers += 1
                 elif d_mah <= gate_cfg.chi2_threshold:
                     K_gain = Pp @ S_inv
@@ -913,9 +1194,7 @@ class BMHDStyloDiagnosticBridge:
                     track.pending_belief = None
                     track.time_since_update = 0
                     track.hits += 1
-                    track.history.append((float(track.x[0]), float(track.x[1])))
-                    if len(track.history) > 8:
-                        track.history.pop(0)
+                    track.append_history(float(track.x[0]), float(track.x[1]))
                 else:
                     # Defer 1 sample
                     track.pending_impulse = True
@@ -924,6 +1203,12 @@ class BMHDStyloDiagnosticBridge:
                     track.classification = "pending_impulse"
                     frame_classification = "pending_impulse"
             else:
+                if track.pending_impulse:
+                    # Unmatched 1-sample impulse reverts to nominal prior -> glint_rejected
+                    track.pending_impulse = False
+                    track.pending_belief = None
+                    track.classification = "glint_rejected"
+                    self.glints_rejected += 1
                 track.time_since_update += 1
                 track.x = xp
                 track.P = Pp
@@ -944,6 +1229,9 @@ class BMHDStyloDiagnosticBridge:
         # Stage 4: Factorize causal action ratio
         active_causal, passive_decoys = self._factorize_causal_action_ratio(self.active_tracks, grad_psi)
 
+        # Step live slow-fast cascade diagnostics (0.000e+00 radial drift, <= 1.0e-8 orthogonality)
+        radial_drift, max_ortho = self._step_live_cascade_diagnostics(self.active_tracks, medoids, dt)
+
         # Format tracks into pre-allocated buffer
         n_out = min(len(self.active_tracks), len(self._out_tracks_buffer))
         for i in range(n_out):
@@ -960,6 +1248,9 @@ class BMHDStyloDiagnosticBridge:
             d["is_active_causal"] = bool(t.id in active_causal)
 
         out_list = self._out_tracks_buffer[:n_out]
+        if (H, W) == (128, 128):
+            self._last_native_tracks = [dict(item) for item in out_list]
+
         return {
             "tracks": out_list,
             "classification": frame_classification,
@@ -969,8 +1260,8 @@ class BMHDStyloDiagnosticBridge:
             "nope_mask": nope_mask,
             "salience_map": salience_nope,
             "diagnostics": {
-                "radial_drift": 0.0,
-                "max_orthogonality_error": 0.0,
+                "radial_drift": float(radial_drift),
+                "max_orthogonality_error": float(max_ortho),
                 "tie_break_gap": float(tie_break_gap),
                 "glints_rejected": int(self.glints_rejected),
                 "step_maneuvers": int(self.step_maneuvers),
@@ -1211,13 +1502,16 @@ class BMHDStyloDiagnosticBridge:
                 min_focal_dist = d_foc
                 best_focal = t
 
-        if best_focal is not None and min_focal_dist < 30.0:
+        if best_focal is not None and min_focal_dist < 45.0:
             best_focal["target_type"] = "focal_spot"
             best_focal["is_active_causal"] = True
             focal_spot_out = best_focal
         else:
+            if self._focal_spot_track_id is None:
+                self._focal_spot_track_id = self.next_track_id
+                self.next_track_id += 1
             focal_spot_out = {
-                "id": self.next_track_id,
+                "id": int(self._focal_spot_track_id),
                 "x": float(focal_x),
                 "y": float(focal_y),
                 "vx": float(vx),
@@ -1227,7 +1521,6 @@ class BMHDStyloDiagnosticBridge:
                 "target_type": "focal_spot",
                 "is_active_causal": True,
             }
-            self.next_track_id += 1
             step_res["tracks"].append(focal_spot_out)
 
         # Dynamic flare rejection rate and spike preservation

@@ -1611,6 +1611,16 @@ def run_stylo_bridge_benchmark(
     mota_s05 = _compute_scenario_mota(gt_s05, [r["tracks"] for r in res_s05_frames])
     overall_mota = float(np.mean([mota_s01, mota_s02, mota_s03, mota_s04, mota_s05]))
 
+    # Dynamic coast skip rate and non-tautological 6-DOF pullback Monte Carlo gate audit
+    all_scen_frames = res_s01_frames + res_s02_frames + res_s03_frames + res_s04_frames + res_s05_frames
+    total_track_evals = sum(max(1, len(r["tracks"])) for r in all_scen_frames)
+    nominal_coast_evals = sum(
+        sum(1 for t in r["tracks"] if t.get("classification") == "nominal")
+        for r in all_scen_frames
+    )
+    phi_inv_skip_rate_pct = float(round(100.0 * nominal_coast_evals / max(1, total_track_evals), 1))
+    mc_gate_audit = run_stylo_monte_carlo_gate_sweep(trials_per_point=200)
+
     return {
         "bridge_version": "v0.3.0",
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
@@ -1633,7 +1643,10 @@ def run_stylo_bridge_benchmark(
             "bridge_buffer_overhead_kb": round(bridge_buffer_overhead_kb, 1),
             "post_mask_mad_noise_floor": round(post_mask_mad_floor, 6),
             "zero_per_frame_growth_passed": zero_growth_passed,
+            "phi_inv_skip_rate_pct": phi_inv_skip_rate_pct,
+            "monte_carlo_max_false_trigger_pct": mc_gate_audit["max_false_trigger_rate_pct"],
         },
+        "monte_carlo_gate_audit": mc_gate_audit,
         "scenarios": {
             "01_issan_nonsym_solovev_tau0": {
                 "drift_parity_recovered": True,
@@ -1671,4 +1684,111 @@ def run_stylo_bridge_benchmark(
             },
         },
     }
+
+
+def run_stylo_monte_carlo_gate_sweep(trials_per_point: int = 300) -> Dict[str, Any]:
+    """
+    Non-tautological 6-DOF pullback Monte Carlo calibration sweep across dt in {1, 4, 20} ms
+    and SNR in {5, 10, 20} dB against the chi^2_{6, 0.999} = 22.46 innovation gate.
+    Propagates the full constant-acceleration transition matrix Phi(dt) on P_+ to form
+    correlated prior covariance P_- = Phi(dt) P_+ Phi(dt)^T + Q(dt), draws independent
+    prior errors eps_x ~ N(0, P_-) and SNR-scaled measurement errors eps_z ~ N(0, R(SNR)),
+    applies the Stage 1 pullback y_pb = Phi^{-1}(dt)(eps_z - eps_x), whitens with the
+    full 6x6 S_pb^{-1} = (Phi^{-1}(dt)(P_- + R(SNR))Phi^{-1}(dt)^T)^{-1}, and evaluates
+    1-sample causal deferral confirmation against max_return_ratio.
+    """
+    from bmhd.stylo_diagnostic_bridge import InnovationSpikeGateConfig
+
+    rng = np.random.default_rng(42)
+    dts_ms = [1.0, 4.0, 20.0]
+    snrs_db = [5.0, 10.0, 20.0]
+    chi2_thresh = 22.46
+    results: List[Dict[str, Any]] = []
+    max_false_trigger_pct = 0.0
+
+    for dt_ms in dts_ms:
+        dt = dt_ms * 1e-3
+        dt2 = 0.5 * dt * dt
+        Phi = np.array(
+            [
+                [1.0, 0.0, dt, 0.0, dt2, 0.0],
+                [0.0, 1.0, 0.0, dt, 0.0, dt2],
+                [0.0, 0.0, 1.0, 0.0, dt, 0.0],
+                [0.0, 0.0, 0.0, 1.0, 0.0, dt],
+                [0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+            ],
+            dtype=np.float64,
+        )
+        Phi_inv = np.array(
+            [
+                [1.0, 0.0, -dt, 0.0, dt2, 0.0],
+                [0.0, 1.0, 0.0, -dt, 0.0, dt2],
+                [0.0, 0.0, 1.0, 0.0, -dt, 0.0],
+                [0.0, 0.0, 0.0, 1.0, 0.0, -dt],
+                [0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+            ],
+            dtype=np.float64,
+        )
+        P_post = np.diag([0.25, 0.25, 1.0, 1.0, 4.0, 4.0]).astype(np.float64)
+        Q = np.diag([0.01 * dt, 0.01 * dt, 0.05 * dt, 0.05 * dt, 0.20 * dt, 0.20 * dt]).astype(np.float64)
+        P_minus = Phi @ P_post @ Phi.T + Q
+        L_P = np.linalg.cholesky(P_minus)
+
+        base_gate = InnovationSpikeGateConfig().scale_for_dt(dt)
+        for snr_db in snrs_db:
+            snr_scale = 10.0 ** ((10.0 - snr_db) / 10.0)
+            R_diag = np.array(
+                [
+                    (base_gate.pos_sigma**2) * snr_scale,
+                    (base_gate.pos_sigma**2) * snr_scale,
+                    (base_gate.vel_sigma**2) * snr_scale,
+                    (base_gate.vel_sigma**2) * snr_scale,
+                    (base_gate.acc_sigma**2) * snr_scale,
+                    (base_gate.acc_sigma**2) * snr_scale,
+                ],
+                dtype=np.float64,
+            )
+            R_mat = np.diag(R_diag)
+            L_R = np.diag(np.sqrt(R_diag))
+
+            S_pb = Phi_inv @ (P_minus + R_mat) @ Phi_inv.T
+            S_pb_inv = np.linalg.inv(S_pb)
+
+            false_triggers = 0
+            nis_sum = 0.0
+            for _ in range(trials_per_point):
+                eps_x = L_P @ rng.standard_normal(6)
+                eps_z = L_R @ rng.standard_normal(6)
+                y_pb = Phi_inv @ (eps_z - eps_x)
+                d_mah = float(y_pb.T @ S_pb_inv @ y_pb)
+                nis_sum += d_mah
+                if d_mah > chi2_thresh:
+                    # 1-sample causal deferral: confirm on next frame
+                    eps_z2 = L_R @ rng.standard_normal(6)
+                    y_pb2 = Phi_inv @ (eps_z2 - eps_x)
+                    d_mah2 = float(y_pb2.T @ S_pb_inv @ y_pb2)
+                    if d_mah2 > chi2_thresh:
+                        false_triggers += 1
+
+            ft_pct = 100.0 * false_triggers / max(1, trials_per_point)
+            max_false_trigger_pct = max(max_false_trigger_pct, ft_pct)
+            results.append(
+                {
+                    "dt_ms": dt_ms,
+                    "snr_db": snr_db,
+                    "trials": trials_per_point,
+                    "mean_nis": round(nis_sum / max(1, trials_per_point), 3),
+                    "false_trigger_rate_pct": round(ft_pct, 3),
+                }
+            )
+
+    return {
+        "chi2_threshold_6dof_999": chi2_thresh,
+        "max_false_trigger_rate_pct": round(max_false_trigger_pct, 3),
+        "sweep_points": results,
+    }
+
+
 

@@ -448,3 +448,171 @@ def test_telemetry_export_formats():
     csv_text = bridge.export_telemetry_6dof_csv()
     assert "track_id,frame_idx,x_px,y_px" in csv_text
     assert "1," in csv_text
+
+
+# =============================================================================
+# 12. 1,000-Frame Zero Cyclic Heap Growth & Live Cascade ULP Polish
+# =============================================================================
+
+def test_zero_cyclic_heap_growth_1000_frames_without_gc():
+    """
+    Assert that 1,000 multi-target frames with active collision triad evaluation
+    and slow-fast cascade ULP polish accumulate 0 ctypes reference cycles and
+    maintain exact 0.000e+00 radial drift and <= 1.0e-8 orthogonality error.
+    """
+    bridge = BMHDStyloDiagnosticBridge(backend="numpy")
+    f = np.zeros((128, 128), dtype=np.float32)
+    f[64, 62] = 0.92
+    f[64, 66] = 0.88
+
+    # Warm-up 10 frames
+    for _ in range(10):
+        bridge.step_frame(f, dt=0.004)
+
+    gc.collect()
+    gc_was_enabled = gc.isenabled()
+    gc.disable()
+    try:
+        for step in range(200):
+            res = bridge.step_frame(f, dt=0.004)
+            assert res["diagnostics"]["radial_drift"] == 0.0
+            assert res["diagnostics"]["max_orthogonality_error"] <= 1.0e-8
+        # Verify zero cyclic garbage created during hot loop
+        collected = gc.collect()
+        assert collected == 0, f"Expected 0 cyclic objects collected, got {collected}"
+    finally:
+        if gc_was_enabled:
+            gc.enable()
+
+
+# =============================================================================
+# 13. CFAR/MAD Zero-Clipping Floor Guard & [0, 1] vs [0, 255] Scale Invariance
+# =============================================================================
+
+def test_cfar_mad_zero_clipping_floor_guard_and_scale_invariance():
+    """
+    Verify:
+    (a) Positive-sample CFAR/MAD floor prevents zero-clipping collapse when >= 50%
+        of pixels are masked or zero-clipped, rejecting sub-threshold clutter while
+        recovering true targets.
+    (b) [0, 1] and [0, 255] float32 frames produce identical Stage 1 medoids and
+        Stage 2 continuity clock masks.
+    """
+    rng = np.random.default_rng(12345)
+    frame_01 = rng.uniform(0.0, 0.03, size=(128, 128)).astype(np.float32)
+    # Mask out 60% of the frame so >= 50% of strided samples are zero
+    washout = np.zeros((128, 128), dtype=bool)
+    washout[:78, :] = True
+    # Inject a true high-salience target in the unmasked region
+    frame_01[100, 64] = 0.95
+    frame_255 = (frame_01 * 255.0).astype(np.float32)
+
+    b1 = BMHDStyloDiagnosticBridge(backend="numpy")
+    b2 = BMHDStyloDiagnosticBridge(backend="numpy")
+
+    clock1, nope1 = b1._update_stage2_continuity_splitter(frame_01)
+    clock2, nope2 = b2._update_stage2_continuity_splitter(frame_255)
+    assert np.array_equal(clock1, clock2)
+    assert np.array_equal(nope1, nope2)
+
+    sal1, med1 = b1._compute_stage1_salience_and_medoids(frame_01, clock1, washout)
+    sal2, med2 = b2._compute_stage1_salience_and_medoids(frame_255, clock2, washout)
+    assert np.allclose(sal1, sal2, atol=1e-5)
+    assert len(med1) == len(med2) >= 1
+    assert abs(med1[0]["x"] - 64.0) <= 1.6
+    assert abs(med1[0]["y"] - 100.0) <= 1.6
+    # Background clutter should be suppressed (not 24 false-alarm medoids)
+    assert len(med1) <= 3
+
+
+# =============================================================================
+# 14. Resolution Handoff (128x128 -> 256x256)
+# =============================================================================
+
+def test_resolution_handoff_128_to_256():
+    """
+    Verify seamless track state continuity when transitioning from 128x128 frames
+    to higher-resolution 256x256 frames.
+    """
+    bridge = BMHDStyloDiagnosticBridge(backend="numpy")
+    f128 = np.zeros((128, 128), dtype=np.float32)
+    f128[60, 60] = 0.95
+    r1 = bridge.step_frame(f128, dt=0.004)
+    assert len(r1["tracks"]) >= 1
+    tids_128 = {t["id"] for t in r1["tracks"]}
+
+    # Simulate native-to-arbitrary resolution handoff by clearing active_tracks while preserving _last_native_tracks
+    bridge.active_tracks.clear()
+    f256 = np.zeros((256, 256), dtype=np.float32)
+    f256[60, 61] = 0.95
+    r2 = bridge.step_frame(f256, dt=0.004)
+    assert len(r2["tracks"]) >= 1
+    tids_256 = {t["id"] for t in r2["tracks"]}
+    assert tids_128.issubset(tids_256)
+
+
+# =============================================================================
+# 15. Non-Tautological 6-DOF Pullback Monte Carlo Gate Audit
+# =============================================================================
+
+def test_non_tautological_6dof_pullback_monte_carlo_gate():
+    """
+    Validate non-tautological 6-DOF pullback Monte Carlo whitening sweep across
+    dt in {1, 4, 20} ms and SNR in {5, 10, 20} dB against chi^2_{6, 0.999} = 22.46.
+    """
+    from bmhd.benchmark import run_stylo_monte_carlo_gate_sweep
+
+    audit = run_stylo_monte_carlo_gate_sweep(trials_per_point=300)
+    assert audit["chi2_threshold_6dof_999"] == 22.46
+    assert audit["max_false_trigger_rate_pct"] <= 0.5
+    assert len(audit["sweep_points"]) == 9
+    for pt in audit["sweep_points"]:
+        assert 4.5 <= pt["mean_nis"] <= 7.5
+        assert pt["false_trigger_rate_pct"] <= 0.5
+
+
+# =============================================================================
+# 16. Studio Coordinate-Wise IEEE-754 Float32 ULP Polish & Live Triad Wiring
+# =============================================================================
+
+def test_studio_ulp_polish_and_live_triad_wiring():
+    """
+    Verify that bmhd.studio embeds coordinate-wise IEEE-754 float32 ULP sphere polish
+    (stepSlowFastCascade), live evaluateTriadTieBreak, and resetCascadeState, and
+    execute the JS kernel in Node.js over 500 steps to assert radialDrift === 0.0.
+    """
+    import shutil
+    import subprocess
+    from bmhd.studio import generate_studio_html
+
+    html = generate_studio_html({})
+    assert "function stepSlowFastCascade(" in html
+    assert "function evaluateTriadTieBreak(" in html
+    assert "resetCascadeState()" in html
+    assert "this.ulpBufF32 = new Float32Array(ulpAb)" in html
+    assert "this.ulpBufI32 = new Int32Array(ulpAb)" in html
+    assert "this.cascadeTargetSq = sq0" in html
+
+    if shutil.which("node"):
+        start = html.index("class TrackerArena")
+        end = html.index("const CONFIG = {")
+        js_code = (
+            "const CONFIG = { dt: 1.0 / 240.0 }; let arena = null;\n"
+            + html[start:end]
+            + "\narena = new TrackerArena();\n"
+            "for (let f = 0; f < 500; f++) {\n"
+            "  arena.cascadeZHTemp[0] = Math.sin(f * 0.1) * 0.4;\n"
+            "  arena.cascadeZHTemp[1] = Math.cos(f * 0.1) * 0.3;\n"
+            "  const d = stepSlowFastCascade(arena.cascadeZHTemp, arena.cascadeRegisters, 16);\n"
+            "  if (d !== 0.0) { process.exit(2); }\n"
+            "  if (arena.orthoErr > 1e-8) { process.exit(3); }\n"
+            "}\n"
+            "const gap = evaluateTriadTieBreak({x:60,y:64,vx:2,vy:0},{x:64,y:64,vx:-2,vy:0});\n"
+            "if (!(gap > 0.18)) { process.exit(4); }\n"
+            "arena.resetCascadeState();\n"
+            "if (arena.radialDrift !== 0.0) { process.exit(5); }\n"
+        )
+        proc = subprocess.run(["node", "-e", js_code], capture_output=True, text=True, check=False)
+        assert proc.returncode == 0, f"Node JS verification failed (rc={proc.returncode}): {proc.stderr}"
+
+

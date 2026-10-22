@@ -1,6 +1,6 @@
 {
   "bridge_version": "v0.3.0",
-  "timestamp": "2026-10-22T08:04:05Z",
+  "timestamp": "2026-10-22T09:03:38Z",
   "hardware_invariants": {
     "max_heap_ceiling_mb": 3.5,
     "active_l3_resident_mb": 2.33,
@@ -8,23 +8,94 @@
     "target_frame_rate_fps": 240.0
   },
   "overall_metrics": {
-    "mota": 0.983,
+    "mota": 0.996,
     "bmhd_stylo_id_swaps": 0,
     "legacy_kalman_iou_swaps": 6,
-    "scenario04_pellet_core_deposition_rmse_px": 0.21,
-    "scenario05_flare_washout_rejection_rate": 1.0,
+    "scenario04_pellet_core_deposition_rmse_px": 0.27,
+    "scenario05_flare_washout_rejection_rate": 0.9996468926553672,
     "scenario05_nozzle_throttle_gain": 0.6599,
-    "single_core_fps": 564.7,
-    "frame_latency_us": 184.0,
+    "single_core_fps": 343.5,
+    "frame_latency_us": 141.6,
     "combined_arena_heap_mb": 2.33,
     "bridge_buffer_overhead_kb": 32.5,
     "post_mask_mad_noise_floor": 0.002432,
-    "zero_per_frame_growth_passed": true
+    "zero_per_frame_growth_passed": true,
+    "phi_inv_skip_rate_pct": 30.5,
+    "monte_carlo_max_false_trigger_pct": 0.0
+  },
+  "monte_carlo_gate_audit": {
+    "chi2_threshold_6dof_999": 22.46,
+    "max_false_trigger_rate_pct": 0.0,
+    "sweep_points": [
+      {
+        "dt_ms": 1.0,
+        "snr_db": 5.0,
+        "trials": 200,
+        "mean_nis": 6.35,
+        "false_trigger_rate_pct": 0.0
+      },
+      {
+        "dt_ms": 1.0,
+        "snr_db": 10.0,
+        "trials": 200,
+        "mean_nis": 6.004,
+        "false_trigger_rate_pct": 0.0
+      },
+      {
+        "dt_ms": 1.0,
+        "snr_db": 20.0,
+        "trials": 200,
+        "mean_nis": 6.234,
+        "false_trigger_rate_pct": 0.0
+      },
+      {
+        "dt_ms": 4.0,
+        "snr_db": 5.0,
+        "trials": 200,
+        "mean_nis": 6.012,
+        "false_trigger_rate_pct": 0.0
+      },
+      {
+        "dt_ms": 4.0,
+        "snr_db": 10.0,
+        "trials": 200,
+        "mean_nis": 6.239,
+        "false_trigger_rate_pct": 0.0
+      },
+      {
+        "dt_ms": 4.0,
+        "snr_db": 20.0,
+        "trials": 200,
+        "mean_nis": 6.336,
+        "false_trigger_rate_pct": 0.0
+      },
+      {
+        "dt_ms": 20.0,
+        "snr_db": 5.0,
+        "trials": 200,
+        "mean_nis": 5.771,
+        "false_trigger_rate_pct": 0.0
+      },
+      {
+        "dt_ms": 20.0,
+        "snr_db": 10.0,
+        "trials": 200,
+        "mean_nis": 5.807,
+        "false_trigger_rate_pct": 0.0
+      },
+      {
+        "dt_ms": 20.0,
+        "snr_db": 20.0,
+        "trials": 200,
+        "mean_nis": 6.23,
+        "false_trigger_rate_pct": 0.0
+      }
+    ]
   },
   "scenarios": {
     "01_issan_nonsym_solovev_tau0": {
       "drift_parity_recovered": true,
-      "tangent_orthogonality_residual": 8.381903171539307e-09,
+      "tangent_orthogonality_residual": 7.450580596923828e-09,
       "id_swaps": 0,
       "mota": 1.0
     },
@@ -43,18 +114,18 @@
     "04_tokamak_elm_pellet_4d": {
       "pellet_elm_crossing_swaps": 0,
       "legacy_swaps": 3,
-      "deposition_depth_rmse_px": 0.21,
+      "deposition_depth_rmse_px": 0.27,
       "bremsstrahlung_glare_rejected": true,
       "mota": 1.0
     },
     "05_beltrami_plasma_spallation_torch": {
-      "molten_glass_flare_rejection_rate": 1.0,
+      "molten_glass_flare_rejection_rate": 0.9996468926553672,
       "micro_spallation_spike_preservation": 1.0,
       "throttle_gain_actual": 0.6599,
       "throttle_gain_expected": 0.6599,
       "throttle_error": 0.0,
       "slew_cmd_active": true,
-      "mota": 0.9166666666666666
+      "mota": 0.9791666666666666
     }
   }
 }
