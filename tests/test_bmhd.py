@@ -521,12 +521,12 @@ def test_mode_b_blind_bmhd_dominance():
 
 
 # =============================================================================
-# 11. BMHD Studio v0.2.0: 3D View Controls, Multi-Tab Diagnostics & Offline HTML
+# 11. BMHD Studio v0.3.0: 3D View Controls, Multi-Tab Diagnostics & Offline HTML
 # =============================================================================
 
 def test_studio_v020_export_and_controls(tmp_path: Path):
     """
-    Verify BMHD Studio v0.2.0 serialization, 3D view controls, camera presets,
+    Verify BMHD Studio v0.3.0 serialization, 3D view controls, camera presets,
     multi-tab 2D diagnostics, and zero-external-network single-file HTML export.
     """
     import bmhd

@@ -1,5 +1,5 @@
 """
-scripts/evaluate_bmhd.py: Master Benchmark Evaluation Runner for BMHD v0.2.0.
+scripts/evaluate_bmhd.py: Master Benchmark Evaluation Runner for BMHD v0.3.0.
 
 Evaluates all 5 canonical scenarios (01 to 05) across:
 1. Mode A: Analytical forward & operator verification of Theorems 2.1–2.7
@@ -74,7 +74,7 @@ def main() -> int:
     args = parser.parse_args()
 
     print("=" * 80)
-    print("BMHD v0.2.0: 3D/4D Beltrami MHD & Non-Symmetric Stellarator Evaluation Suite")
+    print("BMHD v0.3.0: 3D/4D Beltrami MHD & Non-Symmetric Stellarator Evaluation Suite")
     print("=" * 80)
 
     # 1. Build all 5 scenarios
@@ -152,7 +152,7 @@ def main() -> int:
 
     # 5. Assemble Summary JSON Payloads
     eval_summary = {
-        "benchmark_version": "v0.2.0",
+        "benchmark_version": "v0.3.0",
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "mode_a_formal_theorems": mode_a_res,
         "mode_b_summary": {
@@ -165,7 +165,7 @@ def main() -> int:
     }
 
     blind_summary = {
-        "benchmark_version": "v0.2.0",
+        "benchmark_version": "v0.3.0",
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "operating_snr_db": 20.0,
         "zero_target_leakage": True,

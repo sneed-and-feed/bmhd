@@ -1321,7 +1321,7 @@ def run_full_benchmark_suite(
         glare_ablations[sname] = run_glare_ablation(sdata)
 
     eval_summary = {
-        "benchmark_version": "v0.2.0",
+        "benchmark_version": "v0.3.0",
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "mode_a_formal_theorems": mode_a_result,
         "mode_b_summary": {
@@ -1333,7 +1333,7 @@ def run_full_benchmark_suite(
     }
 
     blind_summary = {
-        "benchmark_version": "v0.2.0",
+        "benchmark_version": "v0.3.0",
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "operating_snr_db": 20.0,
         "zero_target_leakage": True,
@@ -1612,7 +1612,7 @@ def run_stylo_bridge_benchmark(
     overall_mota = float(np.mean([mota_s01, mota_s02, mota_s03, mota_s04, mota_s05]))
 
     return {
-        "bridge_version": "v0.2.0",
+        "bridge_version": "v0.3.0",
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "hardware_invariants": {
             "max_heap_ceiling_mb": max_heap_ceiling_mb,

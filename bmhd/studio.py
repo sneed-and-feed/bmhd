@@ -1413,6 +1413,12 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       gap: 6px;
       font-weight: 700;
       color: var(--text-main);
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .quad-title > span:last-child {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -1445,6 +1451,7 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       display: flex;
       align-items: center;
       gap: 8px;
+      flex-shrink: 0;
     }
     .quad-legend {
       display: flex;
@@ -2053,7 +2060,7 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
               <span class="inv-v" id="hudFpsLatency">240 FPS / 182&mu;s</span>
             </div>
             <div class="inv-card">
-              <span class="inv-k">S&sup7; Radial Drift</span>
+              <span class="inv-k">S&#8311; Radial Drift</span>
               <span class="inv-v" id="hudRadialDrift" style="color:#00ff9d;">0.000e+00</span>
             </div>
             <div class="inv-card">
@@ -2247,7 +2254,8 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
         STATE.tau1 = cTau[1];
       }
       if (p.has("field")) {
-        STATE.fieldId = p.get("field");
+        const f = p.get("field");
+        STATE.fieldId = (f === "p_kpa" || f === "pressure_kpa") ? "bmhd_p_kpa" : f;
       }
       if (p.has("tau0")) {
         STATE.tau0 = parseFloat(p.get("tau0"));
@@ -2379,6 +2387,7 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
 
       const selField = document.getElementById("selectField");
       selField.value = STATE.fieldId;
+      updateFieldUnit();
       selField.addEventListener("change", (e) => {
         STATE.fieldId = e.target.value;
         updateFieldUnit();
@@ -3662,8 +3671,8 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
 
       ctx.fillStyle = "#8ea0bc";
       ctx.font = "9px SFMono-Regular, monospace";
-      ctx.fillText(`Section \u03C6=${pData.phi_deg}\u00B0 (1:1 Scale)`, offX + 4, offY + 11);
-      ctx.fillText("O-Pt (\u25CF cyan)  X-Pt (\u2715 red)", offX + plotW - 132, offY + 11);
+      ctx.fillText(`Section \u03C6=${pData.phi_deg}\u00B0 (1:1 Scale)`, 36, offY + 11);
+      ctx.fillText("O-Pt (\u25CF cyan)  X-Pt (\u2715 red)", Math.max(offX + plotW - 132, canvas.width - 140), offY + 11);
       ctx.fillText("R=0.6m", offX, offY + plotH + 12);
       ctx.fillText("R=1.0m", offX + plotW * 0.5 - 16, offY + plotH + 12);
       ctx.fillText("R=1.4m", offX + plotW - 34, offY + plotH + 12);

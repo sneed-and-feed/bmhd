@@ -339,6 +339,8 @@ The package includes a zero-install, single-file interactive 3D WebGL/Canvas CAE
 
 ![BMHD Portable Studio — SPEC Beltrami Shells & Field Strength |B|](results/studio_screenshot_spec_islands.png)
 
+![BMHD Portable Studio — Stylo 4-Quad Tactical EO/IR & Bolometric Diagnostic HUD](results/studio_stylo_hud_screenshot.png)
+
 - **4 Interactive 3D Render Modes:** Switch seamlessly between `Hybrid Torus + Slicer` (stepped-cutaway 3D nested toroidal flux shells $\psi \in \{0.16, 0.52, 0.90\}$ with chair-cut poloidal cross-section end-caps and elliptical-clipped slicer planes), `3D Flux Shells`, `3D Voxel Slicer`, and `B-Lines & Coils` (3D helical magnetic field streamlines with directional arrowheads and 3D modular stellarator coils).
 - **Industry-Standard 3D Camera & Viewport Controls:**
   - **6 CAD Camera Presets:** `ISO` (Key `1`), `TOP Z+` (Key `2`), `FRONT` $\phi=0^\circ$ (Key `3`), `SIDE` $\phi=90^\circ$ (Key `4`), `THROAT` cutaway zoom (Key `5`), and `CHORD` sightline alignment (Key `6`).

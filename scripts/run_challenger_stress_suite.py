@@ -1,5 +1,5 @@
 """
-scripts/run_challenger_stress_suite.py: Comprehensive Empirical Adversarial Stress Suite for BMHD v0.2.0.
+scripts/run_challenger_stress_suite.py: Comprehensive Empirical Adversarial Stress Suite for BMHD v0.3.0.
 
 Challenges:
 1. Numerical divergence div(B) and force balance (J x B) - grad(p) across 150+ random points & 3 grid resolutions.
