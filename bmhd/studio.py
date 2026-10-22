@@ -754,7 +754,7 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       --font-mono: "SFMono-Regular", "Cascadia Code", "Consolas", "Courier New", monospace;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; scrollbar-width: thin; scrollbar-color: #243b61 #060b14; }
     body {
       font-family: var(--font-sans);
       background: var(--bg-root);
@@ -866,9 +866,9 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
     }
     .preset-btn, .mode-pill {
       font-family: var(--font-mono);
-      font-size: 10px;
+      font-size: 9.5px;
       font-weight: 600;
-      padding: 3.5px 8px;
+      padding: 3px 6.5px;
       border-radius: 3px;
       border: 1px solid var(--border);
       background: #0a1220;
@@ -945,6 +945,7 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       display: flex;
       flex-direction: column;
       gap: 5px;
+      flex-shrink: 0;
     }
     .ctrl-label {
       font-size: 10px;
@@ -1037,10 +1038,36 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       color: var(--text-main);
     }
     .center-col {
-      display: grid;
-      grid-template-rows: 1.32fr 0.88fr;
-      gap: 7px;
+      display: flex;
+      flex-direction: column;
       min-height: 0;
+      min-width: 0;
+      height: 100%;
+      overflow: hidden;
+    }
+    #stage3d {
+      display: grid;
+      grid-template-rows: 1.35fr 0.85fr;
+      gap: 7px;
+      flex: 1;
+      min-height: 0;
+      min-width: 0;
+      width: 100%;
+      height: 100%;
+    }
+    #stageHud {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+      min-width: 0;
+      width: 100%;
+      height: 100%;
+      background: #020408;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
     }
     .viewport-wrap {
       position: relative;
@@ -1054,6 +1081,9 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       overflow: hidden;
       display: flex;
       flex-direction: column;
+      min-height: 0;
+      min-width: 0;
+      height: 100%;
     }
     .hud-bar {
       height: 27px;
@@ -1131,6 +1161,8 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       height: 100%;
     }
     canvas#canvas3d {
+      position: absolute;
+      inset: 0;
       width: 100%;
       height: 100%;
       display: block;
@@ -1164,23 +1196,41 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       grid-template-columns: 1fr 1fr;
       gap: 7px;
       min-height: 0;
+      min-width: 0;
+      height: 100%;
+    }
+    .bottom-tabs > .panel {
+      min-height: 0;
+      min-width: 0;
+      height: 100%;
+    }
+    .bottom-tabs .panel-hdr {
+      padding: 4px 6px;
+      gap: 4px;
     }
     .tab-strip {
       display: flex;
       align-items: center;
-      gap: 3px;
+      gap: 2.5px;
+      min-width: 0;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 5;
     }
     .mini-tab {
       width: auto;
-      padding: 2px 6px;
+      padding: 2px 4.5px;
       font-family: var(--font-mono);
-      font-size: 9.5px;
+      font-size: 9px;
       font-weight: 600;
       background: #060b14;
       border: 1px solid var(--border);
       color: var(--text-dim);
       border-radius: 2px;
       cursor: pointer;
+      position: relative;
+      z-index: 6;
+      white-space: nowrap;
     }
     .mini-tab:hover {
       color: var(--text-main);
@@ -1195,17 +1245,20 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       flex: 1;
       position: relative;
       min-height: 0;
+      min-width: 0;
+      width: 100%;
+      height: 100%;
       background: #040811;
       border-radius: 2px;
       overflow: hidden;
-      display: flex;
-      flex-direction: column;
     }
     canvas.view2d {
-      flex: 1;
+      position: absolute;
+      inset: 0;
       width: 100%;
       height: 100%;
       display: block;
+      cursor: crosshair;
     }
     table.scorecard-tbl {
       width: 100%;
@@ -1271,6 +1324,8 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       margin: 0 12px;
     }
     .workstation-btn {
+      width: auto;
+      white-space: nowrap;
       background: transparent;
       border: none;
       color: var(--text-muted);
@@ -1280,7 +1335,6 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       padding: 3px 10px;
       border-radius: 3px;
       cursor: pointer;
-      transition: all 0.15s ease;
       display: flex;
       align-items: center;
       gap: 5px;
@@ -1380,6 +1434,9 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       gap: 6px;
       flex: 1;
       min-height: 0;
+      min-width: 0;
+      width: 100%;
+      height: 100%;
       position: relative;
       background: #020408;
       padding: 6px;
@@ -1393,12 +1450,16 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       overflow: hidden;
       position: relative;
       min-height: 0;
+      min-width: 0;
+      width: 100%;
+      height: 100%;
     }
     .quad-header {
       height: 24px;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 6px;
       padding: 0 8px;
       background: #09101b;
       border-bottom: 1px solid #142236;
@@ -1406,6 +1467,9 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       font-family: var(--font-mono);
       color: var(--text-muted);
       flex-shrink: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      cursor: pointer;
     }
     .quad-title {
       display: flex;
@@ -1413,6 +1477,7 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       gap: 6px;
       font-weight: 700;
       color: var(--text-main);
+      flex: 1;
       min-width: 0;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -1431,6 +1496,7 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       padding: 1px 4px;
       font-size: 8.5px;
       font-weight: 700;
+      flex-shrink: 0;
     }
     .quad-id.b {
       background: rgba(235, 155, 15, 0.18);
@@ -1450,19 +1516,24 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
     .quad-header-right {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       flex-shrink: 0;
+      white-space: nowrap;
     }
     .quad-legend {
       display: flex;
       align-items: center;
-      gap: 6px;
-      font-size: 8.5px;
+      gap: 4px;
+      font-size: 8px;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
     .legend-item {
       display: flex;
       align-items: center;
-      gap: 3px;
+      gap: 2.5px;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
     .legend-dot {
       width: 6px;
@@ -1498,16 +1569,20 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       background: #030508;
       overflow: hidden;
       min-height: 0;
-    }
-    .tactical-canvas {
+      min-width: 0;
       width: 100%;
       height: 100%;
-      max-width: 512px;
-      max-height: 512px;
+      container-type: size;
+    }
+    .tactical-canvas {
+      width: min(100cqw, 100cqh);
+      height: min(100cqw, 100cqh);
+      max-width: 100%;
+      max-height: 100%;
       aspect-ratio: 1 / 1;
-      object-fit: contain;
       display: block;
       cursor: crosshair;
+      margin: auto;
     }
     .quad-stats-overlay {
       position: absolute;
@@ -1602,10 +1677,14 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       align-items: center;
       justify-content: center;
       font-family: var(--font-mono);
-      font-size: 8.5px;
+      font-size: 8.2px;
       color: var(--accent-cyan);
-      letter-spacing: 0.8px;
+      letter-spacing: 0.6px;
       flex-shrink: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding: 0 8px;
     }
   </style>
 </head>
@@ -1773,7 +1852,7 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
     <!-- CENTER COLUMN: Dual-Workstation View (3D CAE Studio vs. Tactical 4-QUAD/Fused HUD) -->
     <div class="center-col">
       <!-- WORKSTATION A: 3D CAE Studio -->
-      <div id="stage3d" style="display:flex;flex-direction:column;flex:1;min-height:0;">
+      <div id="stage3d">
         <div class="viewport-wrap">
           <div class="hud-bar">
             <span id="hudScenarioTitle" style="color:var(--text-main);font-weight:700;overflow:hidden;text-overflow:ellipsis;">01 Stretched Solov'ev (tau0=0.38)</span>
@@ -1817,9 +1896,9 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
               <div class="tab-strip">
                 <button class="mini-tab active" data-ltab="poincare" onclick="setLeftDiagTab('poincare')">Poincar&eacute; (1:1)</button>
                 <button class="mini-tab" data-ltab="poloidal" onclick="setLeftDiagTab('poloidal')">Poloidal &psi;(R,Z)</button>
-                <button class="mini-tab" data-ltab="radial" onclick="setLeftDiagTab('radial')">Radial p(&psi;) &amp; &iota;</button>
+                <button class="mini-tab" data-ltab="radial" onclick="setLeftDiagTab('radial')">Radial p,&iota;</button>
               </div>
-              <select id="selectPoincarePlane" style="width:auto;padding:1px 5px;font-size:9.5px;">
+              <select id="selectPoincarePlane" style="width:66px;min-width:56px;max-width:76px;flex-shrink:1;padding:1px 3px;font-size:9px;cursor:pointer;position:relative;z-index:6;">
                 <option value="phi_0">&phi; = 0&deg;</option>
                 <option value="phi_90">&phi; = 90&deg;</option>
                 <option value="phi_180">&phi; = 180&deg;</option>
@@ -1837,9 +1916,9 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
               <div class="tab-strip">
                 <button class="mini-tab active" data-rtab="profile" onclick="setRightDiagTab('profile')">Chord Profile</button>
                 <button class="mini-tab" data-rtab="morse" onclick="setRightDiagTab('morse')">Morse Spikes</button>
-                <button class="mini-tab" data-rtab="split4d" onclick="setRightDiagTab('split4d')">4D H_clock/nope</button>
+                <button class="mini-tab" data-rtab="split4d" onclick="setRightDiagTab('split4d')">4D H_c/n</button>
               </div>
-              <select id="selectChord" style="width:152px;padding:1px 5px;font-size:9.5px;"></select>
+              <select id="selectChord" style="width:94px;min-width:74px;max-width:112px;flex-shrink:1;padding:1px 3px;font-size:9px;cursor:pointer;position:relative;z-index:6;"></select>
             </div>
             <div class="section-canvas-wrap">
               <canvas id="canvasChordProfile" class="view2d"></canvas>
@@ -1849,7 +1928,7 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       </div>
 
       <!-- WORKSTATION B: Tactical 4-QUAD & Fused HUD (Stylo EO/IR & Bolometric REV 4.2) -->
-      <div id="stageHud" style="display:none;flex-direction:column;flex:1;min-height:0;background:#020408;position:relative;">
+      <div id="stageHud">
         <!-- Global Tactical View & Symbology Control Bar -->
         <div class="tactical-view-bar" id="tactical-view-bar">
           <!-- Viewport Layout Selector -->
@@ -1930,15 +2009,15 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
           <!-- Quad A: Raw Bolometric / IR + M_washout Contour -->
           <div class="quad-panel" id="panel-quad-a">
             <div class="quad-header">
-              <div class="quad-title">
+              <div class="quad-title" onclick="toggleMaximizeQuad('a')" title="Click to Maximize / Restore Quad A">
                 <span class="quad-id" id="quad-a-badge">QUAD A</span>
                 <span id="quad-a-title-text">RAW BOLOMETRIC / IR + M_washout CONTOUR</span>
               </div>
               <div class="quad-header-right">
                 <div class="quad-legend">
-                  <div class="legend-item"><div class="legend-dot dot-cyan"></div><span>T1 Curl</span></div>
-                  <div class="legend-item"><div class="legend-dot dot-yellow"></div><span>RoPE2D</span></div>
-                  <div class="legend-item"><div class="legend-dot dot-purple"></div><span>Washout</span></div>
+                  <div class="legend-item"><div class="legend-dot dot-cyan"></div><span>T1</span></div>
+                  <div class="legend-item"><div class="legend-dot dot-yellow"></div><span>RoPE</span></div>
+                  <div class="legend-item"><div class="legend-dot dot-purple"></div><span>Wash</span></div>
                 </div>
                 <button class="quad-max-btn" id="max-btn-a" onclick="toggleMaximizeQuad('a')" title="Maximize / Restore Quad A">[MAX]</button>
               </div>
@@ -1957,14 +2036,14 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
           <!-- Quad B: Stage-2 Continuity Filtered .Y8 -->
           <div class="quad-panel" id="panel-quad-b">
             <div class="quad-header">
-              <div class="quad-title">
+              <div class="quad-title" onclick="toggleMaximizeQuad('b')" title="Click to Maximize / Restore Quad B">
                 <span class="quad-id b">QUAD B</span>
                 <span>STAGE-2 CONTINUITY FILTERED .Y8 (∂_t ρ + div J = σ)</span>
               </div>
               <div class="quad-header-right">
                 <div class="quad-legend">
-                  <div class="legend-item"><div class="legend-dot dot-amber"></div><span>M_clock (Clutter)</span></div>
-                  <div class="legend-item"><div class="legend-dot dot-emerald"></div><span>H_nope (Targets)</span></div>
+                  <div class="legend-item"><div class="legend-dot dot-amber"></div><span>M_clock</span></div>
+                  <div class="legend-item"><div class="legend-dot dot-emerald"></div><span>H_nope</span></div>
                 </div>
                 <button class="quad-max-btn" id="max-btn-b" onclick="toggleMaximizeQuad('b')" title="Maximize / Restore Quad B">[MAX]</button>
               </div>
@@ -1983,14 +2062,14 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
           <!-- Quad C: SO(C) Triad & Psi-Flux Vectors -->
           <div class="quad-panel" id="panel-quad-c">
             <div class="quad-header">
-              <div class="quad-title">
+              <div class="quad-title" onclick="toggleMaximizeQuad('c')" title="Click to Maximize / Restore Quad C">
                 <span class="quad-id c">QUAD C</span>
                 <span>SO(C) TRIAD &amp; PSI-FLUX VECTORS</span>
               </div>
               <div class="quad-header-right">
                 <div class="quad-legend">
-                  <div class="legend-item"><div class="legend-dot dot-emerald"></div><span>DarkSnail (0 Swaps)</span></div>
-                  <div class="legend-item"><div class="legend-dot dot-crimson"></div><span>Legacy Kalman/IoU</span></div>
+                  <div class="legend-item"><div class="legend-dot dot-emerald"></div><span>Stylo (0)</span></div>
+                  <div class="legend-item"><div class="legend-dot dot-crimson"></div><span>Legacy CV</span></div>
                 </div>
                 <button class="quad-max-btn" id="max-btn-c" onclick="toggleMaximizeQuad('c')" title="Maximize / Restore Quad C">[MAX]</button>
               </div>
@@ -2009,14 +2088,14 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
           <!-- Quad D: MIL-STD-2525D Causal Symbology & Control Telemetry -->
           <div class="quad-panel" id="panel-quad-d">
             <div class="quad-header">
-              <div class="quad-title">
+              <div class="quad-title" onclick="toggleMaximizeQuad('d')" title="Click to Maximize / Restore Quad D">
                 <span class="quad-id d">QUAD D</span>
                 <span>MIL-STD-2525D CAUSAL SYMBOLOGY &amp; CONTROL TELEMETRY</span>
               </div>
               <div class="quad-header-right">
                 <div class="quad-legend">
-                  <div class="legend-item"><div class="legend-dot dot-emerald"></div><span>★ G_act (η ≥ 0.50)</span></div>
-                  <div class="legend-item"><div class="legend-dot dot-crimson"></div><span>✕ Ω_reg (η &lt; 0.50)</span></div>
+                  <div class="legend-item"><div class="legend-dot dot-emerald"></div><span>★ G_act</span></div>
+                  <div class="legend-item"><div class="legend-dot dot-crimson"></div><span>✕ Ω_reg</span></div>
                 </div>
                 <button class="quad-max-btn" id="max-btn-d" onclick="toggleMaximizeQuad('d')" title="Maximize / Restore Quad D">[MAX]</button>
               </div>
@@ -2476,6 +2555,89 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
         STATE.selectedChordIdx = parseInt(e.target.value, 10);
         render3DViewport();
         renderRightDiagnostic();
+      });
+
+      const cPoin = document.getElementById("canvasPoincare");
+      if (cPoin) {
+        const probeLeftCanvas = (e) => {
+          const rect = cPoin.getBoundingClientRect();
+          const mx = e.clientX - rect.left;
+          const my = e.clientY - rect.top;
+          const scen = window.BMHD_OFFLINE_SCENARIOS[STATE.scenarioId];
+          if (!scen) return;
+          const [nz, ny, nx] = scen.grid_shape;
+          const nxFrac = Math.max(0, Math.min(1, (mx - 34) / Math.max(40, rect.width - 48)));
+          const nzFrac = Math.max(0, Math.min(1, 1.0 - (my - 18) / Math.max(40, rect.height - 38)));
+          STATE.poincareProbe = { xFrac: nxFrac, zFrac: nzFrac };
+          const ix = Math.min(nx - 1, Math.max(0, Math.round(nxFrac * (nx - 1))));
+          const iz = Math.min(nz - 1, Math.max(0, Math.round(nzFrac * (nz - 1))));
+          STATE.sliceX = ix;
+          STATE.sliceZ = iz;
+          const slX = document.getElementById("sliceX");
+          const slZ = document.getElementById("sliceZ");
+          if (slX) slX.value = ix;
+          if (slZ) slZ.value = iz;
+          document.getElementById("valSlices").textContent = `Z:${STATE.sliceZ} Y:${STATE.sliceY} X:${STATE.sliceX}`;
+          updateProbeFromVoxel(STATE.sliceZ, STATE.sliceY, STATE.sliceX);
+          renderLeftDiagnostic();
+          render3DViewport();
+        };
+        cPoin.addEventListener("mousedown", (e) => {
+          STATE.isDraggingLeftDiag = true;
+          probeLeftCanvas(e);
+        });
+        cPoin.addEventListener("mousemove", (e) => {
+          if (STATE.isDraggingLeftDiag) probeLeftCanvas(e);
+        });
+        cPoin.addEventListener("dblclick", () => {
+          const planes = ["phi_0", "phi_90", "phi_180", "phi_270"];
+          const nextIdx = (planes.indexOf(STATE.poincarePlane) + 1) % planes.length;
+          STATE.poincarePlane = planes[nextIdx];
+          const sel = document.getElementById("selectPoincarePlane");
+          if (sel) sel.value = STATE.poincarePlane;
+          renderLeftDiagnostic();
+        });
+      }
+
+      const cChord = document.getElementById("canvasChordProfile");
+      if (cChord) {
+        const probeRightCanvas = (e) => {
+          const rect = cChord.getBoundingClientRect();
+          const mx = e.clientX - rect.left;
+          const scen = window.BMHD_OFFLINE_SCENARIOS[STATE.scenarioId];
+          const chord = scen?.chords?.[STATE.selectedChordIdx] || scen?.chords?.[0];
+          if (!chord) return;
+          const nPts = (chord.psi || []).length || 48;
+          const frac = Math.max(0, Math.min(1, (mx - 34) / Math.max(40, rect.width - 48)));
+          const stnIdx = Math.min(nPts - 1, Math.max(0, Math.round(frac * (nPts - 1))));
+          STATE.selectedStationIdx = stnIdx;
+          const [nz, ny, nx] = scen.grid_shape;
+          const iz = Math.min(nz - 1, Math.max(0, Math.round(chord.traj_z?.[stnIdx] ?? STATE.sliceZ)));
+          const iy = Math.min(ny - 1, Math.max(0, Math.round(chord.traj_y?.[stnIdx] ?? STATE.sliceY)));
+          const ix = Math.min(nx - 1, Math.max(0, Math.round(chord.traj_x?.[stnIdx] ?? STATE.sliceX)));
+          updateProbeFromVoxel(iz, iy, ix);
+          renderRightDiagnostic();
+        };
+        cChord.addEventListener("mousedown", (e) => {
+          STATE.isDraggingRightDiag = true;
+          probeRightCanvas(e);
+        });
+        cChord.addEventListener("mousemove", (e) => {
+          if (STATE.isDraggingRightDiag) probeRightCanvas(e);
+        });
+        cChord.addEventListener("dblclick", () => {
+          const scen = window.BMHD_OFFLINE_SCENARIOS[STATE.scenarioId];
+          const nC = (scen?.chords || []).length || 8;
+          STATE.selectedChordIdx = (STATE.selectedChordIdx + 1) % nC;
+          const sel = document.getElementById("selectChord");
+          if (sel) sel.value = STATE.selectedChordIdx;
+          render3DViewport();
+          renderRightDiagnostic();
+        });
+      }
+      window.addEventListener("mouseup", () => {
+        STATE.isDraggingLeftDiag = false;
+        STATE.isDraggingRightDiag = false;
       });
 
       const c3d = document.getElementById("canvas3d");
@@ -3676,12 +3838,31 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       ctx.font = "9px SFMono-Regular, monospace";
       ctx.fillText(`Section \u03C6=${pData.phi_deg}\u00B0 (1:1 Scale)`, 36, offY + 11);
       ctx.fillText("O-Pt (\u25CF cyan)  X-Pt (\u2715 red)", Math.max(offX + plotW - 132, canvas.width - 140), offY + 11);
-      ctx.fillText("R=0.6m", offX, offY + plotH + 12);
-      ctx.fillText("R=1.0m", offX + plotW * 0.5 - 16, offY + plotH + 12);
-      ctx.fillText("R=1.4m", offX + plotW - 34, offY + plotH + 12);
+      const midX = offX + plotW * 0.5;
+      ctx.fillText("R=0.6m", Math.min(offX, midX - 58), offY + plotH + 12);
+      ctx.fillText("R=1.0m", midX - 16, offY + plotH + 12);
+      ctx.fillText("R=1.4m", Math.max(offX + plotW - 34, midX + 26), offY + plotH + 12);
       ctx.fillText("+0.4m", 2, offY + 8);
       ctx.fillText(" 0.0m", 2, offY + plotH * 0.5 + 3);
       ctx.fillText("-0.4m", 2, offY + plotH);
+
+      if (STATE.poincareProbe) {
+        const px = offX + STATE.poincareProbe.xFrac * plotW;
+        const py = offY + (1.0 - STATE.poincareProbe.zFrac) * plotH;
+        ctx.save();
+        ctx.strokeStyle = "rgba(0, 242, 212, 0.75)";
+        ctx.lineWidth = 1.1;
+        ctx.setLineDash([3, 3]);
+        ctx.beginPath();
+        ctx.moveTo(px, offY); ctx.lineTo(px, offY + plotH);
+        ctx.moveTo(offX, py); ctx.lineTo(offX + plotW, py);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(px, py, 3.8, 0, Math.PI * 2);
+        ctx.fillStyle = "#ffd166";
+        ctx.fill();
+        ctx.restore();
+      }
     }
 
     function renderPoloidalContours() {
@@ -3742,6 +3923,26 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       ctx.fillStyle = "#e6edf7";
       ctx.font = "9.5px SFMono-Regular, monospace";
       ctx.fillText(`Poloidal Heatmap: ${fieldMeta.name} [${fieldMeta.unit}]`, padL + 6, padT + 12);
+
+      if (STATE.poincareProbePos) {
+        const px = padL + STATE.poincareProbePos.xFrac * w;
+        const py = padT + (1.0 - STATE.poincareProbePos.zFrac) * h;
+        ctx.save();
+        ctx.strokeStyle = "rgba(255, 209, 102, 0.85)";
+        ctx.lineWidth = 1.1;
+        ctx.setLineDash([3, 3]);
+        ctx.beginPath();
+        ctx.moveTo(px, padT);
+        ctx.lineTo(px, padT + h);
+        ctx.moveTo(padL, py);
+        ctx.lineTo(padL + w, py);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(px, py, 3.8, 0, Math.PI * 2);
+        ctx.fillStyle = "#ffd166";
+        ctx.fill();
+        ctx.restore();
+      }
     }
 
     function renderRadialProfiles() {
@@ -3827,6 +4028,19 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       ctx.fillText("0.0", padL + w + 4, padT + h);
       ctx.fillText("\u03C1=0 (Axis)", padL, padT + h + 13);
       ctx.fillText("\u03C1=1 (LCFS)", padL + w - 58, padT + h + 13);
+
+      if (STATE.poincareProbePos) {
+        const px = padL + STATE.poincareProbePos.xFrac * w;
+        ctx.save();
+        ctx.strokeStyle = "rgba(255, 209, 102, 0.85)";
+        ctx.lineWidth = 1.2;
+        ctx.setLineDash([3, 3]);
+        ctx.beginPath();
+        ctx.moveTo(px, padT);
+        ctx.lineTo(px, padT + h);
+        ctx.stroke();
+        ctx.restore();
+      }
     }
 
     // =========================================================================
@@ -3940,6 +4154,30 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       ctx.fillText("Symm-VMEC", padL + w - 62, padT + 12);
       ctx.fillStyle = "#8ea0bc";
       ctx.fillText(`Stations: ${vals.length} | Spike Recovery: 100%`, padL + 6, padT + h + 13);
+
+      if (typeof STATE.selectedStationIdx === "number" && STATE.selectedStationIdx >= 0 && STATE.selectedStationIdx < vals.length) {
+        const stn = STATE.selectedStationIdx;
+        const sx = padL + (stn / Math.max(1, vals.length - 1)) * w;
+        const sy = padT + h - ((vals[stn] - minV) / Math.max(1e-6, maxV - minV)) * h;
+        ctx.save();
+        ctx.strokeStyle = "rgba(255, 209, 102, 0.8)";
+        ctx.lineWidth = 1.2;
+        ctx.setLineDash([3, 2]);
+        ctx.beginPath();
+        ctx.moveTo(sx, padT);
+        ctx.lineTo(sx, padT + h);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(sx, sy, 4.5, 0, Math.PI * 2);
+        ctx.fillStyle = "#00f2d4";
+        ctx.fill();
+        ctx.strokeStyle = "#ffd166";
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.fillStyle = "#ffd166";
+        ctx.fillText(`Stn #${stn}: ${vals[stn].toFixed(3)}`, Math.min(padL + w - 88, Math.max(padL + 4, sx - 32)), padT + h - 6);
+        ctx.restore();
+      }
     }
 
     function renderMorseSaliencePlot() {
@@ -4002,6 +4240,22 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       ctx.fillText("Thm 2.5 Discrete Morse Salience |2s[k]-s[k-1]-s[k+1]|", padL + 6, padT + 12);
       ctx.fillStyle = "#8ea0bc";
       ctx.fillText("Gold: Locked Beltrami Spike | Purple: Rejected Glare Plateau", padL + 6, padT + h + 13);
+
+      if (typeof STATE.selectedStationIdx === "number" && STATE.selectedStationIdx >= 0 && STATE.selectedStationIdx < n) {
+        const stn = STATE.selectedStationIdx;
+        const sx = padL + (stn / Math.max(1, n - 1)) * w;
+        ctx.save();
+        ctx.strokeStyle = "rgba(0, 242, 212, 0.85)";
+        ctx.lineWidth = 1.2;
+        ctx.setLineDash([3, 2]);
+        ctx.beginPath();
+        ctx.moveTo(sx, padT);
+        ctx.lineTo(sx, padT + h);
+        ctx.stroke();
+        ctx.fillStyle = "#00f2d4";
+        ctx.fillText(`Stn #${stn}: ${sal[stn].toFixed(2)}`, Math.min(padL + w - 82, Math.max(padL + 4, sx - 28)), padT + h - 6);
+        ctx.restore();
+      }
     }
 
     function renderSplit4DPlot() {
@@ -4051,11 +4305,25 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
 
       ctx.fillStyle = "#00f2d4";
       ctx.font = "9px SFMono-Regular, monospace";
-      ctx.fillText("H_nope (Localized Pellet/ELM Shock)", padL + 6, padT + 12);
+      ctx.fillText("H_nope (Pellet/ELM Shock)", padL + 6, padT + 12);
       ctx.fillStyle = "#3b9eff";
-      ctx.fillText("H_clock (AC Ripple)", padL + w - 108, padT + 12);
+      ctx.fillText("H_clock (AC Ripple)", padL + w - 102, padT + 12);
       ctx.fillStyle = "#8ea0bc";
       ctx.fillText("Orthogonal 4D Split: <H_clock, H_nope> = 0.00e+0", padL + 6, padT + h + 13);
+
+      if (typeof STATE.selectedStationIdx === "number" && STATE.selectedStationIdx >= 0) {
+        const sFrac = Math.max(0.0, Math.min(1.0, STATE.selectedStationIdx / 47.0));
+        const sx = padL + sFrac * w;
+        ctx.save();
+        ctx.strokeStyle = "rgba(255, 209, 102, 0.85)";
+        ctx.lineWidth = 1.2;
+        ctx.setLineDash([3, 2]);
+        ctx.beginPath();
+        ctx.moveTo(sx, padT);
+        ctx.lineTo(sx, padT + h);
+        ctx.stroke();
+        ctx.restore();
+      }
     }
 
     function exportViewportPng() {
@@ -4767,6 +5035,17 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
         ctx.lineTo(x, tapeY + 4);
       }
       ctx.stroke();
+
+      if (STATE.tacticalPinnedPos) {
+        const px = STATE.tacticalPinnedPos.sx;
+        const py = STATE.tacticalPinnedPos.sy;
+        drawCornerBracketGate(ctx, px, py, 16, "#ffd166", 1.8);
+        ctx.fillStyle = "#ffd166";
+        ctx.font = "700 9.5px monospace";
+        const vx = Math.max(0, Math.min(127, Math.floor(px / CONFIG.renderScale)));
+        const vy = Math.max(0, Math.min(127, Math.floor(py / CONFIG.renderScale)));
+        ctx.fillText(`LOCK [${vx},${vy}]`, Math.min(vw - 95, px + 18), Math.max(18, py - 8));
+      }
       ctx.restore();
     }
 
@@ -4832,9 +5111,23 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       if (cc) CTXS.c = cc.getContext("2d", { willReadFrequently: true });
       if (cd) CTXS.d = cd.getContext("2d", { willReadFrequently: true });
 
-      [ca, cb, cc, cd].forEach((canv) => {
+      [
+        [ca, "a"],
+        [cb, "b"],
+        [cc, "c"],
+        [cd, "d"],
+      ].forEach(([canv, qId]) => {
         if (canv) {
           canv.addEventListener("mousemove", onTacticalCanvasMouseMove);
+          canv.addEventListener("click", (e) => {
+            onTacticalCanvasMouseMove(e);
+            const rect = e.target.getBoundingClientRect();
+            const sx = ((e.clientX - rect.left) / rect.width) * 512;
+            const sy = ((e.clientY - rect.top) / rect.height) * 512;
+            STATE.tacticalPinnedPos = { sx, sy };
+            renderTacticalHUD();
+          });
+          canv.addEventListener("dblclick", () => toggleMaximizeQuad(qId));
         }
       });
     }
@@ -5756,10 +6049,11 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       const hudTel = document.getElementById("hudTelemetrySection");
 
       if (viewMode === "3d") {
-        if (stage3d) stage3d.style.display = "flex";
+        if (stage3d) stage3d.style.display = "grid";
         if (stageHud) stageHud.style.display = "none";
         if (hudTel) hudTel.style.display = "none";
-        render3DViewport();
+        renderAll();
+        requestAnimationFrame(renderAll);
       } else {
         if (stage3d) stage3d.style.display = "none";
         if (stageHud) stageHud.style.display = "flex";
