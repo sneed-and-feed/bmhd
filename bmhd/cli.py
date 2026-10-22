@@ -247,7 +247,7 @@ def cmd_studio(args: argparse.Namespace) -> int:
         print(f"Error importing bmhd.studio: {e}", file=sys.stderr)
         return 1
 
-    out_file = args.export_html or "results/bmhd_portable_studio.html"
+    out_file = args.export_html or "studio/bmhd_portable_studio.html"
     exported_path = export_portable_html_studio(out_file)
     print(f"Exported BMHD Portable Studio to: {exported_path}")
 
@@ -375,7 +375,7 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     # studio
     sub_studio = subparsers.add_parser("studio", help="Export or launch WebGL Portable Studio")
-    sub_studio.add_argument("--export-html", default="results/bmhd_portable_studio.html", help="Output HTML path")
+    sub_studio.add_argument("--export-html", default="studio/bmhd_portable_studio.html", help="Output HTML path")
     sub_studio.add_argument("--serve", action="store_true", help="Launch local Flask server")
     sub_studio.add_argument("--port", type=int, default=8080, help="Server port")
     sub_studio.set_defaults(func=cmd_studio)

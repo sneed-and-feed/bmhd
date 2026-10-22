@@ -3,7 +3,7 @@ bmhd.studio: Interactive 3D WebGL/Canvas Stellarator & Tokamak Flux-Surface Work
 Zero-Install Portable HTML5 Studio Bundler, and Deep-Linking Console (v0.3.0).
 
 Provides:
-- Standalone single-file dark-mode WebGL/Canvas 3D CAE workstation (results/bmhd_portable_studio.html).
+- Standalone single-file dark-mode WebGL/Canvas 3D CAE workstation (studio/bmhd_portable_studio.html).
 - Deep-linking URL routing (?scenario=01_issan_nonsym_solovev_tau0&field=bmhd_psi&tau0=0.38&mode=hybrid_torus).
 - 4 Interactive 3D Render Modes:
     * hybrid_torus: 3D Stepped-Cutaway Nested Toroidal Flux Shells + Poloidal Cross-Sections + Helical B-Lines + Annular Slicer
@@ -6320,7 +6320,7 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
 
 
 def export_portable_html_studio(
-    output_path: str = "results/bmhd_portable_studio.html",
+    output_path: str = "studio/bmhd_portable_studio.html",
     scenarios: Optional[Dict[str, Any]] = None,
 ) -> str:
     """
@@ -6367,7 +6367,7 @@ def create_studio_app(port: int = 5050) -> Any:
 
 
 if __name__ == "__main__":
-    out = export_portable_html_studio("results/bmhd_portable_studio.html")
+    out = export_portable_html_studio("studio/bmhd_portable_studio.html")
     if "--serve" in sys.argv and HAS_FLASK:
         app = create_studio_app()
         app.run(port=5050, debug=True)

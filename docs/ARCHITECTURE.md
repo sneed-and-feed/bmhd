@@ -248,7 +248,7 @@ Across all 5 canonical plasma scenarios at $\mathrm{SNR} = 20\text{ dB}$, `Blind
 
 ## 9. 3D CAD/CAE WebGL Workstation Architecture (`bmhd/studio.py` v0.3.0)
 
-`bmhd/studio.py` compiles a single-file, zero-external-network HTML5/WebGL workstation (`results/bmhd_portable_studio.html`) containing all 5 pre-computed 3D plasma scenarios, 40 diagnostic sightline trajectories, Poincaré maps, radial profiles, and Mode B scorecards:
+`bmhd/studio.py` compiles a single-file, zero-external-network HTML5/WebGL workstation (`studio/bmhd_portable_studio.html`) containing all 5 pre-computed 3D plasma scenarios, 40 diagnostic sightline trajectories, Poincaré maps, radial profiles, and Mode B scorecards:
 
 - **4 Selectable 3D Render Modes:** `hybrid_torus` (stepped-cutaway 3D nested toroidal flux shells $\psi \in \{0.16, 0.52, 0.90\}$ with chair-cut poloidal cross-section end-caps and elliptical-clipped slicer planes), `flux_shells`, `voxel_slicer`, and `field_lines` (3D helical $\mathbf{B}$-field streamlines and 3D modular coils).
 - **6 CAD Camera Presets & Projection Modes:** `ISO`, `TOP Z+`, `FRONT`, `SIDE`, `THROAT`, and `CHORD` camera presets, Perspective/Orthographic (`PERSP`/`ORTHO`) toggle, 60 FPS turntable `ORBIT`, interactive 3D orientation triad gizmo, vertical colorbar legend, and live hover voxel/cylindrical probe HUD.

@@ -52,7 +52,7 @@ bmhd evaluate --all --snr 20.0
 bmhd verify-theorems
 
 # 3. Export standalone zero-install HTML5/WebGL Portable Studio
-bmhd studio --export-html results/bmhd_portable_studio.html
+bmhd studio --export-html studio/bmhd_portable_studio.html
 
 # 4. Stream 3D field-cube out-of-core with peak heap < 35 MB
 bmhd stream --scenario 01_issan_nonsym_solovev_tau0 --chunk-z 16
@@ -333,9 +333,9 @@ Hardware Invariants: Peak Heap = **2.33 MB** (< 3.5 MB ceiling), Bridge Buffer =
 
 ---
 
-## 11. Portable 3D CAD/CAE WebGL Workstation (`results/bmhd_portable_studio.html`)
+## 11. Portable 3D CAD/CAE WebGL Workstation (`studio/bmhd_portable_studio.html`)
 
-The package includes a zero-install, single-file interactive 3D WebGL/Canvas CAE workstation (`results/bmhd_portable_studio.html`, `v0.3.0`):
+The package includes a zero-install, single-file interactive 3D WebGL/Canvas CAE workstation (`studio/bmhd_portable_studio.html`, `v0.3.0`):
 
 ![BMHD Portable Studio — SPEC Beltrami Shells & Field Strength |B|](results/studio_screenshot_spec_islands.png)
 
