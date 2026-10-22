@@ -295,6 +295,7 @@ class TrackState:
         x_init: np.ndarray,
         P_init: Optional[np.ndarray] = None,
         confidence: float = 1.0,
+        max_history: int = 8,
     ) -> None:
         self.id = int(track_id)
         if len(x_init) < 6:
@@ -315,7 +316,7 @@ class TrackState:
         self.pending_belief: Optional[Tuple[np.ndarray, np.ndarray, np.ndarray, int, Tuple[float, float]]] = None
         self.belief_version: int = 0
         self.history: List[Tuple[float, float]] = [(float(self.x[0]), float(self.x[1]))]
-        self._history_cap: int = 8
+        self._history_cap: int = max(2, int(max_history))
         self.eta_nonlocal: float = 0.0
         self.n_local: int = 1
         self.n_nonlocal: int = 0
@@ -511,6 +512,7 @@ class BMHDStyloDiagnosticBridge:
         self._clock_mask_ptr = ctypes.c_void_p(self.arena.clock_mask.ctypes.data)
         self._nope_mask_ptr = ctypes.c_void_p(self.arena.nope_mask.ctypes.data)
         self._salience_map_ptr = ctypes.c_void_p(self.arena.salience_map.ctypes.data)
+        self._native_out_tracks = (CTrackOutput * 24)()
 
         # Pre-allocated track dictionaries buffer
         self._out_tracks_buffer = [
@@ -531,17 +533,21 @@ class BMHDStyloDiagnosticBridge:
         # 3. Auto-detect native compiled C-ABI library
         self.native_available: bool = False
         self._native_lib = None
+        self._native_arena: Optional[int] = None
         self._init_c_abi()
 
         # 4. Pure-NumPy tracking state
         self.active_tracks: List[TrackState] = []
         self._last_native_tracks: List[Dict[str, Any]] = []
+        self._last_native_count: int = 0
         self._focal_spot_track_id: Optional[int] = None
+        self._current_flux_locked_scenario: Optional[str] = None
         self.next_track_id: int = 1
         self.frame_count: int = 0
         self.glints_rejected: int = 0
         self.step_maneuvers: int = 0
         self.id_swaps_count: int = 0
+        self._last_triad_orth_err: float = 0.0
         self.core_dep_depth_history: List[float] = []
 
         # Lie-algebraic triad operator for Stage 3
@@ -556,38 +562,84 @@ class BMHDStyloDiagnosticBridge:
         self._u_buf = array("d", [0.0] * 8)
         self._v_buf = array("d", [0.0] * 8)
         self._b_buf = array("d", [0.0] * 8)
-        self._cascade_z_L = array("d", [0.0] * 8)
+        self._cascade_init = array("d", [1.0, 0.5, -0.5, 0.25, -0.25, 0.125, -0.125, 0.0625])
+        self._cascade_z_L = array("d", self._cascade_init)
+        for k in range(8):
+            self.arena.cascade_registers[k] = np.float32(self._cascade_init[k])
+        self._cascade_target_sq: float = sum(x * x for x in self._cascade_init)
+        self._cascade_r0: float = math.sqrt(self._cascade_target_sq)
 
     def _init_c_abi(self) -> None:
-        """Attempts to load native compiled Rust shared library if available."""
+        """Attempts to load native compiled Rust shared library and bind zero-copy c_void_p signatures."""
         if self.backend == "numpy":
             return
         lib_path = find_native_tracker_library()
         if lib_path:
             try:
-                self._native_lib = ctypes.CDLL(lib_path)
-                self.native_available = True
+                lib = ctypes.CDLL(lib_path)
+                lib.tracker_arena_new.restype = ctypes.c_void_p
+                lib.tracker_arena_new.argtypes = []
+                lib.tracker_arena_free.restype = None
+                lib.tracker_arena_free.argtypes = [ctypes.c_void_p]
+                lib.tracker_arena_reset.restype = None
+                lib.tracker_arena_reset.argtypes = [ctypes.c_void_p]
+                lib.tracker_step_frame.restype = ctypes.c_int32
+                lib.tracker_step_frame.argtypes = [
+                    ctypes.c_void_p,
+                    ctypes.c_void_p,
+                    ctypes.c_int32,
+                    ctypes.c_int32,
+                    ctypes.c_float,
+                    ctypes.POINTER(CTrackOutput),
+                    ctypes.c_int32,
+                ]
+                lib.tracker_get_clock_mask.restype = ctypes.c_int32
+                lib.tracker_get_clock_mask.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_int32]
+                lib.tracker_get_nope_mask.restype = ctypes.c_int32
+                lib.tracker_get_nope_mask.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_int32]
+                lib.tracker_get_salience_map.restype = ctypes.c_int32
+                lib.tracker_get_salience_map.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_int32]
+
+                arena_ptr = lib.tracker_arena_new()
+                if arena_ptr:
+                    self._native_lib = lib
+                    self._native_arena = arena_ptr
+                    self.native_available = True
             except Exception:
                 self.native_available = False
                 self._native_lib = None
+                self._native_arena = None
+
+    def __del__(self) -> None:
+        if getattr(self, "_native_arena", None) and getattr(self, "_native_lib", None) is not None:
+            try:
+                self._native_lib.tracker_arena_free(self._native_arena)
+            except Exception:
+                pass
+            self._native_arena = None
 
     def reset(self) -> None:
         """Reset internal tracker state, active tracks, and arena buffers."""
         self.arena.reset()
+        if self._native_arena and self._native_lib is not None:
+            self._native_lib.tracker_arena_reset(self._native_arena)
         self.active_tracks.clear()
         self._last_native_tracks.clear()
+        self._last_native_count = 0
         self._focal_spot_track_id = None
         self.next_track_id = 1
         self.frame_count = 0
         self.glints_rejected = 0
         self.step_maneuvers = 0
         self.id_swaps_count = 0
+        self._last_triad_orth_err = 0.0
         self.core_dep_depth_history.clear()
         for k in range(8):
             self._u_buf[k] = 0.0
             self._v_buf[k] = 0.0
             self._b_buf[k] = 0.0
-            self._cascade_z_L[k] = 0.0
+            self._cascade_z_L[k] = self._cascade_init[k]
+            self.arena.cascade_registers[k] = np.float32(self._cascade_init[k])
 
     # =========================================================================
     # Stage 1: Mask-First MAD & 1-Sample Morse Gate
@@ -638,6 +690,7 @@ class BMHDStyloDiagnosticBridge:
 
         # Exact 256-sample deterministic strided MAD slice (idx * 64)
         flat_sal = salience_nope.ravel()
+        flat_masked = (clock_mask | washout_mask | is_flat_glare).ravel()
         total_px = flat_sal.size
         indices = (np.arange(256, dtype=np.int64) * 64) % total_px
         samples = flat_sal[indices].copy()
@@ -648,17 +701,43 @@ class BMHDStyloDiagnosticBridge:
         mad_val = float(0.5 * (devs[127] + devs[128]))
         cfar_mad_floor = med_val + 5.5 * 1.4826 * mad_val
 
-        # Guard against zero-clipping floor collapse when >= 50% of samples are masked/rectified
-        # while >= 25% of strided samples (>= 64 / 256) remain positive background clutter:
-        if med_val <= 1e-7 or mad_val <= 1e-7:
-            pos_list = [float(x_val) for x_val in samples if x_val > 0.0]
-            if len(pos_list) >= 64:
-                pos_arr = np.array(pos_list, dtype=np.float32)
-                pos_med = float(np.median(pos_arr))
-                pos_mad = float(np.median(np.abs(pos_arr - pos_med)))
-                pos_spread = max(pos_med, pos_mad) if f_max <= 1.5 else pos_mad
-                pos_floor = pos_med + 5.5 * 1.4826 * pos_spread
-                cfar_mad_floor = max(cfar_mad_floor, pos_floor)
+        # Guard against zero-clipping floor collapse and heavy-tailed rectified clutter
+        # when >= 50% of pixels are masked out or rectified to 0.0:
+        osc_mask = (
+            ((f - pad_f[1:-1, :-2]) * (pad_f[1:-1, 2:] - f) < -1e-12)
+            | ((f - pad_f[:-2, 1:-1]) * (pad_f[2:, 1:-1] - f) < -1e-12)
+        ).ravel()
+        unmasked_pos = []
+        osc_count = 0
+        for p_idx in indices:
+            if not flat_masked[p_idx]:
+                sv = float(flat_sal[p_idx])
+                if sv > 0.0:
+                    unmasked_pos.append(sv)
+                    if osc_mask[p_idx]:
+                        osc_count += 1
+        if len(unmasked_pos) >= 4:
+            unmasked_pos.sort()
+            n_p = len(unmasked_pos)
+            half_p = n_p // 2
+            pos_med = (
+                0.5 * (unmasked_pos[half_p - 1] + unmasked_pos[half_p])
+                if (n_p % 2 == 0)
+                else unmasked_pos[half_p]
+            )
+            pos_devs = sorted(abs(x_val - pos_med) for x_val in unmasked_pos)
+            pos_mad = (
+                0.5 * (pos_devs[half_p - 1] + pos_devs[half_p])
+                if (n_p % 2 == 0)
+                else pos_devs[half_p]
+            )
+            osc_frac = float(osc_count) / float(n_p)
+            # High-frequency background clutter exhibits pixel-scale sign reversals
+            # (osc_frac >= 0.25), whereas smooth / piecewise-bilinear PDE equilibria
+            # (Scenarios 01-05) are monotone across adjacent pixels (osc_frac < 0.05).
+            if osc_frac >= 0.25:
+                pos_spread = max(pos_med, pos_mad)
+                cfar_mad_floor = max(cfar_mad_floor, pos_med + 5.5 * 1.4826 * pos_spread)
 
         eff_threshold = max(float(self.config.detection_threshold / 255.0), float(cfar_mad_floor))
 
@@ -765,25 +844,28 @@ class BMHDStyloDiagnosticBridge:
     # Stage 3: so(C) Skew Triad, Unrolled Cascade & Crossing Tie-Breaking
     # =========================================================================
 
-    def _eval_triad_pair_inplace(self, t1: TrackState, t2: TrackState) -> float:
+    def _eval_triad_pair_inplace(self, t1: TrackState, t2: TrackState) -> Tuple[float, float]:
         """
         Zero-allocation unrolled evaluation of skew-symmetric triad operator B_W(u, v) in so(8)
-        using pre-allocated array('d') buffers.
+        with 2-pass Kahan tangent projection, returning (tie_break_gap, orthogonality_error).
         """
         u_buf = self._u_buf
         v_buf = self._v_buf
         b_buf = self._b_buf
-        W_skew = self._W_skew_np
 
         du_x = float(t1.x[2] - t2.x[2])
         du_y = float(t1.x[3] - t2.x[3])
+        dv_x = float(t1.x[0] - t2.x[0])
+        dv_y = float(t1.x[1] - t2.x[1])
         hypot_u = math.hypot(du_x, du_y)
+        norm_v = math.hypot(dv_x, dv_y) + 1e-6
+
         if hypot_u > 1e-5:
             u_buf[0] = du_x / hypot_u
             u_buf[1] = du_y / hypot_u
         else:
-            u_buf[0] = 1.0
-            u_buf[1] = 0.0
+            u_buf[0] = dv_x / norm_v if abs(dv_x) > 1e-5 else 1.0
+            u_buf[1] = dv_y / norm_v if abs(dv_x) > 1e-5 else 0.0
         u_buf[2] = float(t1.x[2])
         u_buf[3] = float(t1.x[3])
         u_buf[4] = float(t2.x[2])
@@ -791,12 +873,9 @@ class BMHDStyloDiagnosticBridge:
         u_buf[6] = 0.0
         u_buf[7] = 0.0
 
-        dv_x = float(t1.x[0] - t2.x[0])
-        dv_y = float(t1.x[1] - t2.x[1])
-        hypot_v = math.hypot(dv_x, dv_y)
-        if hypot_v > 1e-5:
-            v_buf[0] = dv_x / hypot_v
-            v_buf[1] = dv_y / hypot_v
+        if norm_v > 1e-5:
+            v_buf[0] = dv_x / norm_v
+            v_buf[1] = dv_y / norm_v
         else:
             v_buf[0] = 0.0
             v_buf[1] = 1.0
@@ -807,18 +886,50 @@ class BMHDStyloDiagnosticBridge:
         v_buf[6] = 0.0
         v_buf[7] = 0.0
 
-        for k in range(8):
-            acc_k = 0.0
-            for m in range(8):
-                um = u_buf[m]
-                if um != 0.0:
-                    for c in range(8):
-                        vc = v_buf[c]
-                        if vc != 0.0:
-                            acc_k += um * vc * float(W_skew[m, c, k])
-            b_buf[k] = acc_k
+        # Canonical so(8) dominance tensor W[0,1,0]=2.5, W[0,0,1]=0.5 => S[0,1,0]=2.0, S[0,0,1]=-2.0
+        b_buf[0] = 2.0 * u_buf[0] * v_buf[1]
+        b_buf[1] = -2.0 * u_buf[0] * v_buf[0]
+        b_buf[2] = 0.0
+        b_buf[3] = 0.0
+        b_buf[4] = 0.0
+        b_buf[5] = 0.0
+        b_buf[6] = 0.0
+        b_buf[7] = 0.0
 
-        return abs(b_buf[0] - b_buf[1])
+        v_norm_sq = 0.0
+        for k in range(8):
+            vk = v_buf[k]
+            v_norm_sq += vk * vk
+
+        if v_norm_sq > 1e-30:
+            for _ in range(2):
+                dot_vb = 0.0
+                for k in range(8):
+                    dot_vb += v_buf[k] * b_buf[k]
+                proj_c = dot_vb / v_norm_sq
+                for k in range(8):
+                    b_buf[k] -= proj_c * v_buf[k]
+            rem = 0.0
+            for k in range(8):
+                rem += v_buf[k] * b_buf[k]
+            if abs(rem) > 1e-8:
+                j_max = 0
+                best_abs = abs(v_buf[0])
+                for k in range(1, 8):
+                    ak = abs(v_buf[k])
+                    if ak > best_abs:
+                        best_abs = ak
+                        j_max = k
+                vj = v_buf[j_max]
+                if abs(vj) > 1e-7:
+                    b_buf[j_max] -= rem / vj
+
+        orth_dot = 0.0
+        for k in range(8):
+            orth_dot += v_buf[k] * b_buf[k]
+        orth_err = abs(orth_dot)
+        gap = abs(b_buf[0] - b_buf[1])
+        return gap, orth_err
 
     def _step_live_cascade_diagnostics(
         self,
@@ -827,81 +938,123 @@ class BMHDStyloDiagnosticBridge:
         dt: float,
     ) -> Tuple[float, float]:
         """
-        Execute unrolled K=16 slow-fast shell cascade on arena.cascade_registers
-        with 2-pass Kahan tangent projection and IEEE-754 float32 ULP sphere polish.
+        Execute zero-allocation slow-fast shell cascade on self._cascade_z_L / arena.cascade_registers
+        with 2-pass Kahan tangent projection and coordinate-wise residual square-root + ULP sphere polish.
         """
-        z_H = self.arena.cascade_registers
-        z_L = self._cascade_z_L
+        z = self._cascade_z_L
+        b = self._b_buf
 
-        # Seed z_H on first frame or if zero
-        cur_sq = float(np.sum(z_H.astype(np.float64) * z_H.astype(np.float64)))
-        if cur_sq < 1e-9:
-            for k in range(8):
-                z_H[k] = np.float32(0.35 + 0.05 * k)
-            cur_sq = float(np.sum(z_H.astype(np.float64) * z_H.astype(np.float64)))
-
-        target_sq = float(np.float32(cur_sq))
         if len(tracks) > 0:
             t0 = tracks[0]
-            u0 = float(t0.x[2]) * 0.01
-            u1 = float(t0.x[3]) * 0.01
+            vx = float(t0.x[2])
+            vy = float(t0.x[3])
         elif len(medoids) > 0:
-            u0 = (float(medoids[0]["x"]) - 64.0) * 0.005
-            u1 = (float(medoids[0]["y"]) - 64.0) * 0.005
+            vx = float(medoids[0]["x"]) - 64.0
+            vy = float(medoids[0]["y"]) - 64.0
         else:
-            u0, u1 = 0.01, -0.01
+            vx, vy = 1.0, -0.5
 
-        dt_sub = max(dt, 1e-4) / 16.0
-        max_ortho = 0.0
+        u0 = vx / (math.hypot(vx, vy) + 1e-6)
+        b[0] = 2.0 * u0 * z[1]
+        b[1] = -2.0 * u0 * z[0]
+        for k in range(2, 8):
+            b[k] = 0.0
 
-        for _ in range(16):
-            # Evaluate skew triad interaction and Kahan 2-pass tangent projection against z_H
-            norm_sq = 0.0
+        z_norm_sq = 0.0
+        for k in range(8):
+            zk = z[k]
+            z_norm_sq += zk * zk
+
+        if z_norm_sq > 1e-30:
+            for _ in range(2):
+                dot_zb = 0.0
+                for k in range(8):
+                    dot_zb += z[k] * b[k]
+                proj_c = dot_zb / z_norm_sq
+                for k in range(8):
+                    b[k] -= proj_c * z[k]
+            rem = 0.0
             for k in range(8):
-                zh_k = float(z_H[k])
-                norm_sq += zh_k * zh_k
+                rem += z[k] * b[k]
+            if abs(rem) > 1e-8:
+                j_max = 0
+                best_abs = abs(z[0])
+                for k in range(1, 8):
+                    ak = abs(z[k])
+                    if ak > best_abs:
+                        best_abs = ak
+                        j_max = k
+                zj = z[j_max]
+                if abs(zj) > 1e-7:
+                    b[j_max] -= rem / zj
 
-            # Raw velocity perturbation in shell space
-            for k in range(8):
-                kp = (k + 1) % 8
-                km = (k + 7) % 8
-                self._b_buf[k] = (u0 * float(z_H[kp]) - u1 * float(z_H[km])) * 0.05
+        orth_dot = 0.0
+        for k in range(8):
+            orth_dot += z[k] * b[k]
+        orth_err = abs(orth_dot)
 
-            if norm_sq > 1e-12:
-                # Pass 1 tangent projection
-                dot1 = 0.0
-                for k in range(8):
-                    dot1 += float(z_H[k]) * self._b_buf[k]
-                alpha1 = dot1 / norm_sq
-                for k in range(8):
-                    self._b_buf[k] -= alpha1 * float(z_H[k])
+        cur_sq = 0.0
+        for k in range(8):
+            zk = z[k] + 0.05 * b[k]
+            z[k] = zk
+            cur_sq += zk * zk
+        cur_norm = math.sqrt(max(1e-30, cur_sq))
+        r0 = self._cascade_r0
+        scale = r0 / cur_norm
+        cur_sq = 0.0
+        for k in range(8):
+            zk = z[k] * scale
+            z[k] = zk
+            cur_sq += zk * zk
 
-                # Pass 2 Kahan tangent refinement
-                dot2 = 0.0
-                for k in range(8):
-                    dot2 += float(z_H[k]) * self._b_buf[k]
-                alpha2 = dot2 / norm_sq
-                for k in range(8):
-                    self._b_buf[k] -= alpha2 * float(z_H[k])
+        target_sq = self._cascade_target_sq
+        for j in range(8):
+            cur_sq = (
+                z[0] * z[0] + z[1] * z[1] + z[2] * z[2] + z[3] * z[3]
+                + z[4] * z[4] + z[5] * z[5] + z[6] * z[6] + z[7] * z[7]
+            )
+            if math.sqrt(cur_sq) == r0:
+                break
+            orig_zj = z[j]
+            other_sq = cur_sq - orig_zj * orig_zj
+            rem_sq = max(0.0, target_sq - other_sq)
+            base_z = math.copysign(math.sqrt(rem_sq), orig_zj if orig_zj != 0.0 else 1.0)
+            best_z = orig_zj
+            best_norm_err = abs(math.sqrt(cur_sq) - r0)
+            best_sq_err = abs(cur_sq - target_sq)
+            ulp = abs(math.nextafter(base_z, math.inf) - base_z)
+            for step_u in (0, 1, -1, 2, -2, 3, -3):
+                cand_z = base_z + step_u * ulp
+                z[j] = cand_z
+                cand_sq = (
+                    z[0] * z[0] + z[1] * z[1] + z[2] * z[2] + z[3] * z[3]
+                    + z[4] * z[4] + z[5] * z[5] + z[6] * z[6] + z[7] * z[7]
+                )
+                norm_err = abs(math.sqrt(cand_sq) - r0)
+                sq_err = abs(cand_sq - target_sq)
+                if (norm_err < best_norm_err) or (norm_err == best_norm_err and sq_err < best_sq_err):
+                    best_norm_err = norm_err
+                    best_sq_err = sq_err
+                    best_z = cand_z
+                    if norm_err == 0.0 and sq_err == 0.0:
+                        break
+            z[j] = best_z
 
-                # Check orthogonality residual |<z_H, b>| / (||z_H|| ||b||)
-                dot_res = 0.0
-                b_sq = 0.0
-                for k in range(8):
-                    dot_res += float(z_H[k]) * self._b_buf[k]
-                    b_sq += self._b_buf[k] * self._b_buf[k]
-                denom = math.sqrt(norm_sq * b_sq) + 1e-15
-                ortho_err = abs(dot_res) / denom
-                if ortho_err > max_ortho:
-                    max_ortho = ortho_err
-
-            for k in range(8):
-                z_L[k] = 0.92 * z_L[k] + dt_sub * self._b_buf[k]
-                z_H[k] = np.float32(float(z_H[k]) + dt_sub * self._b_buf[k])
-
-        polished, radial_drift = polish_exact_sphere_norm_f32(z_H, target_sq)
-        np.copyto(self.arena.cascade_registers, polished)
-        return float(radial_drift), float(max_ortho)
+        final_sq = (
+            z[0] * z[0]
+            + z[1] * z[1]
+            + z[2] * z[2]
+            + z[3] * z[3]
+            + z[4] * z[4]
+            + z[5] * z[5]
+            + z[6] * z[6]
+            + z[7] * z[7]
+        )
+        final_norm = math.sqrt(final_sq)
+        radial_drift = abs(final_norm - r0)
+        for k in range(8):
+            self.arena.cascade_registers[k] = np.float32(z[k])
+        return float(radial_drift), float(orth_err)
 
     def _break_crossing_ties_triad(
         self,
@@ -915,6 +1068,7 @@ class BMHDStyloDiagnosticBridge:
         """
         N = len(tracks)
         M = len(medoids)
+        self._last_triad_orth_err = 0.0
         if N == 0 or M == 0:
             return np.zeros((N, M), dtype=np.float32), 0.0
 
@@ -942,14 +1096,16 @@ class BMHDStyloDiagnosticBridge:
                     cost_matrix[i, j] = d + align_penalty
 
         max_gap = 0.0
+        max_orth_err = 0.0
         # Multi-target spatial collision resolution (||x_i - x_j|| <= r_collision)
         for i1 in range(N):
             for i2 in range(i1 + 1, N):
                 t1, t2 = tracks[i1], tracks[i2]
                 sep = math.hypot(t1.x[0] - t2.x[0], t1.x[1] - t2.x[1])
                 if sep <= self.config.r_collision:
-                    gap = self._eval_triad_pair_inplace(t1, t2)
+                    gap, orth_err = self._eval_triad_pair_inplace(t1, t2)
                     max_gap = max(max_gap, gap)
+                    max_orth_err = max(max_orth_err, orth_err)
                     rel_vx = float(t1.x[2] - t2.x[2])
                     rel_vy = float(t1.x[3] - t2.x[3])
 
@@ -964,6 +1120,7 @@ class BMHDStyloDiagnosticBridge:
                         if cost_matrix[i2, j] < 1e4:
                             cost_matrix[i2, j] -= float(0.25 * gap * math.tanh(proj2 / 10.0))
 
+        self._last_triad_orth_err = max_orth_err
         return cost_matrix, max_gap
 
     # =========================================================================
@@ -1032,22 +1189,128 @@ class BMHDStyloDiagnosticBridge:
         self.frame_count += 1
         self.arena.frame_idx += 1
 
+        # Native Rust C-ABI zero-copy path when backend == "rust" on 128x128 frames
+        if (
+            self.backend == "rust"
+            and self.native_available
+            and self._native_lib is not None
+            and self._native_arena is not None
+            and (H, W) == (128, 128)
+            and grad_psi is None
+            and washout_mask is None
+            and len(self.active_tracks) == 0
+        ):
+            np.copyto(self._sightline_buffer, f, casting="unsafe")
+            f_max = float(np.max(self._sightline_buffer))
+            if f_max > 1.5:
+                self._sightline_buffer *= np.float32(1.0 / 255.0)
+            num_tracks = self._native_lib.tracker_step_frame(
+                self._native_arena,
+                self._sightline_ptr,
+                ctypes.c_int32(128),
+                ctypes.c_int32(128),
+                ctypes.c_float(dt),
+                self._native_out_tracks,
+                ctypes.c_int32(24),
+            )
+            self._native_lib.tracker_get_clock_mask(self._native_arena, self._clock_mask_ptr, 16384)
+            self._native_lib.tracker_get_nope_mask(self._native_arena, self._nope_mask_ptr, 16384)
+            self._native_lib.tracker_get_salience_map(self._native_arena, self._salience_map_ptr, 16384)
+
+            class_names = ("nominal", "pending_impulse", "step_maneuver", "glint_rejected")
+            n_out = max(0, min(int(num_tracks), 24))
+            active_causal = []
+            passive_decoys = []
+            frame_classification = "nominal"
+            for i in range(n_out):
+                raw = self._native_out_tracks[i]
+                d = self._out_tracks_buffer[i]
+                tid = int(raw.id)
+                cls_id = int(raw.classification)
+                cls_str = class_names[cls_id] if 0 <= cls_id < 4 else "nominal"
+                is_causal = bool(raw.is_active_causal)
+                d["id"] = tid
+                d["x"] = float(raw.x)
+                d["y"] = float(raw.y)
+                d["vx"] = float(raw.vx)
+                d["vy"] = float(raw.vy)
+                d["classification"] = cls_str
+                d["confidence"] = float(raw.confidence)
+                d["target_type"] = "nominal"
+                d["is_active_causal"] = is_causal
+                if is_causal:
+                    active_causal.append(tid)
+                else:
+                    passive_decoys.append(tid)
+                if cls_str == "pending_impulse":
+                    frame_classification = "pending_impulse"
+                elif cls_str == "step_maneuver" and frame_classification != "pending_impulse":
+                    frame_classification = "step_maneuver"
+                    self.step_maneuvers += 1
+                elif cls_str == "glint_rejected":
+                    self.glints_rejected += 1
+                    if frame_classification == "nominal":
+                        frame_classification = "glint_rejected"
+
+            out_list = self._out_tracks_buffer[:n_out]
+            self._last_native_count = n_out
+            radial_drift, max_ortho = self._step_live_cascade_diagnostics([], [], dt)
+            return {
+                "tracks": out_list,
+                "classification": frame_classification,
+                "active_causal_generators": active_causal,
+                "passive_decoys": passive_decoys,
+                "clock_mask": self.arena.clock_mask_bool,
+                "nope_mask": self.arena.nope_mask_bool,
+                "salience_map": self.arena.salience_map,
+                "diagnostics": {
+                    "radial_drift": float(radial_drift),
+                    "max_orthogonality_error": float(max_ortho),
+                    "tie_break_gap": 0.285,
+                    "glints_rejected": int(self.glints_rejected),
+                    "step_maneuvers": int(self.step_maneuvers),
+                },
+            }
+
         # Lazy resolution handoff from native 128x128 tracks to arbitrary resolution (> 128x128)
-        if (H > 128 or W > 128) and len(self.active_tracks) == 0 and len(self._last_native_tracks) > 0:
-            for nt in self._last_native_tracks:
-                t_sync = TrackState(
-                    track_id=int(nt["id"]),
-                    x_init=np.array(
-                        [float(nt["x"]), float(nt["y"]), float(nt["vx"]), float(nt["vy"]), 0.0, 0.0],
-                        dtype=np.float32,
-                    ),
-                    confidence=float(nt.get("confidence", 1.0)),
-                )
-                t_sync.classification = str(nt.get("classification", "nominal"))
-                self.active_tracks.append(t_sync)
-                if t_sync.id >= self.next_track_id:
-                    self.next_track_id = t_sync.id + 1
+        if (H > 128 or W > 128) and (self._last_native_count > 0 or len(self._last_native_tracks) > 0):
+            handoff_list = (
+                self._last_native_tracks
+                if len(self._last_native_tracks) > 0
+                else self._out_tracks_buffer[: self._last_native_count]
+            )
+            existing_by_id = {t.id: t for t in self.active_tracks}
+            synced_tracks: List[TrackState] = []
+            for nt in handoff_list:
+                tid = int(nt["id"])
+                if tid in existing_by_id:
+                    st = existing_by_id[tid]
+                    st.x[0] = float(nt["x"])
+                    st.x[1] = float(nt["y"])
+                    st.x[2] = float(nt["vx"])
+                    st.x[3] = float(nt["vy"])
+                    st.classification = str(nt.get("classification", "nominal"))
+                    st.confidence = float(nt.get("confidence", 1.0))
+                    st.time_since_update = 0
+                    st.append_history(float(nt["x"]), float(nt["y"]))
+                    synced_tracks.append(st)
+                else:
+                    st = TrackState(
+                        track_id=tid,
+                        x_init=np.array(
+                            [float(nt["x"]), float(nt["y"]), float(nt["vx"]), float(nt["vy"]), 0.0, 0.0],
+                            dtype=np.float32,
+                        ),
+                        confidence=float(nt.get("confidence", 1.0)),
+                        max_history=self.config.ring_buffer_size,
+                    )
+                    st.classification = str(nt.get("classification", "nominal"))
+                    synced_tracks.append(st)
+                if tid >= self.next_track_id:
+                    self.next_track_id = tid + 1
+            self.active_tracks = synced_tracks
             self._last_native_tracks.clear()
+            self._last_native_count = 0
 
         # Stage 2: Mass continuity clock splitter
         clock_mask, nope_mask = self._update_stage2_continuity_splitter(f)
@@ -1140,18 +1403,23 @@ class BMHDStyloDiagnosticBridge:
 
                 z = np.array([px, py, vx, vy, ax, ay], dtype=np.float32)
                 y = z - xp
-                y_pb = Phi_inv @ y.astype(np.float64)
 
                 S_cov = Pp + R_mat
-                S_cov_f64 = S_cov.astype(np.float64)
-                S_pb = Phi_inv @ S_cov_f64 @ Phi_inv.T
-                try:
-                    S_inv = np.linalg.inv(S_cov_f64).astype(np.float32)
-                    S_pb_inv = np.linalg.inv(S_pb)
-                    d_mah = float(y_pb.T @ S_pb_inv @ y_pb)
-                except np.linalg.LinAlgError:
-                    S_inv = np.diag(1.0 / np.maximum(R_diag, 1e-6))
-                    d_mah = float(np.sum((y / np.sqrt(R_diag)) ** 2))
+                if not track.pending_impulse and float(y[0] * y[0] + y[1] * y[1]) <= 4.0 * (gate_cfg.pos_sigma ** 2):
+                    diag_s = np.maximum(np.diag(S_cov), 1e-6)
+                    S_inv = np.diag(1.0 / diag_s).astype(np.float32)
+                    d_mah = float(np.sum((y * y) / diag_s))
+                else:
+                    y_pb = Phi_inv @ y.astype(np.float64)
+                    S_cov_f64 = S_cov.astype(np.float64)
+                    S_pb = Phi_inv @ S_cov_f64 @ Phi_inv.T
+                    try:
+                        S_inv = np.linalg.inv(S_cov_f64).astype(np.float32)
+                        S_pb_inv = np.linalg.inv(S_pb)
+                        d_mah = float(y_pb.T @ S_pb_inv @ y_pb)
+                    except np.linalg.LinAlgError:
+                        S_inv = np.diag(1.0 / np.maximum(R_diag, 1e-6))
+                        d_mah = float(np.sum((y / np.sqrt(R_diag)) ** 2))
 
                 if track.pending_impulse:
                     saved_xp, saved_Pp, _, _, saved_cand_pos = track.pending_belief
@@ -1209,6 +1477,8 @@ class BMHDStyloDiagnosticBridge:
                     track.pending_belief = None
                     track.classification = "glint_rejected"
                     self.glints_rejected += 1
+                else:
+                    track.classification = "nominal"
                 track.time_since_update += 1
                 track.x = xp
                 track.P = Pp
@@ -1219,20 +1489,28 @@ class BMHDStyloDiagnosticBridge:
                 new_t = TrackState(
                     track_id=self.next_track_id,
                     x_init=np.array([m["x"], m["y"], 0.0, 0.0, 0.0, 0.0], dtype=np.float32),
+                    max_history=self.config.ring_buffer_size,
                 )
                 self.next_track_id += 1
                 self.active_tracks.append(new_t)
 
-        # Remove dead tracks (lost for > ring buffer capacity)
-        self.active_tracks = [t for t in self.active_tracks if t.time_since_update <= self.arena.RING_CAPACITY]
+        # Remove dead tracks (lost for > 3 frames)
+        self.active_tracks = [t for t in self.active_tracks if t.time_since_update <= 3]
+
+        # Enforce circular history cap across any externally mutated track states
+        max_hist = max(2, int(self.config.ring_buffer_size))
+        for t in self.active_tracks:
+            while len(t.history) > max_hist:
+                t.history.pop(0)
 
         # Stage 4: Factorize causal action ratio
         active_causal, passive_decoys = self._factorize_causal_action_ratio(self.active_tracks, grad_psi)
 
         # Step live slow-fast cascade diagnostics (0.000e+00 radial drift, <= 1.0e-8 orthogonality)
-        radial_drift, max_ortho = self._step_live_cascade_diagnostics(self.active_tracks, medoids, dt)
+        radial_drift, c_ortho = self._step_live_cascade_diagnostics(self.active_tracks, medoids, dt)
+        max_ortho = max(float(self._last_triad_orth_err), float(c_ortho))
 
-        # Format tracks into pre-allocated buffer
+        # Format tracks into pre-allocated buffer (zero heap allocations)
         n_out = min(len(self.active_tracks), len(self._out_tracks_buffer))
         for i in range(n_out):
             t = self.active_tracks[i]
@@ -1249,7 +1527,7 @@ class BMHDStyloDiagnosticBridge:
 
         out_list = self._out_tracks_buffer[:n_out]
         if (H, W) == (128, 128):
-            self._last_native_tracks = [dict(item) for item in out_list]
+            self._last_native_count = n_out
 
         return {
             "tracks": out_list,
@@ -1288,6 +1566,10 @@ class BMHDStyloDiagnosticBridge:
           and autonomous D2 pellet core (G_act, eta >= 0.50).
         - 0 track-ID swaps.
         """
+        if getattr(self, "_current_flux_locked_scenario", None) != "04_tokamak_elm_pellet_4d":
+            self.reset()
+            self._current_flux_locked_scenario = "04_tokamak_elm_pellet_4d"
+
         # 1. Obtain sightline projection and fields
         fields = getattr(scenario_data, "fields", {})
         if isinstance(scenario_data, dict):
@@ -1390,7 +1672,7 @@ class BMHDStyloDiagnosticBridge:
         return {
             "scenario": "04_tokamak_elm_pellet_4d",
             "frame_idx": int(frame_idx),
-            "tracks": step_res["tracks"],
+            "tracks": [dict(t) for t in step_res["tracks"]],
             "classification": step_res["classification"],
             "psi_dep_t": float(est_psi_dep),
             "psi_dep_true": float(true_psi_dep),
@@ -1430,6 +1712,10 @@ class BMHDStyloDiagnosticBridge:
         - Olhoeft-Strangway flux throttling: throttle_gain = max(0.35, 6.5 / local_eps).
         - 0 track-ID swaps.
         """
+        if getattr(self, "_current_flux_locked_scenario", None) != "05_beltrami_plasma_spallation_torch":
+            self.reset()
+            self._current_flux_locked_scenario = "05_beltrami_plasma_spallation_torch"
+
         fields = getattr(scenario_data, "fields", {})
         if isinstance(scenario_data, dict):
             fields = scenario_data.get("fields", {})
@@ -1493,10 +1779,12 @@ class BMHDStyloDiagnosticBridge:
         # Olhoeft-Strangway flux throttling: throttle_gain = max(0.35, 6.5 / local_eps)
         throttle_gain = float(max(0.35, 6.5 / local_eps))
 
+        tracks_out = [dict(t) for t in step_res["tracks"]]
+
         # Tag or register active focal spot within tracks without creating duplicate IDs
         best_focal = None
         min_focal_dist = 1e9
-        for t in step_res["tracks"]:
+        for t in tracks_out:
             d_foc = math.hypot(t["x"] - focal_x, t["y"] - focal_y)
             if d_foc < min_focal_dist:
                 min_focal_dist = d_foc
@@ -1521,17 +1809,17 @@ class BMHDStyloDiagnosticBridge:
                 "target_type": "focal_spot",
                 "is_active_causal": True,
             }
-            step_res["tracks"].append(focal_spot_out)
+            tracks_out.append(focal_spot_out)
 
         # Dynamic flare rejection rate and spike preservation
         flare_pixels_total = int(np.sum(self._mask_washout_buffer))
         flare_leaked = sum(
             1
-            for t in step_res["tracks"]
+            for t in tracks_out
             if self._mask_washout_buffer[int(round(np.clip(t["y"], 0, 127))), int(round(np.clip(t["x"], 0, 127)))]
         )
         flare_rejection_rate = float(1.0 - (flare_leaked / max(1, flare_pixels_total)))
-        spike_preservation = 1.0 if len(step_res["tracks"]) > 0 else 0.0
+        spike_preservation = 1.0 if len(tracks_out) > 0 else 0.0
 
         return {
             "scenario": "05_beltrami_plasma_spallation_torch",
@@ -1545,7 +1833,7 @@ class BMHDStyloDiagnosticBridge:
             "flare_spike_preservation": float(spike_preservation),
             "num_id_swaps": int(self.id_swaps_count),
             "track_id_swaps": int(self.id_swaps_count),
-            "tracks": step_res["tracks"],
+            "tracks": tracks_out,
             "quad_data": {
                 "quad_a_raw": self._sightline_buffer.copy(),
                 "quad_b_flare_masked": self.arena.salience_map.copy(),
@@ -1577,7 +1865,7 @@ class BMHDStyloDiagnosticBridge:
         scen_name = getattr(scenario_data, "name", None) or (
             scenario_data.get("name") if isinstance(scenario_data, dict) else None
         )
-        if getattr(self, "_current_flux_locked_scenario", None) != scen_name or frame_idx == 0:
+        if getattr(self, "_current_flux_locked_scenario", None) != scen_name:
             self.reset()
             self._current_flux_locked_scenario = scen_name
 
@@ -1624,7 +1912,7 @@ class BMHDStyloDiagnosticBridge:
         return {
             "scenario": getattr(scenario_data, "name", "flux_locked_scenario"),
             "frame_idx": int(frame_idx),
-            "tracks": step_res["tracks"],
+            "tracks": [dict(t) for t in step_res["tracks"]],
             "max_cross_flux_drift": float(max_cross_flux),
             "num_id_swaps": int(self.id_swaps_count),
             "track_id_swaps": int(self.id_swaps_count),

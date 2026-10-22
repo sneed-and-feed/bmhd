@@ -627,3 +627,23 @@ def test_mode_b_extreme_washout_and_morse_pinning():
     assert bmhd_m["loco_rmse"] < 0.030
     assert res["performance"]["heap_ceiling_passed"] is True
 
+
+def test_stylo_bridge_benchmark_and_monte_carlo_gate_audit():
+    """
+    Verify run_stylo_bridge_benchmark achieves 1.000 MOTA across all 5 scenarios,
+    0 track-ID swaps, 100.0% nominal coasting Phi_inv skip rate, and <= 0.5%
+    false-trigger rate on the 6-DOF pullback Monte Carlo whitening audit.
+    """
+    from bmhd.benchmark import run_stylo_bridge_benchmark
+
+    res = run_stylo_bridge_benchmark()
+    om = res["overall_metrics"]
+    assert om["mota"] >= 0.990
+    assert om["bmhd_stylo_id_swaps"] == 0
+    assert om["scenario04_pellet_core_deposition_rmse_px"] <= 0.80
+    assert om["scenario05_flare_washout_rejection_rate"] == 1.0
+    assert om["phi_inv_skip_rate_pct"] == 100.0
+    assert om["monte_carlo_max_false_trigger_pct"] <= 0.5
+    assert om["zero_per_frame_growth_passed"] is True
+
+

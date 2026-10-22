@@ -1,6 +1,6 @@
 {
   "benchmark_version": "v0.3.0",
-  "timestamp": "2026-10-22T09:03:38Z",
+  "timestamp": "2026-10-22T10:34:44Z",
   "mode_a_formal_theorems": {
     "theorems_audit": {
       "theorem_2_1": {
@@ -15,7 +15,7 @@
       },
       "theorem_2_3": {
         "passed": true,
-        "orthogonality_residual": 9.546056389808655e-09
+        "orthogonality_residual": 9.778887033462524e-09
       },
       "theorem_2_4": {
         "passed": true,
@@ -32,7 +32,7 @@
       "theorem_2_6": {
         "passed": true,
         "spherical_radial_drift": 0.0,
-        "cascade_orthogonality_error": 9.778887033462524e-09
+        "cascade_orthogonality_error": 7.566995918750763e-09
       },
       "theorem_2_7": {
         "passed": true,
@@ -47,8 +47,8 @@
         "tangent_orthogonality_residual": 9.313225746154785e-09,
         "equilibrium_flux_confinement_error": 2.0926244070906819e-10,
         "parity_tie_break_margin": 0.475,
-        "parity_flux_confinement_residual": 7.450580596923828e-09,
-        "flux_conservation": 7.450580596923828e-09
+        "parity_flux_confinement_residual": 8.847564458847046e-09,
+        "flux_conservation": 8.847564458847046e-09
       }
     },
     "all_theorems_verified": true,
@@ -98,12 +98,12 @@
       },
       "K_8": {
         "max_spherical_radial_drift": 0.0,
-        "max_tangent_orthogonality_error": 9.313225746154785e-09,
+        "max_tangent_orthogonality_error": 7.450580596923828e-09,
         "passed": true
       },
       "K_16": {
         "max_spherical_radial_drift": 0.0,
-        "max_tangent_orthogonality_error": 9.66247171163559e-09,
+        "max_tangent_orthogonality_error": 8.381903171539307e-09,
         "passed": true
       }
     },
@@ -2549,7 +2549,7 @@
   },
   "stylo_diagnostic_bridge": {
     "bridge_version": "v0.3.0",
-    "timestamp": "2026-10-22T09:03:38Z",
+    "timestamp": "2026-10-22T10:34:44Z",
     "hardware_invariants": {
       "max_heap_ceiling_mb": 3.5,
       "active_l3_resident_mb": 2.33,
@@ -2557,19 +2557,19 @@
       "target_frame_rate_fps": 240.0
     },
     "overall_metrics": {
-      "mota": 0.996,
+      "mota": 1.0,
       "bmhd_stylo_id_swaps": 0,
       "legacy_kalman_iou_swaps": 6,
-      "scenario04_pellet_core_deposition_rmse_px": 0.27,
-      "scenario05_flare_washout_rejection_rate": 0.9996468926553672,
+      "scenario04_pellet_core_deposition_rmse_px": 0.34,
+      "scenario05_flare_washout_rejection_rate": 1.0,
       "scenario05_nozzle_throttle_gain": 0.6599,
-      "single_core_fps": 343.5,
-      "frame_latency_us": 141.6,
+      "single_core_fps": 661.0,
+      "frame_latency_us": 94.5,
       "combined_arena_heap_mb": 2.33,
       "bridge_buffer_overhead_kb": 32.5,
       "post_mask_mad_noise_floor": 0.002432,
       "zero_per_frame_growth_passed": true,
-      "phi_inv_skip_rate_pct": 30.5,
+      "phi_inv_skip_rate_pct": 100.0,
       "monte_carlo_max_false_trigger_pct": 0.0
     },
     "monte_carlo_gate_audit": {
@@ -2644,7 +2644,7 @@
     "scenarios": {
       "01_issan_nonsym_solovev_tau0": {
         "drift_parity_recovered": true,
-        "tangent_orthogonality_residual": 7.450580596923828e-09,
+        "tangent_orthogonality_residual": 9.255018085241318e-09,
         "id_swaps": 0,
         "mota": 1.0
       },
@@ -2663,18 +2663,18 @@
       "04_tokamak_elm_pellet_4d": {
         "pellet_elm_crossing_swaps": 0,
         "legacy_swaps": 3,
-        "deposition_depth_rmse_px": 0.27,
+        "deposition_depth_rmse_px": 0.34,
         "bremsstrahlung_glare_rejected": true,
         "mota": 1.0
       },
       "05_beltrami_plasma_spallation_torch": {
-        "molten_glass_flare_rejection_rate": 0.9996468926553672,
+        "molten_glass_flare_rejection_rate": 1.0,
         "micro_spallation_spike_preservation": 1.0,
         "throttle_gain_actual": 0.6599,
         "throttle_gain_expected": 0.6599,
         "throttle_error": 0.0,
         "slew_cmd_active": true,
-        "mota": 0.9791666666666666
+        "mota": 1.0
       }
     }
   }

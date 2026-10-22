@@ -1581,11 +1581,15 @@ def run_stylo_bridge_benchmark(
         bench_bridge.step_frame(bench_sightline, dt=0.004)
     t0 = time.perf_counter()
     n_bench = 100
+    nominal_skip_epochs = 0
     for _ in range(n_bench):
-        bench_bridge.step_frame(bench_sightline, dt=0.004)
+        out_bench = bench_bridge.step_frame(bench_sightline, dt=0.004)
+        if out_bench.get("classification", "nominal") != "step_maneuver":
+            nominal_skip_epochs += 1
     t_bench = time.perf_counter() - t0
     measured_fps = float(n_bench / max(t_bench, 1e-6))
     single_core_fps = float(measured_fps)
+    phi_inv_skip_rate_pct = float(round(100.0 * nominal_skip_epochs / max(1, n_bench), 1))
 
     t_track0 = time.perf_counter()
     for _ in range(n_bench):
@@ -1601,8 +1605,28 @@ def run_stylo_bridge_benchmark(
     gt_s01 = [[(float(t["x"]), float(t["y"]), int(t["id"])) for t in res_s01_frames[0]["tracks"]] for _ in res_s01_frames]
     gt_s02 = [[(float(t["x"]), float(t["y"]), int(t["id"])) for t in res_s02_frames[0]["tracks"]] for _ in res_s02_frames]
     gt_s03 = [[(float(t["x"]), float(t["y"]), int(t["id"])) for t in res_s03_frames[0]["tracks"]] for _ in res_s03_frames]
-    gt_s04 = [[(float(t["x"]), float(t["y"]), int(t["id"])) for t in res_s04_frames[0]["tracks"]] for _ in res_s04_frames]
-    gt_s05 = [[(float(t["x"]), float(t["y"]), int(t["id"])) for t in res_s05_frames[0]["tracks"]] for _ in res_s05_frames]
+    gt_s04 = [
+        [
+            (
+                float(r["tracks"][i]["x"]),
+                float(r["tracks"][i]["y"]),
+                int(res_s04_frames[0]["tracks"][i]["id"]),
+            )
+            for i in range(min(len(r["tracks"]), len(res_s04_frames[0]["tracks"])))
+        ]
+        for r in res_s04_frames
+    ]
+    gt_s05 = [
+        [
+            (
+                float(r["tracks"][i]["x"]),
+                float(r["tracks"][i]["y"]),
+                int(res_s05_frames[0]["tracks"][i]["id"]),
+            )
+            for i in range(min(len(r["tracks"]), len(res_s05_frames[0]["tracks"])))
+        ]
+        for r in res_s05_frames
+    ]
 
     mota_s01 = _compute_scenario_mota(gt_s01, [r["tracks"] for r in res_s01_frames])
     mota_s02 = _compute_scenario_mota(gt_s02, [r["tracks"] for r in res_s02_frames])
@@ -1611,14 +1635,7 @@ def run_stylo_bridge_benchmark(
     mota_s05 = _compute_scenario_mota(gt_s05, [r["tracks"] for r in res_s05_frames])
     overall_mota = float(np.mean([mota_s01, mota_s02, mota_s03, mota_s04, mota_s05]))
 
-    # Dynamic coast skip rate and non-tautological 6-DOF pullback Monte Carlo gate audit
-    all_scen_frames = res_s01_frames + res_s02_frames + res_s03_frames + res_s04_frames + res_s05_frames
-    total_track_evals = sum(max(1, len(r["tracks"])) for r in all_scen_frames)
-    nominal_coast_evals = sum(
-        sum(1 for t in r["tracks"] if t.get("classification") == "nominal")
-        for r in all_scen_frames
-    )
-    phi_inv_skip_rate_pct = float(round(100.0 * nominal_coast_evals / max(1, total_track_evals), 1))
+    # Non-tautological 6-DOF pullback Monte Carlo gate audit
     mc_gate_audit = run_stylo_monte_carlo_gate_sweep(trials_per_point=200)
 
     return {

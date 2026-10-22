@@ -406,8 +406,8 @@ def test_scenario_05_torch_nozzle_throttling_and_slew():
 
 def test_scenarios_01_03_flux_locked():
     """
-    Assert generalized step_scenario_flux_locked maintains 0 track-ID swaps and
-    confinement cross-flux drift <= 1.0e-4 across Scenarios 01, 02, and 03.
+    Assert generalized step_scenario_flux_locked maintains >0 active tracks, 0 track-ID swaps,
+    and confinement cross-flux drift <= 1.0e-4 across Scenarios 01, 02, and 03.
     """
     bridge = BMHDStyloDiagnosticBridge()
     scenarios = build_all_scenarios()
@@ -420,6 +420,7 @@ def test_scenarios_01_03_flux_locked():
         s = scenarios[s_name]
         for f in range(4):
             res = bridge.step_scenario_flux_locked(s, frame_idx=f)
+            assert len(res["tracks"]) >= 1, f"Expected active tracks in {s_name} frame {f}, got 0"
             assert res["track_id_swaps"] == 0
             assert res["num_id_swaps"] == 0
             assert res["max_cross_flux_drift"] <= 1.0e-4
@@ -457,32 +458,50 @@ def test_telemetry_export_formats():
 def test_zero_cyclic_heap_growth_1000_frames_without_gc():
     """
     Assert that 1,000 multi-target frames with active collision triad evaluation
-    and slow-fast cascade ULP polish accumulate 0 ctypes reference cycles and
-    maintain exact 0.000e+00 radial drift and <= 1.0e-8 orthogonality error.
+    and slow-fast cascade ULP polish accumulate 0 ctypes reference cycles, < 2 KB
+    steady-state heap growth, and exact 0.000e+00 radial drift / <= 1.0e-8 orthogonality
+    across both numpy and rust backends.
     """
-    bridge = BMHDStyloDiagnosticBridge(backend="numpy")
+    probe = BMHDStyloDiagnosticBridge(backend="auto")
+    backends = ["numpy", "rust"] if probe.native_available else ["numpy"]
+
     f = np.zeros((128, 128), dtype=np.float32)
     f[64, 62] = 0.92
     f[64, 66] = 0.88
 
-    # Warm-up 10 frames
-    for _ in range(10):
-        bridge.step_frame(f, dt=0.004)
+    for bk in backends:
+        bridge = BMHDStyloDiagnosticBridge(backend=bk)
+        # Warm-up 15 frames
+        for _ in range(15):
+            bridge.step_frame(f, dt=0.004)
 
-    gc.collect()
-    gc_was_enabled = gc.isenabled()
-    gc.disable()
-    try:
-        for step in range(200):
-            res = bridge.step_frame(f, dt=0.004)
-            assert res["diagnostics"]["radial_drift"] == 0.0
-            assert res["diagnostics"]["max_orthogonality_error"] <= 1.0e-8
-        # Verify zero cyclic garbage created during hot loop
-        collected = gc.collect()
-        assert collected == 0, f"Expected 0 cyclic objects collected, got {collected}"
-    finally:
-        if gc_was_enabled:
-            gc.enable()
+        gc.collect()
+        gc_was_enabled = gc.isenabled()
+        gc.disable()
+        try:
+            for _ in range(1000):
+                res = bridge.step_frame(f, dt=0.004)
+                assert res["diagnostics"]["radial_drift"] == 0.0
+                assert res["diagnostics"]["max_orthogonality_error"] <= 1.0e-8
+            collected = gc.collect()
+            assert collected == 0, f"[{bk}] Expected 0 cyclic objects collected, got {collected}"
+        finally:
+            if gc_was_enabled:
+                gc.enable()
+
+        # Verify steady-state heap growth < 2048 B with tracemalloc
+        tracemalloc.start()
+        for _ in range(10):
+            bridge.step_frame(f, dt=0.004)
+        gc.collect()
+        snap1 = tracemalloc.take_snapshot()
+        for _ in range(100):
+            bridge.step_frame(f, dt=0.004)
+        gc.collect()
+        snap2 = tracemalloc.take_snapshot()
+        tracemalloc.stop()
+        growth_bytes = sum(s.size_diff for s in snap2.compare_to(snap1, "lineno"))
+        assert growth_bytes < 2048, f"[{bk}] Steady-state heap growth {growth_bytes} B >= 2048 B"
 
 
 # =============================================================================
@@ -493,18 +512,18 @@ def test_cfar_mad_zero_clipping_floor_guard_and_scale_invariance():
     """
     Verify:
     (a) Positive-sample CFAR/MAD floor prevents zero-clipping collapse when >= 50%
-        of pixels are masked or zero-clipped, rejecting sub-threshold clutter while
-        recovering true targets.
+        or >= 75% of pixels are masked or zero-clipped, rejecting sub-threshold clutter
+        while recovering true targets, and suppressing 0-target rectified noise.
     (b) [0, 1] and [0, 255] float32 frames produce identical Stage 1 medoids and
         Stage 2 continuity clock masks.
     """
     rng = np.random.default_rng(12345)
     frame_01 = rng.uniform(0.0, 0.03, size=(128, 128)).astype(np.float32)
-    # Mask out 60% of the frame so >= 50% of strided samples are zero
+    # Mask out 80% of the frame so < 64 strided samples are unmasked
     washout = np.zeros((128, 128), dtype=bool)
-    washout[:78, :] = True
+    washout[:102, :] = True
     # Inject a true high-salience target in the unmasked region
-    frame_01[100, 64] = 0.95
+    frame_01[114, 64] = 0.95
     frame_255 = (frame_01 * 255.0).astype(np.float32)
 
     b1 = BMHDStyloDiagnosticBridge(backend="numpy")
@@ -520,9 +539,14 @@ def test_cfar_mad_zero_clipping_floor_guard_and_scale_invariance():
     assert np.allclose(sal1, sal2, atol=1e-5)
     assert len(med1) == len(med2) >= 1
     assert abs(med1[0]["x"] - 64.0) <= 1.6
-    assert abs(med1[0]["y"] - 100.0) <= 1.6
-    # Background clutter should be suppressed (not 24 false-alarm medoids)
+    assert abs(med1[0]["y"] - 114.0) <= 1.6
     assert len(med1) <= 3
+
+    # Verify 0-target rectified Gaussian noise produces 0 false-alarm medoids
+    rect_noise = np.maximum(0.0, rng.normal(0.0, 0.04, size=(128, 128))).astype(np.float32)
+    empty_mask = np.zeros((128, 128), dtype=bool)
+    _, med_noise = b1._compute_stage1_salience_and_medoids(rect_noise, empty_mask, empty_mask)
+    assert len(med_noise) == 0
 
 
 # =============================================================================
@@ -532,23 +556,22 @@ def test_cfar_mad_zero_clipping_floor_guard_and_scale_invariance():
 def test_resolution_handoff_128_to_256():
     """
     Verify seamless track state continuity when transitioning from 128x128 frames
-    to higher-resolution 256x256 frames.
+    to higher-resolution 256x256 frames without manual state clearing.
     """
-    bridge = BMHDStyloDiagnosticBridge(backend="numpy")
-    f128 = np.zeros((128, 128), dtype=np.float32)
-    f128[60, 60] = 0.95
-    r1 = bridge.step_frame(f128, dt=0.004)
-    assert len(r1["tracks"]) >= 1
-    tids_128 = {t["id"] for t in r1["tracks"]}
+    for bk in ("numpy", "auto"):
+        bridge = BMHDStyloDiagnosticBridge(backend=bk)
+        f128 = np.zeros((128, 128), dtype=np.float32)
+        f128[60, 60] = 0.95
+        r1 = bridge.step_frame(f128, dt=0.004)
+        assert len(r1["tracks"]) >= 1
+        tids_128 = {t["id"] for t in r1["tracks"]}
 
-    # Simulate native-to-arbitrary resolution handoff by clearing active_tracks while preserving _last_native_tracks
-    bridge.active_tracks.clear()
-    f256 = np.zeros((256, 256), dtype=np.float32)
-    f256[60, 61] = 0.95
-    r2 = bridge.step_frame(f256, dt=0.004)
-    assert len(r2["tracks"]) >= 1
-    tids_256 = {t["id"] for t in r2["tracks"]}
-    assert tids_128.issubset(tids_256)
+        f256 = np.zeros((256, 256), dtype=np.float32)
+        f256[60, 61] = 0.95
+        r2 = bridge.step_frame(f256, dt=0.004)
+        assert len(r2["tracks"]) >= 1
+        tids_256 = {t["id"] for t in r2["tracks"]}
+        assert tids_128.issubset(tids_256)
 
 
 # =============================================================================
@@ -578,8 +601,9 @@ def test_non_tautological_6dof_pullback_monte_carlo_gate():
 def test_studio_ulp_polish_and_live_triad_wiring():
     """
     Verify that bmhd.studio embeds coordinate-wise IEEE-754 float32 ULP sphere polish
-    (stepSlowFastCascade), live evaluateTriadTieBreak, and resetCascadeState, and
-    execute the JS kernel in Node.js over 500 steps to assert radialDrift === 0.0.
+    (stepSlowFastCascade), live evaluateTriadTieBreak, resetCascadeState, and live
+    verifyFormalTheorems without artificial Math.min clamping, and execute the JS
+    kernel in Node.js over 500 steps to assert radialDrift === 0.0 and orthoErr <= 1e-8.
     """
     import shutil
     import subprocess
@@ -592,13 +616,21 @@ def test_studio_ulp_polish_and_live_triad_wiring():
     assert "this.ulpBufF32 = new Float32Array(ulpAb)" in html
     assert "this.ulpBufI32 = new Int32Array(ulpAb)" in html
     assert "this.cascadeTargetSq = sq0" in html
+    assert "Math.min(1.0e-9, maxOrthoErr)" not in html
 
     if shutil.which("node"):
         start = html.index("class TrackerArena")
         end = html.index("const CONFIG = {")
+        vf_start = html.index("function verifyFormalTheorems()")
+        vf_end = html.index("function exportTelemetryJSON()")
         js_code = (
-            "const CONFIG = { dt: 1.0 / 240.0 }; let arena = null;\n"
+            "const CONFIG = { dt: 1.0 / 240.0, rCollision: 64.0 };\n"
+            "const STATE = { scenarioId: 's04' };\n"
+            "const window = { BMHD_OFFLINE_SCENARIOS: { s04: { theorems: { theorem_2_6: { radial_drift: 999 } } } } };\n"
+            "let arena = null;\n"
             + html[start:end]
+            + "\n"
+            + html[vf_start:vf_end]
             + "\narena = new TrackerArena();\n"
             "for (let f = 0; f < 500; f++) {\n"
             "  arena.cascadeZHTemp[0] = Math.sin(f * 0.1) * 0.4;\n"
@@ -609,10 +641,14 @@ def test_studio_ulp_polish_and_live_triad_wiring():
             "}\n"
             "const gap = evaluateTriadTieBreak({x:60,y:64,vx:2,vy:0},{x:64,y:64,vx:-2,vy:0});\n"
             "if (!(gap > 0.18)) { process.exit(4); }\n"
+            "arena.tieBreakGap = gap;\n"
+            "const th = verifyFormalTheorems();\n"
+            "if (th.theorem_2_6.radial_drift !== 0.0 || !th.theorem_2_3.passed || th.theorem_2_2.tie_break_gap !== gap) { process.exit(6); }\n"
             "arena.resetCascadeState();\n"
-            "if (arena.radialDrift !== 0.0) { process.exit(5); }\n"
+            "if (arena.radialDrift !== 0.0 || arena.orthoErr !== 0.0) { process.exit(5); }\n"
         )
         proc = subprocess.run(["node", "-e", js_code], capture_output=True, text=True, check=False)
         assert proc.returncode == 0, f"Node JS verification failed (rc={proc.returncode}): {proc.stderr}"
+
 
 

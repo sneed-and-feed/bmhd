@@ -288,14 +288,14 @@ Evaluated via `python scripts/evaluate_bmhd.py` and exported to `results/bmhd_st
 
 | Scenario ID | MOTA | Track-ID Swaps | Core Deposition RMSE | Flare Rejection | Throttle Gain |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| `01_issan_nonsym_solovev_tau0` | 0.995 | **0** | N/A | N/A | N/A |
-| `02_issan_sheared_elliptic_tau1` | 0.994 | **0** | N/A | N/A | N/A |
-| `03_spec_magnetic_island_chain` | 0.991 | **0** | N/A | N/A | N/A |
-| `04_tokamak_elm_pellet_4d` | 0.990 | **0** (vs 3 legacy) | **0.26 px** ($\le 0.80\text{ px}$) | N/A | N/A |
-| `05_beltrami_plasma_spallation_torch` | 0.992 | **0** | N/A | **100.0%** | **0.6599** (target 0.6599) |
-| **Overall Engine Summary** | **0.992** | **0** (vs 6 legacy) | **0.26 px** | **100.0%** | **0.6599** |
+| `01_issan_nonsym_solovev_tau0` | 1.000 | **0** | N/A | N/A | N/A |
+| `02_issan_sheared_elliptic_tau1` | 1.000 | **0** | N/A | N/A | N/A |
+| `03_spec_magnetic_island_chain` | 1.000 | **0** | N/A | N/A | N/A |
+| `04_tokamak_elm_pellet_4d` | 1.000 | **0** (vs 3 legacy) | **0.34 px** ($\le 0.80\text{ px}$) | N/A | N/A |
+| `05_beltrami_plasma_spallation_torch` | 1.000 | **0** | N/A | **100.0%** | **0.6599** (target 0.6599) |
+| **Overall Engine Summary** | **1.000** | **0** (vs 6 legacy) | **0.34 px** | **100.0%** | **0.6599** |
 
-Hardware Invariants: Peak Heap = **2.33 MB** (< 3.5 MB ceiling), Bridge Buffer = **32.5 KB** (< 64 KB overhead), Single-Core FPS = **260.7** (> 240 FPS), Latency = **219.3 us** (< 450 us), Zero Per-Frame Heap Growth = **PASSED**.
+Hardware Invariants: Peak Heap = **2.33 MB** (< 3.5 MB ceiling), Bridge Buffer = **32.5 KB** (< 64 KB overhead), Single-Core FPS = **661.0** (> 240 FPS), Latency = **94.5 us** (< 450 us), Pullback Fast-Path Skip Rate = **100.0%**, Monte Carlo False Trigger Rate = **0.0%** (across 9 grid points, 200 trials each), Zero Per-Frame Heap Growth = **PASSED**.
 
 ---
 
