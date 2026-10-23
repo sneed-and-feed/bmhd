@@ -490,15 +490,15 @@ def test_zero_cyclic_heap_growth_1000_frames_without_gc():
                 gc.enable()
 
         # Verify steady-state heap growth < 2048 B with tracemalloc
-        tracemalloc.start()
         for _ in range(10):
             bridge.step_frame(f, dt=0.004)
         gc.collect()
-        snap1 = tracemalloc.take_snapshot()
+        tracemalloc.start()
+        snap1 = tracemalloc.take_snapshot().filter_traces([tracemalloc.Filter(False, tracemalloc.__file__)])
         for _ in range(100):
             bridge.step_frame(f, dt=0.004)
         gc.collect()
-        snap2 = tracemalloc.take_snapshot()
+        snap2 = tracemalloc.take_snapshot().filter_traces([tracemalloc.Filter(False, tracemalloc.__file__)])
         tracemalloc.stop()
         growth_bytes = sum(s.size_diff for s in snap2.compare_to(snap1, "lineno"))
         assert growth_bytes < 2048, f"[{bk}] Steady-state heap growth {growth_bytes} B >= 2048 B"

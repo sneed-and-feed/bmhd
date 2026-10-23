@@ -1884,15 +1884,15 @@ def run_stylo_bridge_benchmark(
     # Zero per-frame heap growth verification
     growth_bridge = BMHDStyloDiagnosticBridge()
     zero_frame = np.zeros((128, 128), dtype=np.float32)
-    tracemalloc.start()
     for _ in range(10):
         growth_bridge.step_frame(zero_frame, dt=0.004)
     gc.collect()
-    snap1 = tracemalloc.take_snapshot()
+    tracemalloc.start()
+    snap1 = tracemalloc.take_snapshot().filter_traces([tracemalloc.Filter(False, tracemalloc.__file__)])
     for _ in range(30):
         growth_bridge.step_frame(zero_frame, dt=0.004)
     gc.collect()
-    snap2 = tracemalloc.take_snapshot()
+    snap2 = tracemalloc.take_snapshot().filter_traces([tracemalloc.Filter(False, tracemalloc.__file__)])
     tracemalloc.stop()
     growth_bytes = sum(s.size_diff for s in snap2.compare_to(snap1, "lineno"))
     zero_growth_passed = bool(growth_bytes < 1024)

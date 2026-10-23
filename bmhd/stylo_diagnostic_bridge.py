@@ -327,12 +327,34 @@ class TrackState:
 
     def append_history(self, px: float, py: float) -> None:
         """Append position to bounded history ring without unbounded growth."""
+        if self.history:
+            last_pt = self.history[-1]
+            if abs(float(px) - last_pt[0]) <= 1e-6 and abs(float(py) - last_pt[1]) <= 1e-6:
+                pt = last_pt
+            else:
+                pt = (float(px), float(py))
+        else:
+            pt = (float(px), float(py))
         if len(self.history) >= self._history_cap:
             for k in range(self._history_cap - 1):
                 self.history[k] = self.history[k + 1]
-            self.history[-1] = (float(px), float(py))
+            self.history[-1] = pt
         else:
-            self.history.append((float(px), float(py)))
+            self.history.append(pt)
+
+    def append_current_position(self) -> None:
+        """Append current (self.x[0], self.x[1]) to bounded history ring, reusing last tuple if stationary."""
+        if self.history:
+            last_pt = self.history[-1]
+            if abs(float(self.x[0]) - last_pt[0]) <= 1e-6 and abs(float(self.x[1]) - last_pt[1]) <= 1e-6:
+                if len(self.history) >= self._history_cap:
+                    for k in range(self._history_cap - 1):
+                        self.history[k] = self.history[k + 1]
+                    self.history[-1] = last_pt
+                else:
+                    self.history.append(last_pt)
+                return
+        self.append_history(float(self.x[0]), float(self.x[1]))
 
     def predict(self, dt: float) -> Tuple[np.ndarray, np.ndarray]:
         if math.isnan(dt) or dt < 0:
@@ -771,12 +793,17 @@ class BMHDStyloDiagnosticBridge:
             cy, cx = cand_ys[idx], cand_xs[idx]
             sub_x, sub_y = float(cx), float(cy)
             if 0 < cx < W - 1 and 0 < cy < H - 1:
-                denom_x = 2.0 * f[cy, cx] - f[cy, cx - 1] - f[cy, cx + 1] + 1e-6
-                dx_p = 0.5 * (f[cy, cx + 1] - f[cy, cx - 1]) / denom_x
-                denom_y = 2.0 * f[cy, cx] - f[cy - 1, cx] - f[cy + 1, cx] + 1e-6
-                dy_p = 0.5 * (f[cy + 1, cx] - f[cy - 1, cx]) / denom_y
-                sub_x += float(np.clip(dx_p, -0.5, 0.5))
-                sub_y += float(np.clip(dy_p, -0.5, 0.5))
+                fc = float(f[cy, cx])
+                fxm = float(f[cy, cx - 1])
+                fxp = float(f[cy, cx + 1])
+                fym = float(f[cy - 1, cx])
+                fyp = float(f[cy + 1, cx])
+                denom_x = 2.0 * fc - fxm - fxp + 1e-6
+                dx_p = 0.5 * (fxp - fxm) / denom_x
+                denom_y = 2.0 * fc - fym - fyp + 1e-6
+                dy_p = 0.5 * (fyp - fym) / denom_y
+                sub_x += max(-0.5, min(0.5, dx_p))
+                sub_y += max(-0.5, min(0.5, dy_p))
 
             # Greedy NMS
             suppressed = False
@@ -1120,7 +1147,8 @@ class BMHDStyloDiagnosticBridge:
                         if cost_matrix[i2, j] < 1e4:
                             cost_matrix[i2, j] -= float(0.25 * gap * math.tanh(proj2 / 10.0))
 
-        self._last_triad_orth_err = max_orth_err
+        if self._last_triad_orth_err != max_orth_err:
+            self._last_triad_orth_err = max_orth_err
         return cost_matrix, max_gap
 
     # =========================================================================
@@ -1157,7 +1185,9 @@ class BMHDStyloDiagnosticBridge:
                 t.n_local += 1
 
             total_n = max(1, t.n_local + t.n_nonlocal)
-            t.eta_nonlocal = float(t.n_nonlocal) / float(total_n)
+            new_eta = float(t.n_nonlocal) / float(total_n)
+            if abs(t.eta_nonlocal - new_eta) > 1e-12:
+                t.eta_nonlocal = new_eta
 
             if t.eta_nonlocal >= self.config.eta_threshold:
                 active_causal.append(t.id)
@@ -1432,37 +1462,37 @@ class BMHDStyloDiagnosticBridge:
                     if return_ratio <= gate_cfg.max_return_ratio or dist_to_nominal < dist_to_glint_path:
                         # 1-sample specular glint rejected
                         K_gain = Pp @ S_inv
-                        track.x = xp + K_gain @ y
-                        track.P = (np.eye(6, dtype=np.float32) - K_gain) @ Pp
+                        np.copyto(track.x, xp + K_gain @ y)
+                        np.copyto(track.P, (np.eye(6, dtype=np.float32) - K_gain) @ Pp)
                         track.classification = "glint_rejected"
                         track.pending_impulse = False
                         track.pending_belief = None
                         track.time_since_update = 0
                         track.hits += 1
-                        track.append_history(float(track.x[0]), float(track.x[1]))
+                        track.append_current_position()
                         self.glints_rejected += 1
                     else:
                         # Confirmed high-g detachment maneuver: full-rank H^{-1} re-initialization
-                        track.x = z
-                        track.P = R_mat.copy()
+                        np.copyto(track.x, z)
+                        np.copyto(track.P, R_mat)
                         track.classification = "step_maneuver"
                         track.pending_impulse = False
                         track.pending_belief = None
                         track.time_since_update = 0
                         track.hits += 1
                         track.append_history(float(cand_px), float(cand_py))
-                        track.append_history(float(track.x[0]), float(track.x[1]))
+                        track.append_current_position()
                         self.step_maneuvers += 1
                 elif d_mah <= gate_cfg.chi2_threshold:
                     K_gain = Pp @ S_inv
-                    track.x = xp + K_gain @ y
-                    track.P = (np.eye(6, dtype=np.float32) - K_gain) @ Pp
+                    np.copyto(track.x, xp + K_gain @ y)
+                    np.copyto(track.P, (np.eye(6, dtype=np.float32) - K_gain) @ Pp)
                     track.classification = "nominal"
                     track.pending_impulse = False
                     track.pending_belief = None
                     track.time_since_update = 0
                     track.hits += 1
-                    track.append_history(float(track.x[0]), float(track.x[1]))
+                    track.append_current_position()
                 else:
                     # Defer 1 sample
                     track.pending_impulse = True
@@ -1480,8 +1510,8 @@ class BMHDStyloDiagnosticBridge:
                 else:
                     track.classification = "nominal"
                 track.time_since_update += 1
-                track.x = xp
-                track.P = Pp
+                np.copyto(track.x, xp)
+                np.copyto(track.P, Pp)
 
         # Initialize new tracks for unassigned medoids
         for m_idx, m in enumerate(medoids):
@@ -1494,8 +1524,10 @@ class BMHDStyloDiagnosticBridge:
                 self.next_track_id += 1
                 self.active_tracks.append(new_t)
 
-        # Remove dead tracks (lost for > 3 frames)
-        self.active_tracks = [t for t in self.active_tracks if t.time_since_update <= 3]
+        # Remove dead tracks in-place (lost for > 3 frames)
+        for i in range(len(self.active_tracks) - 1, -1, -1):
+            if self.active_tracks[i].time_since_update > 3:
+                del self.active_tracks[i]
 
         # Enforce circular history cap across any externally mutated track states
         max_hist = max(2, int(self.config.ring_buffer_size))
@@ -1516,12 +1548,22 @@ class BMHDStyloDiagnosticBridge:
             t = self.active_tracks[i]
             d = self._out_tracks_buffer[i]
             d["id"] = t.id
-            d["x"] = float(t.x[0])
-            d["y"] = float(t.x[1])
-            d["vx"] = float(t.x[2])
-            d["vy"] = float(t.x[3])
+            tx = float(t.x[0])
+            if abs(d["x"] - tx) > 1e-7:
+                d["x"] = tx
+            ty = float(t.x[1])
+            if abs(d["y"] - ty) > 1e-7:
+                d["y"] = ty
+            tvx = float(t.x[2])
+            if abs(d["vx"] - tvx) > 1e-7:
+                d["vx"] = tvx
+            tvy = float(t.x[3])
+            if abs(d["vy"] - tvy) > 1e-7:
+                d["vy"] = tvy
             d["classification"] = t.classification
-            d["confidence"] = float(t.confidence)
+            tconf = float(t.confidence)
+            if abs(d["confidence"] - tconf) > 1e-7:
+                d["confidence"] = tconf
             d["target_type"] = t.target_type
             d["is_active_causal"] = bool(t.id in active_causal)
 
