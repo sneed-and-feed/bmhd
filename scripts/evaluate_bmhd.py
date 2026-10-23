@@ -1,13 +1,13 @@
 """
-scripts/evaluate_bmhd.py: Master Benchmark Evaluation Runner for BMHD v0.3.0.
+scripts/evaluate_bmhd.py: Master Benchmark Evaluation Runner for BMHD v0.4.0.
 
 Evaluates all 5 canonical scenarios (01 to 05) across:
-1. Mode A: Analytical forward & operator verification of Theorems 2.1–2.7
+1. Mode A: Analytical forward & operator verification of Theorems 2.1–2.10
    (0.00e+0 skew-symmetry, 0.000e+00 radial flux escape, <= 1.0e-8 tangent orthogonality,
     0.00e+0 homotopy reduction at tau0=tau1=0, 1.0000 clean spike recovery under 10% glare,
     <= 1.14e-13 SO(6) rotor conservation) + arXiv:2610.07304v1 analytical invariants.
 2. Mode B: Blind sparse-chord & noisy tomography reconstruction at SNR = 20 dB (zero target leakage)
-   comparing 6 baselines + BlindBMHD (7 total methods).
+   comparing 7 baselines + BlindBMHD (8 total methods).
 3. Robustness Sweeps:
    - SNR in {inf, 20, 10, 5 dB}
    - Separatrix mispick jitter in {0, 1, 2, 3 voxels}
@@ -74,7 +74,7 @@ def main() -> int:
     args = parser.parse_args()
 
     print("=" * 80)
-    print("BMHD v0.3.0: 3D/4D Beltrami MHD & Non-Symmetric Stellarator Evaluation Suite")
+    print("BMHD v0.4.0: 3D/4D Beltrami MHD & Non-Symmetric Stellarator Evaluation Suite")
     print("=" * 80)
 
     # 1. Build all 5 scenarios
@@ -152,7 +152,7 @@ def main() -> int:
 
     # 5. Assemble Summary JSON Payloads
     eval_summary = {
-        "benchmark_version": "v0.3.0",
+        "benchmark_version": "v0.4.0",
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "mode_a_formal_theorems": mode_a_res,
         "mode_b_summary": {
@@ -165,7 +165,7 @@ def main() -> int:
     }
 
     blind_summary = {
-        "benchmark_version": "v0.3.0",
+        "benchmark_version": "v0.4.0",
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "operating_snr_db": 20.0,
         "zero_target_leakage": True,
@@ -176,6 +176,7 @@ def main() -> int:
             "ShellPartitionedKriging",
             "CerfonFreidbergEquilibrium",
             "MinimumFisherTomography",
+            "NonNegativeLogGP",
             "BlindBMHD",
         ],
         "scenarios": mode_b_scenarios,

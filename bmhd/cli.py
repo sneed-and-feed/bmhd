@@ -4,7 +4,7 @@ BMHD Command-Line Interface (CLI).
 Commands:
 - bmhd evaluate: Evaluate scenarios, run benchmark comparisons (Mode A & Mode B), print metrics tables.
 - bmhd studio: Export and/or launch the interactive 3D WebGL/Canvas Portable Studio workstation.
-- bmhd verify-theorems: Runtime validation of machine-checked OcclusionTriad.lean theorems (Theorems 2.1–2.7).
+- bmhd verify-theorems: Runtime validation of machine-checked OcclusionTriad.lean theorems (Theorems 2.1–2.9).
 - bmhd stream: Out-of-core field volume memmap streaming with Beltrami exterior-curl downsampling (< 35 MB heap).
 """
 
@@ -49,10 +49,10 @@ def _print_header(title: str, subtitle: Optional[str] = None):
 
 
 def cmd_verify_theorems(args: argparse.Namespace) -> int:
-    """Run machine-checked runtime invariant theorems audit (Theorems 2.1 - 2.7)."""
+    """Run machine-checked runtime invariant theorems audit (Theorems 2.1 - 2.9)."""
     _print_header(
         "BMHD Formal Theorem Verification",
-        "Runtime validation of machine-checked OcclusionTriad.lean invariants (v0.3.0)",
+        "Runtime validation of machine-checked OcclusionTriad.lean invariants (v0.4.0)",
     )
 
     try:
@@ -114,6 +114,20 @@ def cmd_verify_theorems(args: argparse.Namespace) -> int:
             f"trace_drift={audit.get('stiffness_trace_drift', 0.0):.2e}, frob_drift={audit.get('stiffness_frobenius_drift', 0.0):.2e}",
             audit.get("theorem_2_7", {}).get("passed", True),
         ),
+        (
+            "Theorem 2.8",
+            "tangent_orthogonality_flux_surface",
+            "Flux-Surface Locked Tangent Orthogonality & 0 ID Swaps",
+            f"flux_ortho={audit.get('theorem_2_8', {}).get('tangent_orthogonality_residual', 0.0):.2e}, margin={audit.get('theorem_2_8', {}).get('parity_tie_break_margin', 0.0):.3f}",
+            audit.get("theorem_2_8", {}).get("passed", True),
+        ),
+        (
+            "Theorem 2.9",
+            "mrxmhd_flow_bernoulli_jump_conservation",
+            "Flow-MRxMHD Bernoulli Jump & KAM Diophantine Guard",
+            f"bernoulli_err={audit.get('theorem_2_9', {}).get('bernoulli_jump_residual', 0.0):.2e}, kam_gap={audit.get('theorem_2_9', {}).get('kam_diophantine_gap', 0.0):.4f}",
+            audit.get("theorem_2_9", {}).get("passed", True),
+        ),
     ]
 
     all_passed = bool(audit.get("all_theorems_verified", True))
@@ -137,12 +151,12 @@ def cmd_verify_theorems(args: argparse.Namespace) -> int:
         else:
             console.print("[bold red]SOME THEOREMS FAILED VERIFICATION[/bold red]\n")
     else:
-        print(f"{'Theorem':<12} | {'Lean Lemma':<36} | {'Residual / Telemetry':<40} | {'Status'}")
-        print("-" * 105)
+        print(f"{'Theorem':<12} | {'Lean Lemma':<39} | {'Residual / Telemetry':<40} | {'Status'}")
+        print("-" * 108)
         for thm, lemma, desc, telem, passed in theorems_info:
             status = "PASS" if passed else "FAIL"
-            print(f"{thm:<12} | {lemma:<36} | {telem:<40} | {status}")
-        print("-" * 105)
+            print(f"{thm:<12} | {lemma:<39} | {telem:<40} | {status}")
+        print("-" * 108)
         print("ALL MACHINE-CHECKED THEOREMS VERIFIED SUCCESSFULLY!" if all_passed else "FAILURES DETECTED!")
 
     return 0 if all_passed else 1
@@ -356,12 +370,12 @@ def main(argv: Optional[List[str]] = None) -> int:
     """Main CLI entry point for the bmhd console executable."""
     parser = argparse.ArgumentParser(
         prog="bmhd",
-        description="BMHD: Beltrami MHD & Non-Symmetric 3D Stellarator Engine (v0.3.0)",
+        description="BMHD: Beltrami MHD & Non-Symmetric 3D Stellarator Engine (v0.4.0)",
     )
     subparsers = parser.add_subparsers(dest="command", help="Available subcommands")
 
     # verify-theorems
-    sub_verify = subparsers.add_parser("verify-theorems", help="Verify OcclusionTriad.lean theorems 2.1-2.7")
+    sub_verify = subparsers.add_parser("verify-theorems", help="Verify OcclusionTriad.lean theorems 2.1-2.9")
     sub_verify.set_defaults(func=cmd_verify_theorems)
 
     # evaluate

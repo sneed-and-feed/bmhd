@@ -1,8 +1,8 @@
 """
-tests/test_bmhd.py: Comprehensive Verification Suite for BMHD v0.3.0.
+tests/test_bmhd.py: Comprehensive Verification Suite for BMHD v0.4.0.
 
 Verifies:
-1. test_theorems_mode_a: Machine-checked proof of Theorems 2.1–2.7 with exact 0.00e+0 residuals.
+1. test_theorems_mode_a: Machine-checked proof of Theorems 2.1–2.9 with exact 0.00e+0 residuals.
 2. test_homotopy_zero_reduction: Exact 0.00e+0 reduction at tau_0 = tau_1 = 0.
 3. test_field_line_radial_drift: Strict 0.000e+00 radial escape over K in {1, 4, 8, 16} steps.
 4. test_so6_rotor_invariance: Trace and Frobenius norm drift <= 1.14e-13.
@@ -10,9 +10,12 @@ Verifies:
 6. test_io_las_dev_segy: CWLS LAS 2.0, .dev directional surveys, and memmap streaming.
 7. test_slab_bit_identity: Z-slab chunk sizes (8, 16, 32) yield bit-identical predictions (< 1e-6).
 8. test_heap_memory_ceiling: Peak heap memory strictly < 35 MB under tracemalloc.
-9. test_mode_b_blind_reconstruction: Blind sparse-chord reconstruction at SNR = 20 dB across 7 methods.
-10. test_mode_b_blind_bmhd_dominance: BlindBMHD outperforms all 6 competing baselines on Whole-Torus RMSE & Edge Fidelity.
-11. test_studio_v020_export_and_controls: Portable HTML5/WebGL Studio v0.3.0 3D view controls, multi-tab diagnostics, and zero-network isolation.
+9. test_mode_b_blind_reconstruction: Blind sparse-chord reconstruction at SNR = 20 dB across 8 methods.
+10. test_mode_b_blind_bmhd_dominance: BlindBMHD outperforms all 7 competing baselines across all 4 metrics on Scenarios 01 & 02.
+11. test_studio_v020_export_and_controls: Portable HTML5/WebGL Studio v0.4.0 3D view controls, multi-tab diagnostics, and zero-network isolation.
+12. test_pillar_b_flow_mrxmhd_and_kam_guard: Flow-MRxMHD Theorem 2.9 invariants and SteppedPressureBeltramiTriad.evaluate_volume.
+13. test_pillar_c_near_axis_and_sheared_iota: Non-stellarator-symmetric near-axis twist sigma(0), magnetic well V''(psi), maximum-J, and Family 2 shear.
+14. test_pillar_a_nonnegative_log_gp_and_change_point: NonNegativeLogGP strict [0, 1] bounds and BlindBMHD change-point kernel.
 """
 
 from __future__ import annotations
@@ -54,17 +57,18 @@ from bmhd.benchmark import (
     run_mode_b_evaluation,
     TunedAnisotropicKriging,
     MinimumFisherTomography,
+    NonNegativeLogGP,
     BlindBMHD,
 )
 
 
 # =============================================================================
-# 1. Mode A: Analytical Forward & Operator Verification of Theorems 2.1–2.7
+# 1. Mode A: Analytical Forward & Operator Verification of Theorems 2.1–2.9
 # =============================================================================
 
 def test_theorems_mode_a():
     """
-    Assert Theorems 2.1–2.7 pass with required residuals:
+    Assert Theorems 2.1–2.9 pass with required residuals:
     - Th 2.1 (Stepped-Pressure Skew-Symmetry): antisymmetry_error == 0.00e+0
     - Th 2.2 (Radial Field-Line Invariance / Tie-Break): formula_error == 0.00e+0
     - Th 2.3 (4D Tangent-Normal Orthogonality): drift <= 1.0e-8
@@ -72,6 +76,8 @@ def test_theorems_mode_a():
     - Th 2.5 (Beltrami Exterior-Curl Spike Recovery): >= 0.999 & washout_rejection == 1.0
     - Th 2.6 (Continuous Flux Boundary Pinning): spherical_radial_drift == 0.000e+00
     - Th 2.7 (Kelvin-Mandel SO(6) Rotor): trace & Frobenius drift <= 1.14e-13
+    - Th 2.8 (Flux-Surface-Locked Tangent Orthogonality & SE(2) Kinematics)
+    - Th 2.9 (Relaxed-Flow MRxMHD Bernoulli Jump & Cross-Helicity Collinearity)
     """
     torch.manual_seed(42)
     model = BMHDModel()
@@ -130,6 +136,16 @@ def test_theorems_mode_a():
     assert th8["cross3_isomorphism_error"] <= 1.0e-7
     assert th8["equilibrium_flux_confinement_error"] <= 1.0e-6
     assert th8["parity_tie_break_margin"] > 0.0
+
+    # Theorem 2.9 (Relaxed-Flow MRxMHD Bernoulli Jump & Cross-Helicity Collinearity)
+    assert "theorem_2_9" in audit
+    th9 = audit["theorem_2_9"]
+    assert th9["passed"] is True
+    assert th9["collinear_lorentz_error"] == 0.0
+    assert th9["bernoulli_jump_residual"] == 0.0
+    assert th9["zero_flow_homotopy_error"] == 0.0
+    assert th9["kam_sub_alfvenic_margin"] > 0.0
+    assert th9["kam_diophantine_gap"] > 0.0
 
     # Also verify full Mode A suite runner
     mode_a_summary = run_mode_a_evaluation()
@@ -425,7 +441,7 @@ def test_heap_memory_ceiling():
     tracemalloc.start()
     tracemalloc.reset_peak()
 
-    # Run Mode B reconstruction with 7 baselines
+    # Run Mode B reconstruction with 8 baselines
     res_b = run_mode_b_evaluation(sc, snr_db=20.0, chunk_z=16)
 
     current, peak = tracemalloc.get_traced_memory()
@@ -440,19 +456,20 @@ def test_heap_memory_ceiling():
 
 
 # =============================================================================
-# 9. Mode B: Blind Reconstruction at SNR = 20 dB across 7 Methods
+# 9. Mode B: Blind Reconstruction at SNR = 20 dB across 8 Methods
 # =============================================================================
 
 def test_mode_b_blind_reconstruction():
     """
-    Assert Mode B blind reconstruction at SNR = 20 dB succeeds across all 7 methods:
+    Assert Mode B blind reconstruction at SNR = 20 dB succeeds across all 8 methods:
     1. NaiveBox
     2. TunedAnisotropicKriging
     3. SymmetricFourierVMECBaseline
     4. ShellPartitionedKriging
     5. CerfonFreidbergEquilibrium
     6. MinimumFisherTomography
-    7. BlindBMHD
+    7. NonNegativeLogGP
+    8. BlindBMHD
     Verifies that all metrics are finite and bounded in expected ranges.
     """
     scenarios = build_all_scenarios()
@@ -461,7 +478,7 @@ def test_mode_b_blind_reconstruction():
     res_b = run_mode_b_evaluation(sc, snr_db=20.0, chunk_z=16)
 
     methods = res_b["methods"]
-    assert len(methods) == 7
+    assert len(methods) == 8
 
     expected_methods = [
         "NaiveBox",
@@ -470,6 +487,7 @@ def test_mode_b_blind_reconstruction():
         "ShellPartitionedKriging",
         "CerfonFreidbergEquilibrium",
         "MinimumFisherTomography",
+        "NonNegativeLogGP",
         "BlindBMHD",
     ]
     for m in expected_methods:
@@ -487,9 +505,9 @@ def test_mode_b_blind_reconstruction():
 
     # BlindBMHD should achieve bounded unseen 3D chords RMSE and whole torus RMSE
     bmhd_metrics = methods["BlindBMHD"]
-    assert bmhd_metrics["unseen_3d_chords_rmse"] < 0.15
-    assert bmhd_metrics["whole_torus_psi_rmse"] < 0.15
-    assert bmhd_metrics["bounded_edge_gradient_fidelity"] > 0.50
+    assert bmhd_metrics["unseen_3d_chords_rmse"] < 0.05
+    assert bmhd_metrics["whole_torus_psi_rmse"] < 0.05
+    assert bmhd_metrics["bounded_edge_gradient_fidelity"] > 0.80
 
 
 # =============================================================================
@@ -498,36 +516,43 @@ def test_mode_b_blind_reconstruction():
 
 def test_mode_b_blind_bmhd_dominance():
     """
-    Assert that BlindBMHD achieves the lowest whole_torus_psi_rmse and highest
-    bounded_edge_gradient_fidelity across all 7 Mode B methods on Scenario 01.
+    Assert that BlindBMHD achieves #1 across all 4 accuracy metrics
+    (lowest loco_rmse, lowest unseen_3d_chords_rmse, lowest whole_torus_psi_rmse,
+    and highest bounded_edge_gradient_fidelity) across all 8 Mode B methods
+    on both Scenario 01 and Scenario 02.
     """
     scenarios = build_all_scenarios()
-    sc = scenarios["01_issan_nonsym_solovev_tau0"]
-    res_b = run_mode_b_evaluation(sc, snr_db=20.0, chunk_z=16)
-    methods = res_b["methods"]
+    for scen_key in ("01_issan_nonsym_solovev_tau0", "02_issan_sheared_elliptic_tau1"):
+        sc = scenarios[scen_key]
+        res_b = run_mode_b_evaluation(sc, snr_db=20.0, chunk_z=16)
+        methods = res_b["methods"]
 
-    bmhd_psi_rmse = methods["BlindBMHD"]["whole_torus_psi_rmse"]
-    bmhd_edge_fid = methods["BlindBMHD"]["bounded_edge_gradient_fidelity"]
-
-    for name, m in methods.items():
-        if name == "BlindBMHD":
-            continue
-        assert bmhd_psi_rmse < m["whole_torus_psi_rmse"], (
-            f"BlindBMHD psi RMSE ({bmhd_psi_rmse:.4f}) not lower than {name} ({m['whole_torus_psi_rmse']:.4f})"
-        )
-        assert bmhd_edge_fid > m["bounded_edge_gradient_fidelity"], (
-            f"BlindBMHD edge fidelity ({bmhd_edge_fid:.4f}) not higher than {name} ({m['bounded_edge_gradient_fidelity']:.4f})"
-        )
+        bmhd_m = methods["BlindBMHD"]
+        for name, m in methods.items():
+            if name == "BlindBMHD":
+                continue
+            assert bmhd_m["loco_rmse"] < m["loco_rmse"], (
+                f"[{scen_key}] BlindBMHD loco RMSE ({bmhd_m['loco_rmse']:.4f}) not lower than {name} ({m['loco_rmse']:.4f})"
+            )
+            assert bmhd_m["unseen_3d_chords_rmse"] < m["unseen_3d_chords_rmse"], (
+                f"[{scen_key}] BlindBMHD unseen RMSE ({bmhd_m['unseen_3d_chords_rmse']:.4f}) not lower than {name} ({m['unseen_3d_chords_rmse']:.4f})"
+            )
+            assert bmhd_m["whole_torus_psi_rmse"] < m["whole_torus_psi_rmse"], (
+                f"[{scen_key}] BlindBMHD psi RMSE ({bmhd_m['whole_torus_psi_rmse']:.4f}) not lower than {name} ({m['whole_torus_psi_rmse']:.4f})"
+            )
+            assert bmhd_m["bounded_edge_gradient_fidelity"] > m["bounded_edge_gradient_fidelity"], (
+                f"[{scen_key}] BlindBMHD edge fidelity ({bmhd_m['bounded_edge_gradient_fidelity']:.4f}) not higher than {name} ({m['bounded_edge_gradient_fidelity']:.4f})"
+            )
 
 
 # =============================================================================
-# 11. BMHD Studio v0.3.0: 3D View Controls, Multi-Tab Diagnostics & Offline HTML
+# 11. BMHD Studio v0.4.0: 3D View Controls, Multi-Tab Diagnostics & Offline HTML
 # =============================================================================
 
 def test_studio_v020_export_and_controls(tmp_path: Path):
     """
-    Verify BMHD Studio v0.3.0 serialization, 3D view controls, camera presets,
-    multi-tab 2D diagnostics, and zero-external-network single-file HTML export.
+    Verify BMHD Studio v0.4.0 serialization, 3D view controls, camera presets,
+    multi-tab 2D diagnostics, new near-axis/Flow-MRxMHD invariants, and zero-external-network HTML export.
     """
     import bmhd
     from bmhd.studio import (
@@ -536,8 +561,8 @@ def test_studio_v020_export_and_controls(tmp_path: Path):
         export_portable_html_studio,
     )
 
-    assert bmhd.__version__ == "0.3.0"
-    assert STUDIO_VERSION == "0.3.0"
+    assert bmhd.__version__ == "0.4.0"
+    assert STUDIO_VERSION == "0.4.0"
 
     payload = serialize_evaluation_payload("03_spec_magnetic_island_chain")
     assert payload["scenario_id"] == "03_spec_magnetic_island_chain"
@@ -556,10 +581,23 @@ def test_studio_v020_export_and_controls(tmp_path: Path):
         assert len(payload["radial_profiles"][k]) == 25
 
     assert "invariants" in payload
-    for k in ("enclosed_volume_m3", "beta_v_pct", "jacobian_det", "hamada_integral"):
+    for k in (
+        "enclosed_volume_m3",
+        "beta_v_pct",
+        "jacobian_det",
+        "hamada_integral",
+        "near_axis_sigma0",
+        "magnetic_well_d2v_dpsi2",
+        "second_adiabatic_j",
+        "iota_shear",
+        "mrxmhd_mach_max",
+        "kam_diophantine_gap",
+    ):
         assert k in payload["invariants"]
 
-    assert len(payload["baselines"]) == 7
+    assert len(payload["baselines"]) == 8
+    assert "theorem_2_9_flow_bernoulli_residual" in payload["theorems"]
+    assert payload["theorems"]["theorem_2_9_flow_bernoulli_residual"] == 0.0
 
     html_out = tmp_path / "test_studio.html"
     exported_path = export_portable_html_studio(str(html_out), scenarios={"03_spec_magnetic_island_chain": payload})
@@ -592,6 +630,11 @@ def test_studio_v020_export_and_controls(tmp_path: Path):
     assert "function injectUserChord(" in html_text
     assert "function updateProbeFromVoxel(" in html_text
     assert "CANONICAL_TAU_BY_SCENARIO" in html_text
+    assert "Lean 4 Thm 2.1-2.9: PASS" in html_text
+    assert "invSigma0" in html_text
+    assert "invMagWell" in html_text
+    assert "invJPar" in html_text
+    assert "invKamGap" in html_text
 
 
 def test_cli_commands_and_theorem_telemetry(capsys):
@@ -647,3 +690,119 @@ def test_stylo_bridge_benchmark_and_monte_carlo_gate_audit():
     assert om["zero_per_frame_growth_passed"] is True
 
 
+# =============================================================================
+# 12. Pillar B: Flow-MRxMHD Theorem 2.9 & KAM Existence Guard
+# =============================================================================
+
+def test_pillar_b_flow_mrxmhd_and_kam_guard():
+    """
+    Verify SteppedPressureBeltramiTriad Flow-MRxMHD invariants (Qu et al. arXiv:2001.06984,
+    arXiv:2108.02056, Kumar et al. arXiv:2209.05003) and evaluate_volume telemetry keys.
+    """
+    triad = SteppedPressureBeltramiTriad(
+        n_shells=4,
+        mu_values=(1.2, 0.8, -0.5, 0.3),
+        mach_values=(0.12, 0.08, 0.05, 0.02),
+        chunk_z=16,
+    )
+    inv = triad.verify_flow_mrxmhd_invariants()
+    assert inv["passed"] is True
+    assert inv["collinear_lorentz_error"] == 0.0
+    assert inv["bernoulli_jump_residual"] == 0.0
+    assert inv["zero_flow_homotopy_error"] == 0.0
+    assert inv["kam_sub_alfvenic_margin"] > 0.98
+    assert inv["kam_diophantine_gap"] > 0.04
+    assert inv["kam_admissible"] is True
+
+    # Verify super-Alfvenic Mach number is rejected
+    with pytest.raises(ValueError, match="sub-Alfvenic"):
+        SteppedPressureBeltramiTriad(n_shells=2, mu_values=(1.0, 0.5), mach_values=(1.05, 0.1))
+
+    # Verify evaluate_volume returns all new Flow-MRxMHD keys
+    psi_grid = np.linspace(0.0, 1.0, 32 * 24 * 24, dtype=np.float32).reshape(32, 24, 24)
+    B_grid = np.ones((3, 32, 24, 24), dtype=np.float32) * 2.5
+    p_grid = (1.0 - psi_grid) * 150.0
+    vol_res = triad.evaluate_volume(psi_grid, B_grid, p_grid)
+    for k in (
+        "stepped_p",
+        "stepped_B",
+        "shell_assignments",
+        "n_shells",
+        "effective_mu",
+        "mach_values",
+        "bernoulli_jump_residual",
+        "kam_admissible",
+        "min_kam_diophantine_gap",
+    ):
+        assert k in vol_res
+    assert vol_res["bernoulli_jump_residual"] == 0.0
+    assert vol_res["kam_admissible"] is True
+    assert vol_res["min_kam_diophantine_gap"] > 0.04
+
+
+# =============================================================================
+# 13. Pillar C: Near-Axis Twist sigma(0), Magnetic Well, Max-J & Family 2 Shear
+# =============================================================================
+
+def test_pillar_c_near_axis_and_sheared_iota():
+    """
+    Verify IssanNonSymmetricEquilibriumEngine Family 1 and Family 2 near-axis twist sigma(0),
+    magnetic well V''(psi) < 0, second adiabatic invariant J_parallel > 0, and radial shear.
+    """
+    # Family 1 active vs symmetric limit
+    eng1_asym = IssanNonSymmetricEquilibriumEngine(family=1, tau0=0.38)
+    inv1_asym = eng1_asym.verify_analytical_invariants()
+    assert abs(inv1_asym["near_axis_sigma0"]) > 0.30
+    assert inv1_asym["magnetic_well_d2v_dpsi2"] < 0.0
+    assert inv1_asym["second_adiabatic_j"] > 0.0
+    assert inv1_asym["iota_shear"] == 0.0
+
+    eng1_sym = IssanNonSymmetricEquilibriumEngine(family=1, tau0=0.0)
+    inv1_sym = eng1_sym.verify_analytical_invariants()
+    assert inv1_sym["near_axis_sigma0"] == 0.0
+
+    # Family 2 active vs symmetric limit
+    eng2_asym = IssanNonSymmetricEquilibriumEngine(family=2, tau1=0.42)
+    inv2_asym = eng2_asym.verify_analytical_invariants()
+    assert abs(inv2_asym["near_axis_sigma0"]) > 0.15
+    assert inv2_asym["magnetic_well_d2v_dpsi2"] < 0.0
+    assert inv2_asym["second_adiabatic_j"] > 0.0
+    assert inv2_asym["iota_shear"] > 1.5
+
+    eng2_sym = IssanNonSymmetricEquilibriumEngine(family=2, tau1=0.0)
+    inv2_sym = eng2_sym.verify_analytical_invariants()
+    assert inv2_sym["near_axis_sigma0"] == 0.0
+
+    # Verify Family 2 spatial iota profile has non-zero radial variation
+    x_arr = np.linspace(0.75, 1.25, 16)
+    y_arr = np.zeros(16)
+    z_arr = np.linspace(-0.15, 0.15, 16)
+    cart2 = eng2_asym.compute_cartesian(x_arr, y_arr, z_arr)
+    assert float(np.std(cart2["iota"])) > 0.01
+
+
+# =============================================================================
+# 14. Pillar A: NonNegativeLogGP Positivity & BlindBMHD Change-Point Kernel
+# =============================================================================
+
+def test_pillar_a_nonnegative_log_gp_and_change_point():
+    """
+    Verify NonNegativeLogGP enforces strict [0, 1] bounds without negative overshoot
+    and BlindBMHD change-point Beltrami GP achieves >80% edge fidelity on Scenario 01
+    and >70% edge fidelity on Scenario 02.
+    """
+    scenarios = build_all_scenarios()
+    sc1 = scenarios["01_issan_nonsym_solovev_tau0"]
+    sc2 = scenarios["02_issan_sheared_elliptic_tau1"]
+
+    log_gp = NonNegativeLogGP()
+    log_gp.fit(sc1.chords[:4], sc1.grid_shape)
+    pred_log_gp = log_gp.predict_3d(sc1.grid_shape, chunk_z=16)
+    assert pred_log_gp.shape == sc1.grid_shape
+    assert float(np.min(pred_log_gp)) >= 0.0
+    assert float(np.max(pred_log_gp)) <= 1.0
+
+    res1 = run_mode_b_evaluation(sc1, snr_db=20.0, chunk_z=16)
+    res2 = run_mode_b_evaluation(sc2, snr_db=20.0, chunk_z=16)
+    assert res1["methods"]["BlindBMHD"]["bounded_edge_gradient_fidelity"] > 0.80
+    assert res2["methods"]["BlindBMHD"]["bounded_edge_gradient_fidelity"] > 0.70

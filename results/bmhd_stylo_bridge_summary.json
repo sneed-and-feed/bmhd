@@ -1,6 +1,6 @@
 {
-  "bridge_version": "v0.3.0",
-  "timestamp": "2026-10-22T10:34:44Z",
+  "bridge_version": "v0.4.0",
+  "timestamp": "2026-10-23T02:12:44Z",
   "hardware_invariants": {
     "max_heap_ceiling_mb": 3.5,
     "active_l3_resident_mb": 2.33,
@@ -14,8 +14,8 @@
     "scenario04_pellet_core_deposition_rmse_px": 0.34,
     "scenario05_flare_washout_rejection_rate": 1.0,
     "scenario05_nozzle_throttle_gain": 0.6599,
-    "single_core_fps": 661.0,
-    "frame_latency_us": 94.5,
+    "single_core_fps": 535.9,
+    "frame_latency_us": 138.7,
     "combined_arena_heap_mb": 2.33,
     "bridge_buffer_overhead_kb": 32.5,
     "post_mask_mad_noise_floor": 0.002432,
@@ -95,7 +95,7 @@
   "scenarios": {
     "01_issan_nonsym_solovev_tau0": {
       "drift_parity_recovered": true,
-      "tangent_orthogonality_residual": 9.255018085241318e-09,
+      "tangent_orthogonality_residual": 7.450580596923828e-09,
       "id_swaps": 0,
       "mota": 1.0
     },

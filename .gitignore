@@ -30,3 +30,4 @@ ENV/
 .agents/
 
 ORIGINAL_REQUEST.md
+uv.lock
