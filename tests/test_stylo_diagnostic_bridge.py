@@ -93,11 +93,11 @@ def test_bridge_arena_memory_and_zero_growth():
     zero_bridge = BMHDStyloDiagnosticBridge()
 
     # Warmup
+    gc.collect()
+    tracemalloc.start()
     for _ in range(10):
         zero_bridge.step_frame(zero_frame, dt=0.004)
     gc.collect()
-
-    tracemalloc.start()
     snap1 = tracemalloc.take_snapshot()
     for _ in range(50):
         zero_bridge.step_frame(zero_frame, dt=0.004)
@@ -105,7 +105,10 @@ def test_bridge_arena_memory_and_zero_growth():
     snap2 = tracemalloc.take_snapshot()
     tracemalloc.stop()
 
-    growth_bytes = sum(s.size_diff for s in snap2.compare_to(snap1, "lineno"))
+    _tm_filter = [tracemalloc.Filter(False, "*tracemalloc*")]
+    growth_bytes = sum(
+        s.size_diff for s in snap2.filter_traces(_tm_filter).compare_to(snap1.filter_traces(_tm_filter), "lineno")
+    )
     # Snapshot internal bookkeeping is < 1024 B, zero algorithmic heap growth
     assert growth_bytes < 1024
 
@@ -490,17 +493,21 @@ def test_zero_cyclic_heap_growth_1000_frames_without_gc():
                 gc.enable()
 
         # Verify steady-state heap growth < 2048 B with tracemalloc
+        gc.collect()
+        tracemalloc.start()
         for _ in range(10):
             bridge.step_frame(f, dt=0.004)
         gc.collect()
-        tracemalloc.start()
-        snap1 = tracemalloc.take_snapshot().filter_traces([tracemalloc.Filter(False, tracemalloc.__file__)])
+        snap1 = tracemalloc.take_snapshot()
         for _ in range(100):
             bridge.step_frame(f, dt=0.004)
         gc.collect()
-        snap2 = tracemalloc.take_snapshot().filter_traces([tracemalloc.Filter(False, tracemalloc.__file__)])
+        snap2 = tracemalloc.take_snapshot()
         tracemalloc.stop()
-        growth_bytes = sum(s.size_diff for s in snap2.compare_to(snap1, "lineno"))
+        _tm_filter = [tracemalloc.Filter(False, "*tracemalloc*")]
+        growth_bytes = sum(
+            s.size_diff for s in snap2.filter_traces(_tm_filter).compare_to(snap1.filter_traces(_tm_filter), "lineno")
+        )
         assert growth_bytes < 2048, f"[{bk}] Steady-state heap growth {growth_bytes} B >= 2048 B"
 
 
