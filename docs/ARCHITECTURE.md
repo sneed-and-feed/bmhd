@@ -359,7 +359,32 @@ Hardware Invariants: Peak Heap = **2.33 MB** (< 3.5 MB ceiling), Bridge Buffer =
 
 ---
 
-## 11. References & BibTeX Bibliography
+## 11. Closed-Loop Stellarator Modular Coil & Divertor Bionic Synthesis (`bmhd` to `toposnail`)
+
+The closed-loop multi-physics bridge in `toposnail/stellarator_coupling.py` (Scenario `06_stellarator_modular_coil_divertor`) pipes `bmhd` 3D non-stellarator-symmetric MHD fields and stepped-pressure Flow-MRxMHD Beltrami shells directly into `toposnail`'s 3D anisotropic TTI thermo-elastic topology optimizer:
+
+1. **Volumetric 3D Lorentz Force Coupling:**
+   Samples `IssanNonSymmetricEquilibriumEngine` (`tau0 = 0.38`, Family 1 Stretched Solov'ev) and `SteppedPressureBeltramiTriad` ($N_{\mathrm{shells}} = 4$, `chunk_z = 16`) across the $(32, 24, 24)$ hexahedral grid, distributing element Lorentz forces to 24-DOF hexahedral nodes:
+
+```math
+\mathbf f_{\mathrm{ext}} = \mathbf J \times \mathbf B = \nabla p, \qquad \mathbf J = \frac{1}{\mu_0} \nabla \times \mathbf B
+```
+
+2. **Stepped-Pressure Beltrami Divertor Heat-Flux & TTI Thermo-Elasticity:**
+   Couples the scrape-off layer (SOL) Eich Gaussian strike-point thermal gradient peaking at $\Delta T = 1200\text{ K}$ ($2000\text{ K}$ absolute divertor surface temperature envelope) along $\psi = 1.0$ into the $\mathrm{SO}(6)$ Kelvin-Mandel rotated orthotropic stiffness tensor $\mathbf C_{\mathrm{TTI}}$ (Theorem 2.7):
+
+```math
+\boldsymbol\sigma_{\mathrm{therm}} = \mathbf C_{\mathrm{TTI}} : \boldsymbol\alpha \Delta T, \qquad \mathbf C_{\mathrm{TTI}} = \mathbf M(\mathbf R_e) \mathbf C_{\mathrm{VTI}} \mathbf M(\mathbf R_e)^\top
+```
+
+3. **Topological Void Guarantee (`b2 == 0`), 4-Stage CAD Export & BCM2712 Cache Assurance:**
+   - **Zero Trapped Cavities:** `JordanCavityEnforcer` verifies strictly `0` trapped $\beta_2$ internal cavities (`b2_trapped_cavities == 0`) via 6-way boundary flood filling while preserving open `beta_1` helical cooling channels (`Omega_KOZ`).
+   - **Coupling Verification Receipts (`toposnail/results/stellarator_bionic_coupling_summary.json`):** Achieves **86.55% compliance reduction** ($J / J_{\mathrm{SIMP}} = 0.1345$), **99.70% binary crispness**, `0.0%` checkerboard defects, true equilibrium residual `r_eq = 8.87e-5 <= 1.0e-4`, $\mathrm{SO}(6)$ trace drift `7.11e-15`, and exports 4-stage watertight `.STL` and `.OBJ` CAD meshes (`stellarator_coil_divertor_s1..s4.{stl,obj}`).
+   - **BCM2712 Cortex-A76 Cache Telemetry (`results/bcm2712_cache_receipts.json`):** Executes in `TopoStateArena` (`1,472,448 B` < `1.50 MB` SRAM, 64-byte aligned) with **`0` dynamic heap allocations** and a **`0.04601%` LLd cache miss rate** (`< 0.100%` limit) across 50,000,000 memory references.
+
+---
+
+## 12. References & BibTeX Bibliography
 
 ```bibtex
 @article{Issan2026,

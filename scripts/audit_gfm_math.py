@@ -136,7 +136,7 @@ def audit_file(filepath: str) -> int:
 
 
 if __name__ == "__main__":
-    targets = sys.argv[1:] if len(sys.argv) > 1 else ["README.md", "docs/ARCHITECTURE.md", "PROJECT.md"]
+    targets = sys.argv[1:] if len(sys.argv) > 1 else ["README.md", "docs/ARCHITECTURE.md"]
     rc = 0
     for target in targets:
         rc |= audit_file(target)

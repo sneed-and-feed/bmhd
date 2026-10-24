@@ -393,7 +393,33 @@ Hardware Invariants: Peak Heap = **2.33 MB** (< 3.5 MB ceiling), Bridge Buffer =
 
 ---
 
-## 11. Portable 3D CAD/CAE WebGL Workstation (`studio/bmhd_portable_studio.html`)
+## 11. Closed-Loop Stellarator Modular Coil & Divertor Bionic Synthesis (`bmhd` to `toposnail`)
+
+In `v0.4.0`, `bmhd` couples directly into `toposnail` (`toposnail/stellarator_coupling.py`, Scenario `06_stellarator_modular_coil_divertor`) to synthesize 3D-printable bionic stellarator modular coil winding packs and self-draining divertor target plates:
+
+1. **Non-Stellarator-Symmetric 3D Lorentz Force Coupling:**
+   Evaluates `IssanNonSymmetricEquilibriumEngine` (`tau0 = 0.38`, Family 1 Stretched Solov'ev) and `SteppedPressureBeltramiTriad` ($N_{\mathrm{shells}} = 4$, `chunk_z = 16`) on the $(32, 24, 24)$ hexahedral grid, piping the 3D volumetric Lorentz force density directly into `TopoSnailOptimizer` nodal degrees of freedom:
+
+```math
+\mathbf f_{\mathrm{ext}} = \mathbf J \times \mathbf B = \nabla p, \qquad \mathbf J = \frac{1}{\mu_0} \nabla \times \mathbf B
+```
+
+2. **Stepped-Pressure Beltrami Divertor Heat-Flux & Anisotropic TTI Thermo-Elasticity:**
+   Models the scrape-off layer (SOL) Eich Gaussian strike-point thermal footprint peaking at $\Delta T = 1200\text{ K}$ ($2000\text{ K}$ absolute divertor surface temperature envelope) along the separatrix $\psi = 1.0$, driving coupled anisotropic Thomsen TTI thermal stress rotated by the $\mathrm{SO}(6)$ Kelvin-Mandel stiffness rotor $\mathbf M(\mathbf R_e) \in \mathrm{SO}(6)$ (Theorem 2.7):
+
+```math
+\boldsymbol\sigma_{\mathrm{therm}} = \mathbf C_{\mathrm{TTI}} : \boldsymbol\alpha \Delta T, \qquad \mathbf C_{\mathrm{TTI}} = \mathbf M(\mathbf R_e) \mathbf C_{\mathrm{VTI}} \mathbf M(\mathbf R_e)^\top
+```
+
+3. **Zero Trapped Cavities, 4-Stage CAD Export & BCM2712 Hardware Cache Assurance:**
+   - **Topological Void Guarantee (`b2 == 0`):** Enforces 6-way Jordan boundary flood filling (`JordanCavityEnforcer`) to guarantee strictly `0` trapped $\beta_2$ internal powder/coolant voids while preserving unobstructed `beta_1` helical cooling channels (`Omega_KOZ`) and divertor strike-plate armor tiles (`Omega_solid`).
+   - **Structural & Numerical Receipts (`toposnail/results/stellarator_bionic_coupling_summary.json`):** Achieves an **86.55% compliance reduction** ($J / J_{\mathrm{SIMP}} = 0.1345$, reducing initial compliance `0.02069` to `0.002782`), **99.70% binary crispness**, `0.0%` checkerboard defects, true recomputed equilibrium residual `r_eq = 8.87e-5 <= 1.0e-4`, and $\mathrm{SO}(6)$ rotor trace drift `7.11e-15`.
+   - **4-Stage Bionic CAD Export:** Exports watertight 2-manifold `.STL` and `.OBJ` meshes across all 4 morphological stages (`stellarator_coil_divertor_s1..s4.{stl,obj}`).
+   - **Broadcom BCM2712 Cortex-A76 Cache Telemetry (`results/bcm2712_cache_receipts.json`):** Executes inside the 64-byte aligned `#![no_std]` Rust `TopoStateArena` (`1,472,448 B` = `1.40 MB` < `1.50 MB` SRAM budget) with **`0` dynamic heap allocations** and a verified **`0.04601%` LLd cache miss rate** (`< 0.100%` hard target) across 50,000,000 memory references.
+
+---
+
+## 12. Portable 3D CAD/CAE WebGL Workstation (`studio/bmhd_portable_studio.html`)
 
 The package includes a zero-install, single-file interactive 3D WebGL/Canvas CAE workstation (`studio/bmhd_portable_studio.html`, `v0.4.0`):
 
@@ -414,7 +440,7 @@ The package includes a zero-install, single-file interactive 3D WebGL/Canvas CAE
 
 ---
 
-## 12. References & BibTeX Bibliography
+## 13. References & BibTeX Bibliography
 
 ```bibtex
 @article{Issan2026,
