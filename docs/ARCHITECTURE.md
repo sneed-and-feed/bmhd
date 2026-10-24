@@ -616,4 +616,12 @@ The closed-loop multi-physics bridge in `toposnail/stellarator_coupling.py` (Sce
   archivePrefix = {arXiv},
   primaryClass  = {physics.plasm-ph}
 }
+
+@software{bmhd_2026,
+  author        = {Cohen, Noah},
+  title         = {BMHD: Beltrami MHD and Non-Symmetric 3D Stellarator Engine},
+  year          = {2026},
+  version       = {0.4.0},
+  url           = {https://github.com/sneed-and-feed/bmhd}
+}
 ```

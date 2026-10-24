@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+title: "BMHD: Beltrami MHD & Non-Symmetric 3D Stellarator Engine"
+message: "If you use this software, please cite it using the metadata from this file."
+type: software
+authors:
+  - family-names: "Cohen"
+    given-names: "Noah"
+version: 0.4.0
+date-released: 2026-10-24
+license: CC0-1.0
+repository-code: "https://github.com/sneed-and-feed/bmhd"

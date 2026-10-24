@@ -6,6 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "bmhd"
 version = "0.4.0"
 description = "BMHD: Beltrami MHD & Non-Symmetric 3D Stellarator Engine - Standalone 3D/4D magnetohydrodynamic flux-surface solver, stepped-pressure Beltrami shell relaxer, and sparse diagnostic laser-chord tomography workstation powered by machine-checked OcclusionTriad.lean invariants"
+authors = [{ name = "Noah Cohen" }]
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "CC0-1.0" }
