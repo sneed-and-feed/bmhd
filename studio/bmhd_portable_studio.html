@@ -4177,13 +4177,14 @@
         }
       }
 
-      // Coordinate-wise IEEE-754 float32 ULP polish (guarantees sumSqF32(v) === r0Sq -> 0.000e+00 drift)
+      // Active-coordinate-only IEEE-754 float32 ULP polish (strictly |v[idx]| > 1e-12, guarantees sumSqF32(v) === r0Sq -> 0.000e+00 drift)
       const f32 = arena.ulpBufF32;
       const i32 = arena.ulpBufI32;
       for (let pass = 0; pass < 2; pass++) {
         let curSq = sumSqF32(v);
         if (curSq === r0Sq) break;
         for (let idx = 0; idx < 8; idx++) {
+          if (Math.abs(v[idx]) <= 1e-12) continue;
           let otherSq = 0.0;
           for (let j = 0; j < 8; j++) {
             if (j !== idx) otherSq = Math.fround(otherSq + Math.fround(v[j] * v[j]));
@@ -4202,9 +4203,9 @@
             }
             f32[0] = base;
             const baseBits = i32[0];
-            for (let step = -2; step <= 2; step++) {
+            for (let step = -12; step <= 12; step++) {
               if (step === 0) continue;
-              i32[0] = baseBits + step;
+              i32[0] = (baseBits + step) | 0;
               const cand = f32[0];
               if (!Number.isFinite(cand)) continue;
               v[idx] = cand;
@@ -4219,6 +4220,56 @@
             curSq = sumSqF32(v);
             if (curSq === r0Sq) break;
           }
+        }
+      }
+
+      // 2-coordinate active-pair ULP fallback polish (strictly |v[i]| > 1e-12 && |v[j]| > 1e-12)
+      if (sumSqF32(v) !== r0Sq) {
+        let bestErr = Math.abs(sumSqF32(v) - r0Sq);
+        let bestPair = null;
+        for (let i = 0; i < 8; i++) {
+          const origI = v[i];
+          if (Math.abs(origI) <= 1e-12) continue;
+          f32[0] = origI;
+          const bitsI = i32[0];
+          for (let j = i + 1; j < 8; j++) {
+            const origJ = v[j];
+            if (Math.abs(origJ) <= 1e-12) continue;
+            f32[0] = origJ;
+            const bitsJ = i32[0];
+            for (let duI = -8; duI <= 8; duI++) {
+              i32[0] = (bitsI + duI) | 0;
+              const candI = f32[0];
+              if (!Number.isFinite(candI)) continue;
+              v[i] = candI;
+              for (let duJ = -8; duJ <= 8; duJ++) {
+                if (duI === 0 && duJ === 0) continue;
+                i32[0] = (bitsJ + duJ) | 0;
+                const candJ = f32[0];
+                if (!Number.isFinite(candJ)) continue;
+                v[j] = candJ;
+                const err = Math.abs(sumSqF32(v) - r0Sq);
+                if (err === 0.0) {
+                  bestPair = [i, candI, j, candJ];
+                  bestErr = 0.0;
+                  break;
+                }
+                if (err < bestErr) {
+                  bestErr = err;
+                  bestPair = [i, candI, j, candJ];
+                }
+              }
+              if (bestErr === 0.0) break;
+            }
+            v[j] = origJ;
+            if (bestErr === 0.0) break;
+          }
+          v[i] = origI;
+          if (bestErr === 0.0) break;
+        }
+        if (bestPair) {
+          v[bestPair[0]] = bestPair[1];
+          v[bestPair[2]] = bestPair[3];
         }
       }
 
@@ -4819,6 +4870,30 @@
         arena.cascadeZHTemp[3] = (arena.tracks[1].vy || -0.2) * 0.5;
       }
       stepSlowFastCascade(arena.cascadeZHTemp, arena.cascadeRegisters, 16);
+
+      // O(1) 256-sample strided MAD floor (Number.isFinite sanitized) & causal 3-point Morse gate (hIdx + 255) % 256
+      if (!arena.morseHistory) arena.morseHistory = new Float32Array(256);
+      const samples256 = arena.statSamples256 || new Float32Array(256);
+      const devs256 = arena.statDevs256 || new Float32Array(256);
+      for (let s = 0; s < 256; s++) {
+        const v = arena.curlNorm[(s * 64) % arena.size];
+        samples256[s] = Number.isFinite(v) ? v : 0.0;
+      }
+      samples256.sort();
+      const medSal = 0.5 * (samples256[127] + samples256[128]);
+      for (let s = 0; s < 256; s++) devs256[s] = Math.abs(samples256[s] - medSal);
+      devs256.sort();
+      const madSal = Math.max(0.5, 0.5 * (devs256[127] + devs256[128]));
+      arena.madFloor = medSal + 5.5 * 1.4826 * madSal;
+
+      const hIdx = (frameIdx | 0) % 256;
+      const rawMorseSample = arena.tracks.length > 0 ? (arena.tracks[0].nis || arena.madFloor) : arena.madFloor;
+      arena.morseHistory[hIdx] = Number.isFinite(rawMorseSample) ? rawMorseSample : 0.0;
+      const midSample = arena.morseHistory[(hIdx + 255) % 256];
+      const prev2Sample = arena.morseHistory[(hIdx + 254) % 256];
+      const dMinus = midSample - prev2Sample;
+      const dPlus = midSample - arena.morseHistory[hIdx];
+      arena.isMorseCritical = frameIdx >= 2 && (dMinus * dPlus > 0);
 
       const statSpikes = document.getElementById("stat-spikes");
       if (statSpikes) statSpikes.innerText = (medoidCount * 2).toString();
