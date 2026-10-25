@@ -1,6 +1,6 @@
 {
   "bridge_version": "v0.4.0",
-  "timestamp": "2026-10-23T02:12:44Z",
+  "timestamp": "2026-10-25T21:55:49Z",
   "hardware_invariants": {
     "max_heap_ceiling_mb": 3.5,
     "active_l3_resident_mb": 2.33,
@@ -14,8 +14,8 @@
     "scenario04_pellet_core_deposition_rmse_px": 0.34,
     "scenario05_flare_washout_rejection_rate": 1.0,
     "scenario05_nozzle_throttle_gain": 0.6599,
-    "single_core_fps": 535.9,
-    "frame_latency_us": 138.7,
+    "single_core_fps": 792.2,
+    "frame_latency_us": 95.1,
     "combined_arena_heap_mb": 2.33,
     "bridge_buffer_overhead_kb": 32.5,
     "post_mask_mad_noise_floor": 0.002432,

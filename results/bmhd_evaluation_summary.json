@@ -1,6 +1,6 @@
 {
   "benchmark_version": "v0.4.0",
-  "timestamp": "2026-10-23T02:12:44Z",
+  "timestamp": "2026-10-25T21:55:49Z",
   "mode_a_formal_theorems": {
     "theorems_audit": {
       "theorem_2_1": {
@@ -114,12 +114,12 @@
       },
       "K_8": {
         "max_spherical_radial_drift": 0.0,
-        "max_tangent_orthogonality_error": 9.313225746154785e-09,
+        "max_tangent_orthogonality_error": 7.450580596923828e-09,
         "passed": true
       },
       "K_16": {
         "max_spherical_radial_drift": 0.0,
-        "max_tangent_orthogonality_error": 8.847564458847046e-09,
+        "max_tangent_orthogonality_error": 8.381903171539307e-09,
         "passed": true
       }
     },
@@ -177,10 +177,10 @@
         "edge_fidelity_pct": "57.00%"
       },
       "BlindBMHD": {
-        "loco_rmse": 0.010055998728637784,
-        "unseen_3d_chords_rmse": 0.01937426346800743,
-        "whole_torus_psi_rmse": 0.0303383449847068,
-        "bounded_edge_gradient_fidelity": 0.8192898902553494,
+        "loco_rmse": 0.010055998728637916,
+        "unseen_3d_chords_rmse": 0.01937426346800725,
+        "whole_torus_psi_rmse": 0.030338344984706663,
+        "bounded_edge_gradient_fidelity": 0.8192898902553495,
         "edge_fidelity_pct": "81.93%"
       }
     },
@@ -235,10 +235,10 @@
         "edge_fidelity_pct": "17.09%"
       },
       "BlindBMHD": {
-        "loco_rmse": 0.01777514750593692,
-        "unseen_3d_chords_rmse": 0.03313613361101457,
-        "whole_torus_psi_rmse": 0.041763954320847424,
-        "bounded_edge_gradient_fidelity": 0.7192474031036236,
+        "loco_rmse": 0.017775147505936468,
+        "unseen_3d_chords_rmse": 0.033136133611014675,
+        "whole_torus_psi_rmse": 0.04176395432084735,
+        "bounded_edge_gradient_fidelity": 0.7192474031036238,
         "edge_fidelity_pct": "71.92%"
       }
     },
@@ -293,9 +293,9 @@
         "edge_fidelity_pct": "71.69%"
       },
       "BlindBMHD": {
-        "loco_rmse": 0.011319282400878481,
-        "unseen_3d_chords_rmse": 0.012948642180305796,
-        "whole_torus_psi_rmse": 0.01868656845788926,
+        "loco_rmse": 0.011319282400878615,
+        "unseen_3d_chords_rmse": 0.012948642180305843,
+        "whole_torus_psi_rmse": 0.018686568457889255,
         "bounded_edge_gradient_fidelity": 0.8670161599958737,
         "edge_fidelity_pct": "86.70%"
       }
@@ -351,10 +351,10 @@
         "edge_fidelity_pct": "58.40%"
       },
       "BlindBMHD": {
-        "loco_rmse": 0.009064307355951408,
-        "unseen_3d_chords_rmse": 0.016248113857259137,
-        "whole_torus_psi_rmse": 0.017668307328505668,
-        "bounded_edge_gradient_fidelity": 0.9014637727847736,
+        "loco_rmse": 0.009064307355951423,
+        "unseen_3d_chords_rmse": 0.01624811385725903,
+        "whole_torus_psi_rmse": 0.017668307328505498,
+        "bounded_edge_gradient_fidelity": 0.9014637727847739,
         "edge_fidelity_pct": "90.15%"
       }
     },
@@ -409,10 +409,10 @@
         "edge_fidelity_pct": "81.19%"
       },
       "BlindBMHD": {
-        "loco_rmse": 0.007135780037427663,
-        "unseen_3d_chords_rmse": 0.009214433338497866,
-        "whole_torus_psi_rmse": 0.009355823412098644,
-        "bounded_edge_gradient_fidelity": 0.8989845634741443,
+        "loco_rmse": 0.007135780037428002,
+        "unseen_3d_chords_rmse": 0.009214433338498865,
+        "whole_torus_psi_rmse": 0.00935582341209848,
+        "bounded_edge_gradient_fidelity": 0.8989845634741433,
         "edge_fidelity_pct": "89.90%"
       }
     }
@@ -470,10 +470,10 @@
           "edge_fidelity_pct": "57.04%"
         },
         "BlindBMHD": {
-          "loco_rmse": 0.0072112295772382975,
-          "unseen_3d_chords_rmse": 0.013628248500854591,
-          "whole_torus_psi_rmse": 0.023604645442438656,
-          "bounded_edge_gradient_fidelity": 0.8661385022425357,
+          "loco_rmse": 0.007211229577237992,
+          "unseen_3d_chords_rmse": 0.013628248500854574,
+          "whole_torus_psi_rmse": 0.02360464544243845,
+          "bounded_edge_gradient_fidelity": 0.8661385022425362,
           "edge_fidelity_pct": "86.61%"
         }
       },
@@ -528,10 +528,10 @@
           "edge_fidelity_pct": "57.00%"
         },
         "BlindBMHD": {
-          "loco_rmse": 0.010055998728637784,
-          "unseen_3d_chords_rmse": 0.01937426346800743,
-          "whole_torus_psi_rmse": 0.0303383449847068,
-          "bounded_edge_gradient_fidelity": 0.8192898902553494,
+          "loco_rmse": 0.010055998728637916,
+          "unseen_3d_chords_rmse": 0.01937426346800725,
+          "whole_torus_psi_rmse": 0.030338344984706663,
+          "bounded_edge_gradient_fidelity": 0.8192898902553495,
           "edge_fidelity_pct": "81.93%"
         }
       },
@@ -586,10 +586,10 @@
           "edge_fidelity_pct": "56.51%"
         },
         "BlindBMHD": {
-          "loco_rmse": 0.022487787364426574,
-          "unseen_3d_chords_rmse": 0.038599896155620095,
-          "whole_torus_psi_rmse": 0.04936713790649125,
-          "bounded_edge_gradient_fidelity": 0.7240165479060576,
+          "loco_rmse": 0.02248778736442682,
+          "unseen_3d_chords_rmse": 0.03859989615562004,
+          "whole_torus_psi_rmse": 0.04936713790649119,
+          "bounded_edge_gradient_fidelity": 0.7240165479060579,
           "edge_fidelity_pct": "72.40%"
         }
       },
@@ -644,9 +644,9 @@
           "edge_fidelity_pct": "55.59%"
         },
         "BlindBMHD": {
-          "loco_rmse": 0.037331938049188725,
-          "unseen_3d_chords_rmse": 0.057635271690493164,
-          "whole_torus_psi_rmse": 0.06660816938638378,
+          "loco_rmse": 0.037331938049189016,
+          "unseen_3d_chords_rmse": 0.057635271690493255,
+          "whole_torus_psi_rmse": 0.06660816938638366,
           "bounded_edge_gradient_fidelity": 0.6611061444145521,
           "edge_fidelity_pct": "66.11%"
         }
@@ -704,10 +704,10 @@
           "edge_fidelity_pct": "17.26%"
         },
         "BlindBMHD": {
-          "loco_rmse": 0.016948270572162256,
-          "unseen_3d_chords_rmse": 0.03415475796847269,
-          "whole_torus_psi_rmse": 0.041196712358065816,
-          "bounded_edge_gradient_fidelity": 0.719667071913034,
+          "loco_rmse": 0.016948270572161733,
+          "unseen_3d_chords_rmse": 0.03415475796847258,
+          "whole_torus_psi_rmse": 0.04119671235806566,
+          "bounded_edge_gradient_fidelity": 0.7196670719130349,
           "edge_fidelity_pct": "71.97%"
         }
       },
@@ -762,10 +762,10 @@
           "edge_fidelity_pct": "17.09%"
         },
         "BlindBMHD": {
-          "loco_rmse": 0.01777514750593692,
-          "unseen_3d_chords_rmse": 0.03313613361101457,
-          "whole_torus_psi_rmse": 0.041763954320847424,
-          "bounded_edge_gradient_fidelity": 0.7192474031036236,
+          "loco_rmse": 0.017775147505936468,
+          "unseen_3d_chords_rmse": 0.033136133611014675,
+          "whole_torus_psi_rmse": 0.04176395432084735,
+          "bounded_edge_gradient_fidelity": 0.7192474031036238,
           "edge_fidelity_pct": "71.92%"
         }
       },
@@ -820,9 +820,9 @@
           "edge_fidelity_pct": "16.91%"
         },
         "BlindBMHD": {
-          "loco_rmse": 0.028777133183088256,
-          "unseen_3d_chords_rmse": 0.0444573067259564,
-          "whole_torus_psi_rmse": 0.058163800267483336,
+          "loco_rmse": 0.028777133183087972,
+          "unseen_3d_chords_rmse": 0.044457306725956484,
+          "whole_torus_psi_rmse": 0.058163800267483176,
           "bounded_edge_gradient_fidelity": 0.5834378307009873,
           "edge_fidelity_pct": "58.34%"
         }
@@ -878,10 +878,10 @@
           "edge_fidelity_pct": "16.80%"
         },
         "BlindBMHD": {
-          "loco_rmse": 0.04225466057951268,
-          "unseen_3d_chords_rmse": 0.05749582847354354,
-          "whole_torus_psi_rmse": 0.07009034711383744,
-          "bounded_edge_gradient_fidelity": 0.490287964989772,
+          "loco_rmse": 0.042254660579512444,
+          "unseen_3d_chords_rmse": 0.05749582847354361,
+          "whole_torus_psi_rmse": 0.07009034711383735,
+          "bounded_edge_gradient_fidelity": 0.49028796498977223,
           "edge_fidelity_pct": "49.03%"
         }
       }
@@ -938,10 +938,10 @@
           "edge_fidelity_pct": "71.81%"
         },
         "BlindBMHD": {
-          "loco_rmse": 0.003831617473155052,
-          "unseen_3d_chords_rmse": 0.006320811833188355,
-          "whole_torus_psi_rmse": 0.006092877537115212,
-          "bounded_edge_gradient_fidelity": 0.9273064003321349,
+          "loco_rmse": 0.0038316174731552106,
+          "unseen_3d_chords_rmse": 0.006320811833188212,
+          "whole_torus_psi_rmse": 0.00609287753711515,
+          "bounded_edge_gradient_fidelity": 0.9273064003321345,
           "edge_fidelity_pct": "92.73%"
         }
       },
@@ -996,9 +996,9 @@
           "edge_fidelity_pct": "71.69%"
         },
         "BlindBMHD": {
-          "loco_rmse": 0.011319282400878481,
-          "unseen_3d_chords_rmse": 0.012948642180305796,
-          "whole_torus_psi_rmse": 0.01868656845788926,
+          "loco_rmse": 0.011319282400878615,
+          "unseen_3d_chords_rmse": 0.012948642180305843,
+          "whole_torus_psi_rmse": 0.018686568457889255,
           "bounded_edge_gradient_fidelity": 0.8670161599958737,
           "edge_fidelity_pct": "86.70%"
         }
@@ -1054,10 +1054,10 @@
           "edge_fidelity_pct": "70.84%"
         },
         "BlindBMHD": {
-          "loco_rmse": 0.0295307835692837,
-          "unseen_3d_chords_rmse": 0.031977577403526025,
-          "whole_torus_psi_rmse": 0.04084778495497113,
-          "bounded_edge_gradient_fidelity": 0.7653771128262655,
+          "loco_rmse": 0.029530783569283986,
+          "unseen_3d_chords_rmse": 0.03197757740352629,
+          "whole_torus_psi_rmse": 0.04084778495497114,
+          "bounded_edge_gradient_fidelity": 0.7653771128262657,
           "edge_fidelity_pct": "76.54%"
         }
       },
@@ -1112,10 +1112,10 @@
           "edge_fidelity_pct": "69.27%"
         },
         "BlindBMHD": {
-          "loco_rmse": 0.048147874803747985,
-          "unseen_3d_chords_rmse": 0.04986588024148874,
-          "whole_torus_psi_rmse": 0.05919168573615657,
-          "bounded_edge_gradient_fidelity": 0.6954738177475379,
+          "loco_rmse": 0.048147874803748214,
+          "unseen_3d_chords_rmse": 0.04986588024148889,
+          "whole_torus_psi_rmse": 0.059191685736156595,
+          "bounded_edge_gradient_fidelity": 0.6954738177475375,
           "edge_fidelity_pct": "69.55%"
         }
       }
@@ -1172,10 +1172,10 @@
           "edge_fidelity_pct": "58.47%"
         },
         "BlindBMHD": {
-          "loco_rmse": 0.006005302531824588,
-          "unseen_3d_chords_rmse": 0.011364867646591496,
-          "whole_torus_psi_rmse": 0.01203048041460296,
-          "bounded_edge_gradient_fidelity": 0.9194509290612926,
+          "loco_rmse": 0.006005302531824687,
+          "unseen_3d_chords_rmse": 0.01136486764659148,
+          "whole_torus_psi_rmse": 0.012030480414602753,
+          "bounded_edge_gradient_fidelity": 0.9194509290612929,
           "edge_fidelity_pct": "91.95%"
         }
       },
@@ -1230,10 +1230,10 @@
           "edge_fidelity_pct": "58.40%"
         },
         "BlindBMHD": {
-          "loco_rmse": 0.009064307355951408,
-          "unseen_3d_chords_rmse": 0.016248113857259137,
-          "whole_torus_psi_rmse": 0.017668307328505668,
-          "bounded_edge_gradient_fidelity": 0.9014637727847736,
+          "loco_rmse": 0.009064307355951423,
+          "unseen_3d_chords_rmse": 0.01624811385725903,
+          "whole_torus_psi_rmse": 0.017668307328505498,
+          "bounded_edge_gradient_fidelity": 0.9014637727847739,
           "edge_fidelity_pct": "90.15%"
         }
       },
@@ -1288,10 +1288,10 @@
           "edge_fidelity_pct": "58.10%"
         },
         "BlindBMHD": {
-          "loco_rmse": 0.01972383878957102,
-          "unseen_3d_chords_rmse": 0.0281509975641965,
-          "whole_torus_psi_rmse": 0.03294061597166512,
-          "bounded_edge_gradient_fidelity": 0.8491400726219824,
+          "loco_rmse": 0.01972383878957091,
+          "unseen_3d_chords_rmse": 0.02815099756419629,
+          "whole_torus_psi_rmse": 0.032940615971664956,
+          "bounded_edge_gradient_fidelity": 0.8491400726219825,
           "edge_fidelity_pct": "84.91%"
         }
       },
@@ -1346,9 +1346,9 @@
           "edge_fidelity_pct": "57.51%"
         },
         "BlindBMHD": {
-          "loco_rmse": 0.03156018525913596,
-          "unseen_3d_chords_rmse": 0.0392652619297654,
-          "whole_torus_psi_rmse": 0.046660570311560366,
+          "loco_rmse": 0.03156018525913609,
+          "unseen_3d_chords_rmse": 0.03926526192976526,
+          "whole_torus_psi_rmse": 0.04666057031156006,
           "bounded_edge_gradient_fidelity": 0.8139420206795993,
           "edge_fidelity_pct": "81.39%"
         }
@@ -1406,10 +1406,10 @@
           "edge_fidelity_pct": "81.10%"
         },
         "BlindBMHD": {
-          "loco_rmse": 0.0033094838075625956,
-          "unseen_3d_chords_rmse": 0.0037370047731090576,
-          "whole_torus_psi_rmse": 0.004377105391455138,
-          "bounded_edge_gradient_fidelity": 0.9445262850217824,
+          "loco_rmse": 0.003309483807561616,
+          "unseen_3d_chords_rmse": 0.003737004773108352,
+          "whole_torus_psi_rmse": 0.004377105391455095,
+          "bounded_edge_gradient_fidelity": 0.944526285021783,
           "edge_fidelity_pct": "94.45%"
         }
       },
@@ -1464,10 +1464,10 @@
           "edge_fidelity_pct": "81.19%"
         },
         "BlindBMHD": {
-          "loco_rmse": 0.007135780037427663,
-          "unseen_3d_chords_rmse": 0.009214433338497866,
-          "whole_torus_psi_rmse": 0.009355823412098644,
-          "bounded_edge_gradient_fidelity": 0.8989845634741443,
+          "loco_rmse": 0.007135780037428002,
+          "unseen_3d_chords_rmse": 0.009214433338498865,
+          "whole_torus_psi_rmse": 0.00935582341209848,
+          "bounded_edge_gradient_fidelity": 0.8989845634741433,
           "edge_fidelity_pct": "89.90%"
         }
       },
@@ -1522,10 +1522,10 @@
           "edge_fidelity_pct": "76.13%"
         },
         "BlindBMHD": {
-          "loco_rmse": 0.022934112419870093,
-          "unseen_3d_chords_rmse": 0.027650924357177215,
-          "whole_torus_psi_rmse": 0.02058637145460614,
-          "bounded_edge_gradient_fidelity": 0.848027047472035,
+          "loco_rmse": 0.022934112419870385,
+          "unseen_3d_chords_rmse": 0.0276509243571779,
+          "whole_torus_psi_rmse": 0.020586371454606022,
+          "bounded_edge_gradient_fidelity": 0.848027047472034,
           "edge_fidelity_pct": "84.80%"
         }
       },
@@ -1580,9 +1580,9 @@
           "edge_fidelity_pct": "70.97%"
         },
         "BlindBMHD": {
-          "loco_rmse": 0.04194793946803976,
-          "unseen_3d_chords_rmse": 0.049559266174608506,
-          "whole_torus_psi_rmse": 0.037612271795088824,
+          "loco_rmse": 0.04194793946804002,
+          "unseen_3d_chords_rmse": 0.04955926617460927,
+          "whole_torus_psi_rmse": 0.03761227179508869,
           "bounded_edge_gradient_fidelity": 0.7826845955686084,
           "edge_fidelity_pct": "78.27%"
         }
@@ -1642,10 +1642,10 @@
           "edge_fidelity_pct": "57.00%"
         },
         "BlindBMHD": {
-          "loco_rmse": 0.010055998728637784,
-          "unseen_3d_chords_rmse": 0.01937426346800743,
-          "whole_torus_psi_rmse": 0.0303383449847068,
-          "bounded_edge_gradient_fidelity": 0.8192898902553494,
+          "loco_rmse": 0.010055998728637916,
+          "unseen_3d_chords_rmse": 0.01937426346800725,
+          "whole_torus_psi_rmse": 0.030338344984706663,
+          "bounded_edge_gradient_fidelity": 0.8192898902553495,
           "edge_fidelity_pct": "81.93%"
         }
       },
@@ -1700,10 +1700,10 @@
           "edge_fidelity_pct": "54.03%"
         },
         "BlindBMHD": {
-          "loco_rmse": 0.06577061695975006,
-          "unseen_3d_chords_rmse": 0.09700589232520683,
-          "whole_torus_psi_rmse": 0.12726954306000207,
-          "bounded_edge_gradient_fidelity": 0.39626116977894676,
+          "loco_rmse": 0.06577061695974994,
+          "unseen_3d_chords_rmse": 0.09700589232520686,
+          "whole_torus_psi_rmse": 0.12726954306000188,
+          "bounded_edge_gradient_fidelity": 0.3962611697789463,
           "edge_fidelity_pct": "39.63%"
         }
       },
@@ -1758,10 +1758,10 @@
           "edge_fidelity_pct": "43.44%"
         },
         "BlindBMHD": {
-          "loco_rmse": 0.13005244587109926,
-          "unseen_3d_chords_rmse": 0.1578668521830145,
-          "whole_torus_psi_rmse": 0.18371367424291782,
-          "bounded_edge_gradient_fidelity": 0.3393646936562784,
+          "loco_rmse": 0.13005244587109957,
+          "unseen_3d_chords_rmse": 0.15786685218301466,
+          "whole_torus_psi_rmse": 0.18371367424291776,
+          "bounded_edge_gradient_fidelity": 0.3393646936562774,
           "edge_fidelity_pct": "33.94%"
         }
       },
@@ -1816,10 +1816,10 @@
           "edge_fidelity_pct": "33.11%"
         },
         "BlindBMHD": {
-          "loco_rmse": 0.18756652942434868,
-          "unseen_3d_chords_rmse": 0.251748135396313,
-          "whole_torus_psi_rmse": 0.23622941590310104,
-          "bounded_edge_gradient_fidelity": 0.2706448750945306,
+          "loco_rmse": 0.18756652942434884,
+          "unseen_3d_chords_rmse": 0.2517481353963133,
+          "whole_torus_psi_rmse": 0.23622941590310098,
+          "bounded_edge_gradient_fidelity": 0.2706448750945296,
           "edge_fidelity_pct": "27.06%"
         }
       }
@@ -1876,10 +1876,10 @@
           "edge_fidelity_pct": "17.09%"
         },
         "BlindBMHD": {
-          "loco_rmse": 0.01777514750593692,
-          "unseen_3d_chords_rmse": 0.03313613361101457,
-          "whole_torus_psi_rmse": 0.041763954320847424,
-          "bounded_edge_gradient_fidelity": 0.7192474031036236,
+          "loco_rmse": 0.017775147505936468,
+          "unseen_3d_chords_rmse": 0.033136133611014675,
+          "whole_torus_psi_rmse": 0.04176395432084735,
+          "bounded_edge_gradient_fidelity": 0.7192474031036238,
           "edge_fidelity_pct": "71.92%"
         }
       },
@@ -1934,10 +1934,10 @@
           "edge_fidelity_pct": "15.09%"
         },
         "BlindBMHD": {
-          "loco_rmse": 0.08844393705419915,
-          "unseen_3d_chords_rmse": 0.1881010301045984,
-          "whole_torus_psi_rmse": 0.15490076943325262,
-          "bounded_edge_gradient_fidelity": 0.31782175249770583,
+          "loco_rmse": 0.08844393705419976,
+          "unseen_3d_chords_rmse": 0.18810103010459878,
+          "whole_torus_psi_rmse": 0.1549007694332526,
+          "bounded_edge_gradient_fidelity": 0.3178217524977066,
           "edge_fidelity_pct": "31.78%"
         }
       },
@@ -1992,10 +1992,10 @@
           "edge_fidelity_pct": "14.21%"
         },
         "BlindBMHD": {
-          "loco_rmse": 0.15632512847437594,
-          "unseen_3d_chords_rmse": 0.31490724948577814,
-          "whole_torus_psi_rmse": 0.21339880248822043,
-          "bounded_edge_gradient_fidelity": 0.30819714133359666,
+          "loco_rmse": 0.15632512847437613,
+          "unseen_3d_chords_rmse": 0.3149072494857784,
+          "whole_torus_psi_rmse": 0.2133988024882203,
+          "bounded_edge_gradient_fidelity": 0.30819714133359555,
           "edge_fidelity_pct": "30.82%"
         }
       },
@@ -2050,10 +2050,10 @@
           "edge_fidelity_pct": "11.65%"
         },
         "BlindBMHD": {
-          "loco_rmse": 0.24754045674261352,
-          "unseen_3d_chords_rmse": 0.3279941549016896,
+          "loco_rmse": 0.24754045674261382,
+          "unseen_3d_chords_rmse": 0.3279941549016898,
           "whole_torus_psi_rmse": 0.22617660199461784,
-          "bounded_edge_gradient_fidelity": 0.16659462238362377,
+          "bounded_edge_gradient_fidelity": 0.16659462238362277,
           "edge_fidelity_pct": "16.66%"
         }
       }
@@ -2110,9 +2110,9 @@
           "edge_fidelity_pct": "71.69%"
         },
         "BlindBMHD": {
-          "loco_rmse": 0.011319282400878481,
-          "unseen_3d_chords_rmse": 0.012948642180305796,
-          "whole_torus_psi_rmse": 0.01868656845788926,
+          "loco_rmse": 0.011319282400878615,
+          "unseen_3d_chords_rmse": 0.012948642180305843,
+          "whole_torus_psi_rmse": 0.018686568457889255,
           "bounded_edge_gradient_fidelity": 0.8670161599958737,
           "edge_fidelity_pct": "86.70%"
         }
@@ -2168,10 +2168,10 @@
           "edge_fidelity_pct": "63.90%"
         },
         "BlindBMHD": {
-          "loco_rmse": 0.07419181104396641,
-          "unseen_3d_chords_rmse": 0.07554019120606387,
+          "loco_rmse": 0.0741918110439666,
+          "unseen_3d_chords_rmse": 0.07554019120606371,
           "whole_torus_psi_rmse": 0.07738826267944734,
-          "bounded_edge_gradient_fidelity": 0.5726750937526668,
+          "bounded_edge_gradient_fidelity": 0.572675093752665,
           "edge_fidelity_pct": "57.27%"
         }
       },
@@ -2226,10 +2226,10 @@
           "edge_fidelity_pct": "50.65%"
         },
         "BlindBMHD": {
-          "loco_rmse": 0.15718687893808164,
-          "unseen_3d_chords_rmse": 0.16224446379270896,
-          "whole_torus_psi_rmse": 0.1407050497693458,
-          "bounded_edge_gradient_fidelity": 0.5914267617550495,
+          "loco_rmse": 0.1571868789380818,
+          "unseen_3d_chords_rmse": 0.16224446379270893,
+          "whole_torus_psi_rmse": 0.14070504976934575,
+          "bounded_edge_gradient_fidelity": 0.5914267617550504,
           "edge_fidelity_pct": "59.14%"
         }
       },
@@ -2284,10 +2284,10 @@
           "edge_fidelity_pct": "47.57%"
         },
         "BlindBMHD": {
-          "loco_rmse": 0.22805487604503147,
-          "unseen_3d_chords_rmse": 0.2421881928076558,
+          "loco_rmse": 0.22805487604503222,
+          "unseen_3d_chords_rmse": 0.24218819280765577,
           "whole_torus_psi_rmse": 0.19358364914067253,
-          "bounded_edge_gradient_fidelity": 0.49898495203161886,
+          "bounded_edge_gradient_fidelity": 0.4989849520316205,
           "edge_fidelity_pct": "49.90%"
         }
       }
@@ -2344,10 +2344,10 @@
           "edge_fidelity_pct": "58.40%"
         },
         "BlindBMHD": {
-          "loco_rmse": 0.009064307355951408,
-          "unseen_3d_chords_rmse": 0.016248113857259137,
-          "whole_torus_psi_rmse": 0.017668307328505668,
-          "bounded_edge_gradient_fidelity": 0.9014637727847736,
+          "loco_rmse": 0.009064307355951423,
+          "unseen_3d_chords_rmse": 0.01624811385725903,
+          "whole_torus_psi_rmse": 0.017668307328505498,
+          "bounded_edge_gradient_fidelity": 0.9014637727847739,
           "edge_fidelity_pct": "90.15%"
         }
       },
@@ -2402,10 +2402,10 @@
           "edge_fidelity_pct": "48.91%"
         },
         "BlindBMHD": {
-          "loco_rmse": 0.18234543673584686,
-          "unseen_3d_chords_rmse": 0.18558280023240153,
-          "whole_torus_psi_rmse": 0.1287425239256031,
-          "bounded_edge_gradient_fidelity": 0.4727761246013713,
+          "loco_rmse": 0.1823454367358471,
+          "unseen_3d_chords_rmse": 0.1855828002324017,
+          "whole_torus_psi_rmse": 0.12874252392560306,
+          "bounded_edge_gradient_fidelity": 0.47277612460137053,
           "edge_fidelity_pct": "47.28%"
         }
       },
@@ -2460,10 +2460,10 @@
           "edge_fidelity_pct": "33.76%"
         },
         "BlindBMHD": {
-          "loco_rmse": 0.3147986774239128,
-          "unseen_3d_chords_rmse": 0.34629366348427487,
-          "whole_torus_psi_rmse": 0.22708332840616133,
-          "bounded_edge_gradient_fidelity": 0.30724281658447805,
+          "loco_rmse": 0.3147986774239126,
+          "unseen_3d_chords_rmse": 0.34629366348427515,
+          "whole_torus_psi_rmse": 0.22708332840616127,
+          "bounded_edge_gradient_fidelity": 0.3072428165844797,
           "edge_fidelity_pct": "30.72%"
         }
       },
@@ -2518,10 +2518,10 @@
           "edge_fidelity_pct": "30.06%"
         },
         "BlindBMHD": {
-          "loco_rmse": 0.3487618837864795,
+          "loco_rmse": 0.34876188378647904,
           "unseen_3d_chords_rmse": 0.43605620341782964,
           "whole_torus_psi_rmse": 0.2960874529173421,
-          "bounded_edge_gradient_fidelity": 0.33968463480860434,
+          "bounded_edge_gradient_fidelity": 0.3396846348086038,
           "edge_fidelity_pct": "33.97%"
         }
       }
@@ -2578,10 +2578,10 @@
           "edge_fidelity_pct": "81.19%"
         },
         "BlindBMHD": {
-          "loco_rmse": 0.007135780037427663,
-          "unseen_3d_chords_rmse": 0.009214433338497866,
-          "whole_torus_psi_rmse": 0.009355823412098644,
-          "bounded_edge_gradient_fidelity": 0.8989845634741443,
+          "loco_rmse": 0.007135780037428002,
+          "unseen_3d_chords_rmse": 0.009214433338498865,
+          "whole_torus_psi_rmse": 0.00935582341209848,
+          "bounded_edge_gradient_fidelity": 0.8989845634741433,
           "edge_fidelity_pct": "89.90%"
         }
       },
@@ -2636,10 +2636,10 @@
           "edge_fidelity_pct": "70.62%"
         },
         "BlindBMHD": {
-          "loco_rmse": 0.052540842911852764,
-          "unseen_3d_chords_rmse": 0.08999714924114978,
-          "whole_torus_psi_rmse": 0.07079806558444529,
-          "bounded_edge_gradient_fidelity": 0.7289574085591016,
+          "loco_rmse": 0.052540842911852695,
+          "unseen_3d_chords_rmse": 0.08999714924114957,
+          "whole_torus_psi_rmse": 0.07079806558444504,
+          "bounded_edge_gradient_fidelity": 0.7289574085591013,
           "edge_fidelity_pct": "72.90%"
         }
       },
@@ -2694,10 +2694,10 @@
           "edge_fidelity_pct": "57.40%"
         },
         "BlindBMHD": {
-          "loco_rmse": 0.1051294403588297,
-          "unseen_3d_chords_rmse": 0.17247608006776077,
-          "whole_torus_psi_rmse": 0.1360640739958089,
-          "bounded_edge_gradient_fidelity": 0.5028042725322759,
+          "loco_rmse": 0.10512944035883007,
+          "unseen_3d_chords_rmse": 0.1724760800677608,
+          "whole_torus_psi_rmse": 0.13606407399580867,
+          "bounded_edge_gradient_fidelity": 0.5028042725322763,
           "edge_fidelity_pct": "50.28%"
         }
       },
@@ -2752,9 +2752,9 @@
           "edge_fidelity_pct": "44.00%"
         },
         "BlindBMHD": {
-          "loco_rmse": 0.17688807568704165,
-          "unseen_3d_chords_rmse": 0.24692265492217622,
-          "whole_torus_psi_rmse": 0.19600375598948375,
+          "loco_rmse": 0.17688807568704237,
+          "unseen_3d_chords_rmse": 0.24692265492217624,
+          "whole_torus_psi_rmse": 0.19600375598948355,
           "bounded_edge_gradient_fidelity": 0.32430273940181475,
           "edge_fidelity_pct": "32.43%"
         }
@@ -2880,7 +2880,7 @@
   },
   "stylo_diagnostic_bridge": {
     "bridge_version": "v0.4.0",
-    "timestamp": "2026-10-23T02:12:44Z",
+    "timestamp": "2026-10-25T21:55:49Z",
     "hardware_invariants": {
       "max_heap_ceiling_mb": 3.5,
       "active_l3_resident_mb": 2.33,
@@ -2894,8 +2894,8 @@
       "scenario04_pellet_core_deposition_rmse_px": 0.34,
       "scenario05_flare_washout_rejection_rate": 1.0,
       "scenario05_nozzle_throttle_gain": 0.6599,
-      "single_core_fps": 535.9,
-      "frame_latency_us": 138.7,
+      "single_core_fps": 792.2,
+      "frame_latency_us": 95.1,
       "combined_arena_heap_mb": 2.33,
       "bridge_buffer_overhead_kb": 32.5,
       "post_mask_mad_noise_floor": 0.002432,

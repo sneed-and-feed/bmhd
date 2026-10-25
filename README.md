@@ -389,7 +389,7 @@ Evaluated via `python scripts/evaluate_bmhd.py` and exported to `results/bmhd_st
 | `05_beltrami_plasma_spallation_torch` | 1.000 | **0** | N/A | **100.0%** | **0.6599** (target 0.6599) |
 | **Overall Engine Summary** | **1.000** | **0** (vs 6 legacy) | **0.34 px** | **100.0%** | **0.6599** |
 
-Hardware Invariants: Peak Heap = **2.33 MB** (< 3.5 MB ceiling), Bridge Buffer = **32.5 KB** (< 64 KB overhead), Single-Core FPS = **524.8** (> 240 FPS), Latency = **136.6 us** (< 450 us), Pullback Fast-Path Skip Rate = **100.0%**, Monte Carlo False Trigger Rate = **0.0%** (across 9 grid points, 200 trials each), Zero Per-Frame Heap Growth = **PASSED**.
+Hardware Invariants: Peak Heap = **2.33 MB** (< 3.5 MB ceiling), Bridge Buffer = **32.5 KB** (< 64 KB overhead), Single-Core FPS = **792.2** (> 240 FPS), Latency = **95.1 us** (< 450 us), Pullback Fast-Path Skip Rate = **100.0%**, Monte Carlo False Trigger Rate = **0.0%** (across 9 grid points, 200 trials each), Zero Per-Frame Heap Growth = **PASSED**.
 
 ---
 
@@ -413,7 +413,7 @@ In `v0.4.0`, `bmhd` couples directly into `toposnail` (`toposnail/stellarator_co
 
 3. **Zero Trapped Cavities, 4-Stage CAD Export & BCM2712 Hardware Cache Assurance:**
    - **Topological Void Guarantee (`b2 == 0`):** Enforces 6-way Jordan boundary flood filling (`JordanCavityEnforcer`) to guarantee strictly `0` trapped $\beta_2$ internal powder/coolant voids while preserving unobstructed `beta_1` helical cooling channels (`Omega_KOZ`) and divertor strike-plate armor tiles (`Omega_solid`).
-   - **Structural & Numerical Receipts (`toposnail/results/stellarator_bionic_coupling_summary.json`):** Achieves an **86.55% compliance reduction** ($J / J_{\mathrm{SIMP}} = 0.1345$, reducing initial compliance `0.02069` to `0.002782`), **99.70% binary crispness**, `0.0%` checkerboard defects, true recomputed equilibrium residual `r_eq = 8.87e-5 <= 1.0e-4`, and $\mathrm{SO}(6)$ rotor trace drift `7.11e-15`.
+   - **Structural & Numerical Receipts (`toposnail/results/stellarator_bionic_coupling_summary.json`):** Achieves an **86.53% compliance reduction** ($J / J_{\mathrm{SIMP}} = 0.1347$, reducing initial compliance `0.02069` to `0.002786`), **99.70% binary crispness**, `0.0%` checkerboard defects, true recomputed equilibrium residual `r_eq = 9.30e-5 <= 1.0e-4`, and $\mathrm{SO}(6)$ rotor trace drift `7.11e-15`.
    - **4-Stage Bionic CAD Export:** Exports watertight 2-manifold `.STL` and `.OBJ` meshes across all 4 morphological stages (`stellarator_coil_divertor_s1..s4.{stl,obj}`).
    - **Broadcom BCM2712 Cortex-A76 Cache Telemetry (`results/bcm2712_cache_receipts.json`):** Executes inside the 64-byte aligned `#![no_std]` Rust `TopoStateArena` (`1,472,448 B` = `1.40 MB` < `1.50 MB` SRAM budget) with **`0` dynamic heap allocations** and a verified **`0.04601%` LLd cache miss rate** (`< 0.100%` hard target) across 50,000,000 memory references.
 
