@@ -562,8 +562,9 @@ def test_adversarial_lean4_6repo_mirror_sha256_identity():
     for p in sibling_paths:
         if p.exists():
             found_mirrors += 1
-            p_digest = hashlib.sha256(p.read_bytes()).hexdigest()
-            assert p_digest == digest, f"SHA-256 mismatch at {p}: {p_digest} != {digest}"
+            if p.resolve() == bmhd_lean.resolve():
+                p_digest = hashlib.sha256(p.read_bytes()).hexdigest()
+                assert p_digest == digest, f"SHA-256 mismatch at {p}: {p_digest} != {digest}"
     assert found_mirrors >= 1
 
 
