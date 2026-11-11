@@ -251,7 +251,7 @@ which reduces identically to static MRxMHD $(\tilde{\mu_i} = \mu_i)$ at zero Mac
 - **Qu, Hudson, Dewar, Loizu & Hole (2021):** See [https://arxiv.org/abs/2108.02056](https://arxiv.org/abs/2108.02056). Because both Beltrami current $\mathbf{J}$ and field-aligned velocity $\mathbf{v}$ are collinear with $\mathbf{B}$, the Lorentz and Euler Lamb cross-product forces $B_{W_{\mathrm{LC}}}(\alpha \mathbf{B}, \mathbf{B})$ vanish identically (`0.00e+0` error), and the interface jump condition generalizes to the exact **Flow-MRxMHD Bernoulli Jump Conservation Law**:
 
 ```math
-\left\llbracket p_i + \frac{1}{2}\left(1 + M_i^2\right) B_i^2 \right\rrbracket = 0 \quad \text{on } I_i
+\left\lbrack\!\left\lbrack p_i + \frac{1}{2}\left(1 + M_i^2\right) B_i^2 \right\rbrack\!\right\rbrack = 0 \quad \text{on } I_i
 ```
 
 - **Kumar, Loizu, Hole, Qu, Hudson & Dewar (2022):** See [https://arxiv.org/abs/2209.05003](https://arxiv.org/abs/2209.05003). Enforces PDE ellipticity ($1 - M_i^2 \gt 0$) and the KAM Diophantine non-resonance barrier guard on interface rotational transforms:
